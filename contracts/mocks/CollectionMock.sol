@@ -2,14 +2,14 @@
 
 pragma solidity ^0.8.0;
 
-import "../NFTLegends.sol";
+import "../Collection.sol";
 
 /**
  * @title ERC721Mock
  * This mock just provides a public safeMint, mint, and burn functions for testing purposes
  */
-contract NFTLegendsMock is NFTLegends {
-    constructor () NFTLegends() { }
+contract CollectionMock is Collection {
+    constructor () Collection() { }
 
     function baseURI() public view returns (string memory) {
         return _baseURI();

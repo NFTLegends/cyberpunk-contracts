@@ -5,7 +5,7 @@ module.exports = async ({
   const {deploy} = deployments;
   const {deployer} = await getNamedAccounts();
 
-  await deploy('NFTLegends', {
+  await deploy('Collection', {
     from: deployer,
     gasLimit: 4000000,
     args: [],

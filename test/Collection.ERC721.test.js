@@ -3,14 +3,14 @@ const {
   shouldBehaveLikeERC721Metadata,
 } = require('./behaviors/ERC721.behavior');
 
-const NFTLegendsMock = artifacts.require('NFTLegendsMock');
+const CollectionMock = artifacts.require('CollectionMock');
 
-contract('NFTLegends', function (accounts) {
-  const name = 'NFTLegends';
-  const symbol = 'NFTL';
+contract('Collection : ERC721', function (accounts) {
+  const name = 'CyberPunk';
+  const symbol = 'CPN';
 
   beforeEach(async function () {
-    this.token = await NFTLegendsMock.new();
+    this.token = await CollectionMock.new();
   });
 
   shouldBehaveLikeERC721('ERC721', ...accounts);
