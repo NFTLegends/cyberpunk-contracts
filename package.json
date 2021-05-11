@@ -1,0 +1,11 @@
+{
+  "name": "nftlegends_solidity",
+  "version": "0.1.0",
+  "main": "index.js",
+  "repository": "git@github.com:OnGridSystems/nftlegends_solidity.git",
+  "author": "n",
+  "license": "GPLv3",
+  "devDependencies": {
+    "hardhat": "^2.2.1"
+  }
+}
