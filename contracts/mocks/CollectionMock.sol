@@ -9,7 +9,9 @@ import "../Collection.sol";
  * This mock just provides a public safeMint, mint, and burn functions for testing purposes
  */
 contract CollectionMock is Collection {
-    constructor () Collection() { }
+    constructor() {
+        _maxTotalSupply = 2*256 - 1;
+    }
 
     function baseURI() public view returns (string memory) {
         return _baseURI();

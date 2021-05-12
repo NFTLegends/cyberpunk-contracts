@@ -3,18 +3,24 @@
 pragma solidity 0.8.4;
 
 import "@openzeppelin/contracts/token/ERC721/extensions/ERC721Enumerable.sol";
+import "@openzeppelin/contracts/utils/math/SafeMath.sol";
 
 contract Collection is ERC721Enumerable {
-    // Don't enforce the limits until batches added
-    uint256 private constant _MAX_INT = 2**256 - 1;
+    using SafeMath for uint256;
 
+    struct SaleStage {
+        uint256 endTokens;
+        uint256 weiPerToken;
+    }
+
+    SaleStage[] internal _saleStages;
     // Maximum allowed tokenSupply boundary.
     // Can be extended by adding new batches
-    uint256 private _maxTotalSupply = _MAX_INT;
+    uint256 internal _maxTotalSupply = 0;
 
     constructor() ERC721("CyberPunk", "CPN") {}
 
-    function maxTotalSupply() public view virtual returns (uint256) {
+    function maxTotalSupply() public virtual view returns (uint256) {
         return _maxTotalSupply;
     }
 
@@ -28,5 +34,71 @@ contract Collection is ERC721Enumerable {
         if (from == address(0)) {
             require(totalSupply() < _maxTotalSupply, "Collection: maxSupply achieved");
         }
+    }
+
+    function saleStagesLength() public view returns (uint256) {
+        return _saleStages.length;
+    }
+
+    function getSaleStage(uint256 saleStageIndex) public view returns (uint256 startTokens, uint256 endTokens, uint256 weiPerToken) {
+        require(_saleStages.length > 0, 'getSaleStage: no stages');
+
+        if (0 == saleStageIndex) {
+            SaleStage memory saleStage = _saleStages[saleStageIndex];
+            return (0, saleStage.endTokens, saleStage.weiPerToken);
+        } else {
+            SaleStage memory previousSaleStage = _saleStages[saleStageIndex.sub(1)];
+            SaleStage memory saleStage = _saleStages[saleStageIndex];
+            return (previousSaleStage.endTokens, saleStage.endTokens, saleStage.weiPerToken);
+        }
+    }
+
+    function addSaleStage(uint256 endTokens, uint256 weiPerToken) external {
+        require(weiPerToken > 0, "addSaleStage: weiPerToken must be non-zero");
+        uint256 saleStagesLength = _saleStages.length;
+        if (0 == saleStagesLength) {
+            require(endTokens > 0, "addSaleStage: first stage endTokens must be non-zero");
+        }
+        else {
+            (,uint256 currentSaleStageEndTokens,) = getSaleStage(saleStagesLength.sub(1));
+            require(endTokens > currentSaleStageEndTokens, "addSaleStage: new endTokens must be more than current last");
+        }
+
+        _saleStages.push(SaleStage(endTokens, weiPerToken));
+        _maxTotalSupply = endTokens;
+    }
+
+    function setSaleStage(uint256 saleStageIndex, uint256 endTokens, uint256 weiPerToken) external {
+        uint256 saleStagesLength = _saleStages.length;
+        require(saleStageIndex < saleStagesLength, "setSaleStage: saleStage with this index does not exist");
+        require(weiPerToken > 0, "setSaleStage: weiPerToken must be non-zero");
+
+        (uint256 previousSaleStageEndTokens,,) = getSaleStage(saleStageIndex);
+        require(endTokens > previousSaleStageEndTokens, "setSaleStage: new endTokens must be more than in previous stage");
+
+        if (saleStageIndex.add(1) < saleStagesLength) {
+            (,uint256 nextSaleStageEndTokens,) = getSaleStage(saleStageIndex.add(1));
+            require(endTokens > nextSaleStageEndTokens, "setSaleStage: new endTokens must be less than in next stage");
+        }
+
+        _saleStages[saleStageIndex] = SaleStage(endTokens, weiPerToken);
+    }
+
+    function getPrice() public view returns (uint256) {
+        uint256 saleStagesLength = _saleStages.length;
+        SaleStage memory saleStage;
+        uint256 currentPrice = 0;
+        for (uint256 i = 0; i < saleStagesLength; i++) {
+            saleStage = _saleStages[i];
+            if (totalSupply() <= saleStage.endTokens) {
+                currentPrice = saleStage.weiPerToken;
+                break;
+            }
+        }
+        return currentPrice;
+    }
+
+    function getTotalPriceFor(uint256 tokens) public view returns (uint256) {
+        return getPrice() * tokens;
     }
 }
