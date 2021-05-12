@@ -1,5 +1,5 @@
+/* eslint-disable max-len */
 const { expectRevert } = require('@openzeppelin/test-helpers');
-
 const { ethers } = require('hardhat');
 const { expect } = require('chai');
 
@@ -10,7 +10,8 @@ contract('Collection : ERC721', function ([ deployer, others ]) {
     const accounts = await ethers.getSigners();
     this.owner = accounts[0];
     this.batchManagerAddress = accounts[1];
-    this.noRoleAddress = accounts[2];
+    this.saleAdminAddress = accounts[2];
+    this.noRoleAddress = accounts[4];
     this.token = await CollectionMock.new();
   });
 
@@ -422,6 +423,34 @@ contract('Collection : ERC721', function ([ deployer, others ]) {
         ans = await this.token.tokenURI(12);
         expect(ans).equal('https://ipfs.io/ipfs/QmWADyUFUzVfcXPBfxVNceKExb4Veitt5Cy5ynMLVoeTF7/12.json');
       });
+    });
+  });
+
+  describe('with Admin role', function () {
+    beforeEach(async function () {
+      this.saleAdminRole = await this.token.SALE_ADMIN_ROLE();
+      await this.token.grantRole(this.saleAdminRole, this.saleAdminAddress.address);
+    });
+    it('start sale', async function () {
+      expect(await this.token.start({ from: this.saleAdminAddress.address }));
+      const active = await this.token.saleActive();
+      expect(active).equal(true);
+    });
+    it('stop sale', async function () {
+      expect(await this.token.stop({ from: this.saleAdminAddress.address }));
+      const active = await this.token.saleActive();
+      expect(active).equal(false);
+    });
+  });
+
+  describe('without Admin role, start and stop should revert', function () {
+    it('exception', async function () {
+      await expectRevert(
+        this.token.start({ from: this.noRoleAddress.address }),
+        'VM Exception while processing transaction: revert AccessControl');
+      await expectRevert(
+        this.token.stop({ from: this.noRoleAddress.address }),
+        'VM Exception while processing transaction: revert AccessControl');
     });
   });
 });

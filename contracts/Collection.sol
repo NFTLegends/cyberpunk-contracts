@@ -8,6 +8,8 @@ import "@openzeppelin/contracts/utils/Strings.sol";
 import "@openzeppelin/contracts/utils/math/SafeMath.sol";
 
 contract Collection is ERC721Enumerable, AccessControl {
+    bool public saleActive = false;
+
     using SafeMath for uint256;
     using Strings for uint256;
 
@@ -33,6 +35,7 @@ contract Collection is ERC721Enumerable, AccessControl {
     bytes32 public constant SALE_STAGES_MANAGER_ROLE = keccak256("SALE_STAGES_MANAGER_ROLE");
     // Role with add & deletej permissions
     bytes32 public constant BATCH_MANAGER_ROLE = keccak256("BATCH_MANAGER_ROLE");
+    bytes32 public constant SALE_ADMIN_ROLE = keccak256("SALE_ADMIN_ROLE");
 
     constructor() ERC721("CyberPunk", "CPN") {
         _setupRole(DEFAULT_ADMIN_ROLE, _msgSender());
@@ -286,5 +289,19 @@ contract Collection is ERC721Enumerable, AccessControl {
             }
         }
         return index;
+    }
+
+    /**
+     * @dev Starts sale
+     */
+    function start() public onlyRole(SALE_ADMIN_ROLE) {
+        saleActive = true;
+    }
+
+    /**
+     * @dev Stops sale
+     */
+    function stop() public onlyRole(SALE_ADMIN_ROLE) {
+        saleActive = false;
     }
 }
