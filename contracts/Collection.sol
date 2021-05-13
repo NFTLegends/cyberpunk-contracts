@@ -84,21 +84,29 @@ contract Collection is ERC721Enumerable {
         _saleStages[saleStageIndex] = SaleStage(endTokens, weiPerToken);
     }
 
-    function getPrice() public view returns (uint256) {
+    function getTotalPriceFor(uint256 tokens) public view returns (uint256) {
         uint256 saleStagesLength = _saleStages.length;
+        uint256 totalSupply = totalSupply();
+        uint256 tokensLeft = tokens;
+
+        uint256 totalPrice = 0;
+        uint256 tokensDiff;
+
         SaleStage memory saleStage;
-        uint256 currentPrice = 0;
         for (uint256 i = 0; i < saleStagesLength; i++) {
             saleStage = _saleStages[i];
-            if (totalSupply() <= saleStage.endTokens) {
-                currentPrice = saleStage.weiPerToken;
+            if (totalSupply > saleStage.endTokens)
+                continue;
+            tokensDiff = (saleStage.endTokens).sub(totalSupply);
+            if (tokensLeft > 0) {
+                totalPrice = totalPrice.add(tokensDiff.mul(saleStage.weiPerToken));
+                tokensLeft = tokensLeft.sub(tokensDiff);
+                totalSupply = totalSupply.add(tokensDiff);
+            }
+            else {
                 break;
             }
         }
-        return currentPrice;
-    }
-
-    function getTotalPriceFor(uint256 tokens) public view returns (uint256) {
-        return getPrice() * tokens;
+        return totalPrice;
     }
 }

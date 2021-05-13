@@ -107,13 +107,29 @@ contract('Collection : ERC721', function (accounts) {
       });
     });
 
-    context('getPrice()', function () {
+    context('getTotalPriceFor()', function () {
       it('works', async function () {
-        expect(await this.token.getPrice()).to.be.bignumber.equal('0');
+        expect(await this.token.getTotalPriceFor(0)).to.be.bignumber.equal('0');
+        expect(await this.token.getTotalPriceFor(1)).to.be.bignumber.equal('0');
+
         await this.token.addSaleStage(1, 100);
-        expect(await this.token.getPrice()).to.be.bignumber.equal('100');
+        expect(await this.token.getTotalPriceFor(0)).to.be.bignumber.equal('0');
+        expect(await this.token.getTotalPriceFor(1)).to.be.bignumber.equal('100');
+        expect(await this.token.getTotalPriceFor(2)).to.be.bignumber.equal('100');
+
         await this.token.addSaleStage(2, 200);
-        expect(await this.token.getPrice()).to.be.bignumber.equal('100');
+        expect(await this.token.getTotalPriceFor(0)).to.be.bignumber.equal('0');
+        expect(await this.token.getTotalPriceFor(1)).to.be.bignumber.equal('100');
+        expect(await this.token.getTotalPriceFor(2)).to.be.bignumber.equal('300');
+        expect(await this.token.getTotalPriceFor(3)).to.be.bignumber.equal('300');
+
+        await this.token.addSaleStage(3, 300);
+        expect(await this.token.getTotalPriceFor(0)).to.be.bignumber.equal('0');
+        expect(await this.token.getTotalPriceFor(1)).to.be.bignumber.equal('100');
+        expect(await this.token.getTotalPriceFor(2)).to.be.bignumber.equal('300');
+        expect(await this.token.getTotalPriceFor(3)).to.be.bignumber.equal('600');
+        expect(await this.token.getTotalPriceFor(4)).to.be.bignumber.equal('600');
+        expect(await this.token.getTotalPriceFor(10)).to.be.bignumber.equal('600');
       });
     });
   });
