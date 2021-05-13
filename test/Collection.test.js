@@ -132,5 +132,21 @@ contract('Collection : ERC721', function (accounts) {
         expect(await this.token.getTotalPriceFor(10)).to.be.bignumber.equal('600');
       });
     });
+
+    context('buy()', function () {
+      it('works', async function () {
+        await this.token.addSaleStage(10, 100);
+
+        let price;
+
+        price = await this.token.getTotalPriceFor(1);
+        await this.token.buy(1, { value: price });
+        expect(await this.token.totalSupply()).to.be.bignumber.equal('1');
+
+        price = await this.token.getTotalPriceFor(2);
+        await this.token.buy(2, { value: price });
+        expect(await this.token.totalSupply()).to.be.bignumber.equal('3');
+      });
+    });
   });
 });

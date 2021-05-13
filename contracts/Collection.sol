@@ -17,6 +17,7 @@ contract Collection is ERC721Enumerable {
     // Maximum allowed tokenSupply boundary.
     // Can be extended by adding new batches
     uint256 internal _maxTotalSupply = 0;
+    uint256 internal _maxPurchaseSize = 20;
 
     constructor() ERC721("CyberPunk", "CPN") {}
 
@@ -41,7 +42,7 @@ contract Collection is ERC721Enumerable {
     }
 
     function getSaleStage(uint256 saleStageIndex) public view returns (uint256 startTokens, uint256 endTokens, uint256 weiPerToken) {
-        require(_saleStages.length > 0, 'getSaleStage: no stages');
+        require(_saleStages.length > 0, "getSaleStage: no stages");
 
         if (0 == saleStageIndex) {
             SaleStage memory saleStage = _saleStages[saleStageIndex];
@@ -99,14 +100,34 @@ contract Collection is ERC721Enumerable {
                 continue;
             tokensDiff = (saleStage.endTokens).sub(totalSupply);
             if (tokensLeft > 0) {
-                totalPrice = totalPrice.add(tokensDiff.mul(saleStage.weiPerToken));
-                tokensLeft = tokensLeft.sub(tokensDiff);
-                totalSupply = totalSupply.add(tokensDiff);
+                if (tokensLeft > tokensDiff) {
+                    totalPrice = totalPrice.add(tokensDiff.mul(saleStage.weiPerToken));
+                    tokensLeft = tokensLeft.sub(tokensDiff);
+                    totalSupply = totalSupply.add(tokensDiff);
+                }
+                else {
+                    totalPrice = totalPrice.add(tokensLeft.mul(saleStage.weiPerToken));
+                    tokensLeft = 0;
+                    totalSupply = totalSupply.add(tokensLeft);
+                }
             }
             else {
                 break;
             }
         }
         return totalPrice;
+    }
+
+    function buy(uint256 nfts) public payable {
+        require(totalSupply() < _maxTotalSupply, "Sale has already ended");
+        require(nfts > 0, "tokens cannot be 0");
+        require(nfts <= _maxPurchaseSize, "You may not buy more than _maxPurchaseSize NFTs at once");
+        require(totalSupply().add(nfts) <= _maxTotalSupply, "Exceeds MAX_NFT_SUPPLY");
+        require(getTotalPriceFor(nfts) == msg.value, "Ether value sent is not correct");
+
+        for (uint i = 0; i < nfts; i++) {
+            uint mintIndex = totalSupply();
+            _safeMint(msg.sender, mintIndex);
+        }
     }
 }
