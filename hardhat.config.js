@@ -3,7 +3,7 @@ require('@nomiclabs/hardhat-solhint');
 require('@nomiclabs/hardhat-etherscan');
 require('solidity-coverage');
 require('hardhat-deploy');
-require("hardhat-deploy-ethers")
+require('hardhat-deploy-ethers');
 
 const accounts = {
   mnemonic: process.env.MNEMONIC || 'test test test test test test test test test test test junk',

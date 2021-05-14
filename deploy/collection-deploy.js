@@ -7,7 +7,7 @@ module.exports = async ({
   const { deploy } = deployments;
   const { deployer } = await getNamedAccounts();
 
-  const chainId = await getChainId()
+  const chainId = await getChainId();
 
   await deploy('Collection', {
     from: deployer,

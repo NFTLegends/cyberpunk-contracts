@@ -8,19 +8,23 @@ import "@openzeppelin/contracts/utils/math/SafeMath.sol";
 contract Collection is ERC721Enumerable {
     using SafeMath for uint256;
 
+    // Sale Stage Info struct
     struct SaleStage {
         uint256 endTokens;
         uint256 weiPerToken;
     }
-
+    // Array of sale stages
     SaleStage[] internal _saleStages;
-    // Maximum allowed tokenSupply boundary.
-    // Can be extended by adding new batches
+    // Maximum allowed tokenSupply boundary. Can be extended by adding new stages.
     uint256 internal _maxTotalSupply = 0;
+    // Max NFTs that can be bought at once.
     uint256 internal _maxPurchaseSize = 20;
 
     constructor() ERC721("CyberPunk", "CPN") {}
 
+    /**
+     * @notice Returns current `_maxTotalSupply` value.
+     */
     function maxTotalSupply() public virtual view returns (uint256) {
         return _maxTotalSupply;
     }
@@ -37,10 +41,16 @@ contract Collection is ERC721Enumerable {
         }
     }
 
+    /**
+     * @notice Returns current `_saleStages` array length.
+     */
     function saleStagesLength() public view returns (uint256) {
         return _saleStages.length;
     }
 
+    /**
+     * @notice Returns info about sale stage with given index.
+     */
     function getSaleStage(uint256 saleStageIndex) public view returns (uint256 startTokens, uint256 endTokens, uint256 weiPerToken) {
         require(_saleStages.length > 0, "getSaleStage: no stages");
 
@@ -54,6 +64,9 @@ contract Collection is ERC721Enumerable {
         }
     }
 
+    /**
+     * @notice Adds new sale stage with given params at the end of `saleStages array`.
+     */
     function addSaleStage(uint256 endTokens, uint256 weiPerToken) external {
         require(weiPerToken > 0, "addSaleStage: weiPerToken must be non-zero");
         uint256 saleStagesLength = _saleStages.length;
@@ -69,6 +82,9 @@ contract Collection is ERC721Enumerable {
         _maxTotalSupply = endTokens;
     }
 
+    /**
+     * @notice Rewrites sale stage properties with given index.
+     */
     function setSaleStage(uint256 saleStageIndex, uint256 endTokens, uint256 weiPerToken) external {
         uint256 saleStagesLength = _saleStages.length;
         require(saleStageIndex < saleStagesLength, "setSaleStage: saleStage with this index does not exist");
@@ -85,6 +101,9 @@ contract Collection is ERC721Enumerable {
         _saleStages[saleStageIndex] = SaleStage(endTokens, weiPerToken);
     }
 
+    /**
+     * @notice Returns summary price for given number of tokens.
+     */
     function getTotalPriceFor(uint256 tokens) public view returns (uint256) {
         uint256 saleStagesLength = _saleStages.length;
         uint256 totalSupply = totalSupply();
@@ -118,6 +137,9 @@ contract Collection is ERC721Enumerable {
         return totalPrice;
     }
 
+    /**
+     * @notice Method to purchase and get random available NFTs.
+     */
     function buy(uint256 nfts) public payable {
         require(totalSupply() < _maxTotalSupply, "Sale has already ended");
         require(nfts > 0, "tokens cannot be 0");
@@ -126,17 +148,20 @@ contract Collection is ERC721Enumerable {
         require(getTotalPriceFor(nfts) == msg.value, "Ether value sent is not correct");
 
         for (uint i = 0; i < nfts; i++) {
-            uint256 mintIndex = getRandomAvailableIndex();
+            uint256 mintIndex = _getRandomAvailableIndex();
             _safeMint(msg.sender, mintIndex);
         }
     }
 
-    function getRandomAvailableIndex() internal view returns (uint256) {
+    /**
+     * @dev Pseudo-random index generator. Returns new free of owner token index.
+     */
+    function _getRandomAvailableIndex() internal view returns (uint256) {
         uint256 index = (
             uint256(
                 keccak256(
                     abi.encodePacked(
-                        block.timestamp,
+                        block.timestamp, /* solhint-disable not-rely-on-time */
                         gasleft(),
                         blockhash(block.number - 1)
                     )
