@@ -144,11 +144,13 @@ contract('Collection : ERC721', function ([ deployer, others ]) {
     });
 
     context('buy()', function () {
-      it('works', async function () {
+      let price;
+
+      beforeEach(async function () {
         await this.token.addSaleStage(10, 100);
+      });
 
-        let price;
-
+      it('works', async function () {
         price = await this.token.getTotalPriceFor(1);
         await this.token.buy(1, { value: price });
         expect(await this.token.totalSupply()).to.be.bignumber.equal('1');
@@ -156,6 +158,37 @@ contract('Collection : ERC721', function ([ deployer, others ]) {
         price = await this.token.getTotalPriceFor(2);
         await this.token.buy(2, { value: price });
         expect(await this.token.totalSupply()).to.be.bignumber.equal('3');
+      });
+
+      it('reverts when trying to buy after sale end', async function () {
+        price = await this.token.getTotalPriceFor(10);
+        await this.token.buy(10, { value: price });
+        expect(await this.token.totalSupply()).to.be.bignumber.equal('10');
+
+        await expectRevert(this.token.buy(10, { value: price }), 'buy: Sale has already ended');
+      });
+
+      it('reverts when trying to buy 0 nft', async function () {
+        price = await this.token.getTotalPriceFor(1);
+        await expectRevert(this.token.buy(0, { value: 0 }), 'buy: nfts cannot be 0');
+      });
+
+      it('reverts when trying to buy more than _maxPurchaseSize nft', async function () {
+        price = await this.token.getTotalPriceFor(1);
+        await expectRevert(
+          this.token.buy(21, { value: 0 }),
+          'buy: You can not buy more than _maxPurchaseSize NFTs at once',
+        );
+      });
+
+      it('reverts when trying to buy nfts that exceeds totalSupply', async function () {
+        price = await this.token.getTotalPriceFor(1);
+        await expectRevert(this.token.buy(20, { value: 0 }), 'buy: Exceeds _maxTotalSupply');
+      });
+
+      it('reverts when send incorrect ETH value', async function () {
+        price = await this.token.getTotalPriceFor(5);
+        await expectRevert(this.token.buy(5, { value: 0 }), 'buy: Ether value sent is not correct');
       });
     });
   });

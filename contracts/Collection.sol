@@ -50,7 +50,7 @@ contract Collection is ERC721Enumerable, AccessControl {
 
         // check maxTotalSupply is not exceeded on mint
         if (from == address(0)) {
-            require(totalSupply() < _maxTotalSupply, "Collection: maxSupply achieved");
+            require(totalSupply() <= _maxTotalSupply, "Collection: maxSupply achieved");
         }
     }
 
@@ -168,11 +168,11 @@ contract Collection is ERC721Enumerable, AccessControl {
      * @notice Method to purchase and get random available NFTs.
      */
     function buy(uint256 nfts) public payable {
-        require(totalSupply() < _maxTotalSupply, "Sale has already ended");
-        require(nfts > 0, "tokens cannot be 0");
-        require(nfts <= _maxPurchaseSize, "You may not buy more than _maxPurchaseSize NFTs at once");
-        require(totalSupply().add(nfts) <= _maxTotalSupply, "Exceeds MAX_NFT_SUPPLY");
-        require(getTotalPriceFor(nfts) == msg.value, "Ether value sent is not correct");
+        require(totalSupply() < _maxTotalSupply, "buy: Sale has already ended");
+        require(nfts > 0, "buy: nfts cannot be 0");
+        require(nfts <= _maxPurchaseSize, "buy: You can not buy more than _maxPurchaseSize NFTs at once");
+        require(totalSupply().add(nfts) <= _maxTotalSupply, "buy: Exceeds _maxTotalSupply");
+        require(getTotalPriceFor(nfts) == msg.value, "buy: Ether value sent is not correct");
 
         for (uint i = 0; i < nfts; i++) {
             uint256 mintIndex = _getRandomAvailableIndex();
