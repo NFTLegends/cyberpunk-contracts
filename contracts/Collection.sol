@@ -126,8 +126,29 @@ contract Collection is ERC721Enumerable {
         require(getTotalPriceFor(nfts) == msg.value, "Ether value sent is not correct");
 
         for (uint i = 0; i < nfts; i++) {
-            uint mintIndex = totalSupply();
+            uint256 mintIndex = getRandomAvailableIndex();
             _safeMint(msg.sender, mintIndex);
         }
+    }
+
+    function getRandomAvailableIndex() internal view returns (uint256) {
+        uint256 index = (
+            uint256(
+                keccak256(
+                    abi.encodePacked(
+                        block.timestamp,
+                        gasleft(),
+                        blockhash(block.number - 1)
+                    )
+                )
+            ) % _maxTotalSupply
+        );
+        while (_exists(index)) {
+            index += 1;
+            if (index >= _maxTotalSupply) {
+                index = 0;
+            }
+        }
+        return index;
     }
 }
