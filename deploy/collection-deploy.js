@@ -19,6 +19,6 @@ module.exports = async ({
   const collection = await ethers.getContract('Collection');
 
   if (chainId === '31337' || chainId === '1337') {
-    await collection.addSaleStage('1000', '1000');
+    await collection.addSaleStage('1000', '1000', { from: deployer });
   }
 };

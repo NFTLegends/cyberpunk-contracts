@@ -3,9 +3,10 @@
 pragma solidity 0.8.4;
 
 import "@openzeppelin/contracts/token/ERC721/extensions/ERC721Enumerable.sol";
+import "@openzeppelin/contracts/access/AccessControl.sol";
 import "@openzeppelin/contracts/utils/math/SafeMath.sol";
 
-contract Collection is ERC721Enumerable {
+contract Collection is ERC721Enumerable, AccessControl {
     using SafeMath for uint256;
 
     // Sale Stage Info struct
@@ -19,8 +20,20 @@ contract Collection is ERC721Enumerable {
     uint256 internal _maxTotalSupply = 0;
     // Max NFTs that can be bought at once.
     uint256 internal _maxPurchaseSize = 20;
+    // Role with add & set sale stages permissions
+    bytes32 public constant SALE_STAGES_MANAGER_ROLE = keccak256("SALE_STAGES_MANAGER_ROLE");
 
-    constructor() ERC721("CyberPunk", "CPN") {}
+    constructor() ERC721("CyberPunk", "CPN") {
+        _setupRole(DEFAULT_ADMIN_ROLE, _msgSender());
+        _setupRole(SALE_STAGES_MANAGER_ROLE, _msgSender());
+    }
+
+    /**
+     * @dev See {IERC165-supportsInterface}.
+     */
+    function supportsInterface(bytes4 interfaceId) public view virtual override(ERC721Enumerable, AccessControl) returns (bool) {
+        return super.supportsInterface(interfaceId);
+    }
 
     /**
      * @notice Returns current `_maxTotalSupply` value.
@@ -51,7 +64,15 @@ contract Collection is ERC721Enumerable {
     /**
      * @notice Returns info about sale stage with given index.
      */
-    function getSaleStage(uint256 saleStageIndex) public view returns (uint256 startTokens, uint256 endTokens, uint256 weiPerToken) {
+    function getSaleStage(uint256 saleStageIndex)
+        public
+        view
+        returns (
+            uint256 startTokens,
+            uint256 endTokens,
+            uint256 weiPerToken
+        )
+    {
         require(_saleStages.length > 0, "getSaleStage: no stages");
 
         if (0 == saleStageIndex) {
@@ -67,7 +88,10 @@ contract Collection is ERC721Enumerable {
     /**
      * @notice Adds new sale stage with given params at the end of `saleStages array`.
      */
-    function addSaleStage(uint256 endTokens, uint256 weiPerToken) external {
+    function addSaleStage(uint256 endTokens, uint256 weiPerToken)
+        external
+        onlyRole(SALE_STAGES_MANAGER_ROLE)
+    {
         require(weiPerToken > 0, "addSaleStage: weiPerToken must be non-zero");
         uint256 saleStagesLength = _saleStages.length;
         if (0 == saleStagesLength) {
@@ -85,7 +109,10 @@ contract Collection is ERC721Enumerable {
     /**
      * @notice Rewrites sale stage properties with given index.
      */
-    function setSaleStage(uint256 saleStageIndex, uint256 endTokens, uint256 weiPerToken) external {
+    function setSaleStage(uint256 saleStageIndex, uint256 endTokens, uint256 weiPerToken)
+        external
+        onlyRole(SALE_STAGES_MANAGER_ROLE)
+    {
         uint256 saleStagesLength = _saleStages.length;
         require(saleStageIndex < saleStagesLength, "setSaleStage: saleStage with this index does not exist");
         require(weiPerToken > 0, "setSaleStage: weiPerToken must be non-zero");

@@ -4,7 +4,7 @@ const { expect } = require('chai');
 
 const CollectionMock = artifacts.require('Collection');
 
-contract('Collection : ERC721', function (accounts) {
+contract('Collection : ERC721', function ([ deployer, others ]) {
   beforeEach(async function () {
     this.token = await CollectionMock.new();
   });
@@ -58,6 +58,10 @@ contract('Collection : ERC721', function (accounts) {
       it('works when trying to add stage with wrong weiPerToken', async function () {
         await expectRevert(this.token.addSaleStage(0, 0), 'addSaleStage: weiPerToken must be non-zer');
       });
+
+      it('reverts when trying to add from not sale stage manager', async function () {
+        await expectRevert.unspecified(this.token.addSaleStage(0, 0, { from: others }));
+      });
     });
 
     context('setSaleStage()', function () {
@@ -104,6 +108,12 @@ contract('Collection : ERC721', function (accounts) {
         await this.token.addSaleStage(1, 100);
 
         await expectRevert(this.token.setSaleStage(0, 1, 0), 'setSaleStage: weiPerToken must be non-zero');
+      });
+
+      it('reverts when trying to add from not sale stage manager', async function () {
+        await this.token.addSaleStage(1, 100);
+
+        await expectRevert.unspecified(this.token.setSaleStage(0, 1, 0, { from: others }));
       });
     });
 
