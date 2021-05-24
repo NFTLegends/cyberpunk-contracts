@@ -133,7 +133,7 @@ contract Collection is ERC721Enumerable, AccessControl {
     /**
      * @notice Return token batch URI
      */
-    function getBatch(uint256 tokenId) public view returns (string memory) {
+    function getBatch(uint256 tokenId) public view returns (Batch memory) {
         require(_batches.length > 0, "getBatch: no batches");
         require(
             tokenId < _batches[_batches.length - 1].endId,
@@ -144,7 +144,7 @@ contract Collection is ERC721Enumerable, AccessControl {
             if (tokenId > _batches[i].endId) {
                 continue;
             } else {
-                return _batches[i].baseURI;
+                return _batches[i];
             }
         }
     }
@@ -169,7 +169,7 @@ contract Collection is ERC721Enumerable, AccessControl {
         override
         returns (string memory)
     {
-        string memory baseURI = getBatch(tokenId);
+        string memory baseURI = getBatch(tokenId).baseURI;
 
         return
             bytes(baseURI).length > 0
