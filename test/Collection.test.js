@@ -193,6 +193,7 @@ contract('Collection : ERC721', function ([ deployer, others ]) {
     });
 
     context('getBatch()', function () {
+      let ans;
       it('reverts when there is no bathes', async function () {
         await expectRevert(this.token.getBatch(0), 'getBatch: no batches');
       });
@@ -217,6 +218,7 @@ contract('Collection : ERC721', function ([ deployer, others ]) {
     });
 
     context('addBatch()', function () {
+      let ans, ans1, ans2;
       it('reverts when first batch endTokens is zero', async function () {
         await expectRevert(this.token.addBatch(0, 'testBaseURI'),
           'addBatch: batch endTokens must be non-zero',
@@ -231,7 +233,7 @@ contract('Collection : ERC721', function ([ deployer, others ]) {
       it('reverts when batch is added', async function () {
         await this.token.addBatch(10, 'https://ipfs.io/ipfs/QmSQENpQaQ9JLJRTXxDGR9zwKzyXxkYsk5KSB3YsGQu78a/11111.json');
         ans = await this.token.getBatch(0);
-        expect(ans.baseURI).equal('https://ipfs.io/ipfs/QmSQENpQaQ9JLJRTXxDGR9zwKzyXxkYsk5KSB3YsGQu78a/11111.json')
+        expect(ans.baseURI).equal('https://ipfs.io/ipfs/QmSQENpQaQ9JLJRTXxDGR9zwKzyXxkYsk5KSB3YsGQu78a/11111.json');
       });
       it('reverts when batch is added (few batches)', async function () {
         await this.token.addBatch(10, 'https://ipfs.io/ipfs/QmSQENpQaQ9JLJRTXxDGR9zwKzyXxkYsk5KSB3YsGQu78a/11111.json');
@@ -244,10 +246,11 @@ contract('Collection : ERC721', function ([ deployer, others ]) {
       });
     });
     context('deleteBatch()', function () {
+      let ans;
       it('works when index out of batches length', async function () {
         await this.token.addBatch(10, 'testBaseURI');
         await expectRevert(this.token.deleteBatch(2),
-          "deleteBatch: index out of batches length",
+          'deleteBatch: index out of batches length',
         );
       });
       it('works when batch is deleted', async function () {
@@ -256,11 +259,12 @@ contract('Collection : ERC721', function ([ deployer, others ]) {
         expect(ans.baseURI).equal('testBaseURI');
         await this.token.deleteBatch(0);
         await expectRevert(this.token.getBatch(5),
-          "getBatch: tokenId must be less then last token id in batches array",
+          'getBatch: tokenId must be less then last token id in batches array',
         );
       });
     });
     context('tokenURI()', function () {
+      let ans;
       it('works when tokenURI is returned', async function () {
         await this.token.addBatch(10, 'testBaseURI');
         ans = await this.token.tokenURI(2);
