@@ -228,6 +228,20 @@ contract('Collection : ERC721', function ([ deployer, others ]) {
           'batchEndId must be greater than the endId of the last batch',
         );
       });
+      it('reverts when batch is added', async function () {
+        await this.token.addBatch(10, 'https://ipfs.io/ipfs/QmSQENpQaQ9JLJRTXxDGR9zwKzyXxkYsk5KSB3YsGQu78a/11111.json');
+        ans = await this.token.getBatch(0);
+        expect(ans.baseURI).equal('https://ipfs.io/ipfs/QmSQENpQaQ9JLJRTXxDGR9zwKzyXxkYsk5KSB3YsGQu78a/11111.json')
+      });
+      it('reverts when batch is added (few batches)', async function () {
+        await this.token.addBatch(10, 'https://ipfs.io/ipfs/QmSQENpQaQ9JLJRTXxDGR9zwKzyXxkYsk5KSB3YsGQu78a/11111.json');
+        ans1 = await this.token.getBatch(0);
+        expect(ans1.baseURI).equal('https://ipfs.io/ipfs/QmSQENpQaQ9JLJRTXxDGR9zwKzyXxkYsk5KSB3YsGQu78a/11111.json');
+
+        await this.token.addBatch(20, 'https://ipfs.io/ipfs/QmSQENpQaQ9JLJRTXxDGR9zwKzyXxkYsk5KSB3YsGQu78a/2.json');
+        ans2 = await this.token.getBatch(11);
+        expect(ans2.baseURI).equal('https://ipfs.io/ipfs/QmSQENpQaQ9JLJRTXxDGR9zwKzyXxkYsk5KSB3YsGQu78a/2.json');
+      });
     });
     context('deleteBatch()', function () {
       it('works when index out of batches length', async function () {
@@ -252,11 +266,11 @@ contract('Collection : ERC721', function ([ deployer, others ]) {
         ans = await this.token.tokenURI(2);
         expect(ans).equal('testBaseURI/2.json');
       });
-      it('works when tokenURI is returned 2', async function () {
-        await this.token.addBatch(10, 'testBaseURI');
-        await this.token.addBatch(20, 'testBaseURI2');
-        ans = await this.token.tokenURI(12);
-        expect(ans).equal('testBaseURI2/12.json');
+      it('works when tokenURI is returned (few tokens)', async function () {
+        await this.token.addBatch(10, 'https://ipfs.io/ipfs/QmYgHse7NjPeYagSwA3Y3atxY5ns4na6KmGwaug5cHHVnL');
+        await this.token.addBatch(20, 'https://ipfs.io/ipfs/QmSQENpQaQ9JLJRTXxDGR9zwKzyXxkYsk5KSB3YsGQu78a');
+        ans = await this.token.tokenURI(17);
+        expect(ans).equal('https://ipfs.io/ipfs/QmSQENpQaQ9JLJRTXxDGR9zwKzyXxkYsk5KSB3YsGQu78a/17.json');
       });
     });
   });
