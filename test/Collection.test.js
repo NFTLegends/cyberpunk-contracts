@@ -191,5 +191,91 @@ contract('Collection : ERC721', function ([ deployer, others ]) {
         await expectRevert(this.token.buy(5, { value: 0 }), 'buy: Ether value sent is not correct');
       });
     });
+
+    context('getBatch()', function () {
+      let ans;
+      it('reverts when there is no bathes', async function () {
+        await expectRevert(this.token.getBatch(0), 'getBatch: no batches');
+      });
+      it('works when return right baseURI', async function () {
+        await this.token.addBatch(10, 'testBaseURI');
+        ans = await this.token.getBatch(0);
+        expect(ans.baseURI).equal('testBaseURI');
+      });
+      it('works when return right baseURI (second batch)', async function () {
+        await this.token.addBatch(10, 'testBaseURI');
+        await this.token.addBatch(30, 'testBaseURI2');
+        ans = await this.token.getBatch(20);
+        expect(ans.baseURI).equal('testBaseURI2');
+      });
+      it('works when tokenId greater then last token id in batches array', async function () {
+        await this.token.addBatch(10, 'testBaseURI');
+        await this.token.addBatch(30, 'testBaseURI2');
+        await expectRevert(this.token.getBatch(31),
+          'getBatch: tokenId must be less then last token id in batches array',
+        );
+      });
+    });
+
+    context('addBatch()', function () {
+      let ans, ans1, ans2;
+      it('reverts when first batch endTokens is zero', async function () {
+        await expectRevert(this.token.addBatch(0, 'testBaseURI'),
+          'addBatch: batch endTokens must be non-zero',
+        );
+      });
+      it('reverts when batchEndId greater than the endId of the last batch', async function () {
+        await this.token.addBatch(10, 'testBaseURI');
+        await expectRevert(this.token.addBatch(10, 'testBaseURI2'),
+          'batchEndId must be greater than the endId of the last batch',
+        );
+      });
+      it('reverts when batch is added', async function () {
+        await this.token.addBatch(10, 'https://ipfs.io/ipfs/QmSQENpQaQ9JLJRTXxDGR9zwKzyXxkYsk5KSB3YsGQu78a/11111.json');
+        ans = await this.token.getBatch(0);
+        expect(ans.baseURI).equal('https://ipfs.io/ipfs/QmSQENpQaQ9JLJRTXxDGR9zwKzyXxkYsk5KSB3YsGQu78a/11111.json');
+      });
+      it('reverts when batch is added (few batches)', async function () {
+        await this.token.addBatch(10, 'https://ipfs.io/ipfs/QmSQENpQaQ9JLJRTXxDGR9zwKzyXxkYsk5KSB3YsGQu78a/11111.json');
+        ans1 = await this.token.getBatch(0);
+        expect(ans1.baseURI).equal('https://ipfs.io/ipfs/QmSQENpQaQ9JLJRTXxDGR9zwKzyXxkYsk5KSB3YsGQu78a/11111.json');
+
+        await this.token.addBatch(20, 'https://ipfs.io/ipfs/QmSQENpQaQ9JLJRTXxDGR9zwKzyXxkYsk5KSB3YsGQu78a/2.json');
+        ans2 = await this.token.getBatch(11);
+        expect(ans2.baseURI).equal('https://ipfs.io/ipfs/QmSQENpQaQ9JLJRTXxDGR9zwKzyXxkYsk5KSB3YsGQu78a/2.json');
+      });
+    });
+    context('deleteBatch()', function () {
+      let ans;
+      it('works when index out of batches length', async function () {
+        await this.token.addBatch(10, 'testBaseURI');
+        await expectRevert(this.token.deleteBatch(2),
+          'deleteBatch: index out of batches length',
+        );
+      });
+      it('works when batch is deleted', async function () {
+        await this.token.addBatch(10, 'testBaseURI');
+        ans = await this.token.getBatch(5);
+        expect(ans.baseURI).equal('testBaseURI');
+        await this.token.deleteBatch(0);
+        await expectRevert(this.token.getBatch(5),
+          'getBatch: tokenId must be less then last token id in batches array',
+        );
+      });
+    });
+    context('tokenURI()', function () {
+      let ans;
+      it('works when tokenURI is returned', async function () {
+        await this.token.addBatch(10, 'testBaseURI');
+        ans = await this.token.tokenURI(2);
+        expect(ans).equal('testBaseURI/2.json');
+      });
+      it('works when tokenURI is returned (few tokens)', async function () {
+        await this.token.addBatch(10, 'https://ipfs.io/ipfs/QmYgHse7NjPeYagSwA3Y3atxY5ns4na6KmGwaug5cHHVnL');
+        await this.token.addBatch(20, 'https://ipfs.io/ipfs/QmSQENpQaQ9JLJRTXxDGR9zwKzyXxkYsk5KSB3YsGQu78a');
+        ans = await this.token.tokenURI(17);
+        expect(ans).equal('https://ipfs.io/ipfs/QmSQENpQaQ9JLJRTXxDGR9zwKzyXxkYsk5KSB3YsGQu78a/17.json');
+      });
+    });
   });
 });

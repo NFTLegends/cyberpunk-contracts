@@ -2,18 +2,27 @@
 
 pragma solidity 0.8.4;
 
-import "@openzeppelin/contracts/token/ERC721/extensions/ERC721Enumerable.sol";
 import "@openzeppelin/contracts/access/AccessControl.sol";
+import "@openzeppelin/contracts/token/ERC721/extensions/ERC721Enumerable.sol";
+import "@openzeppelin/contracts/utils/Strings.sol";
 import "@openzeppelin/contracts/utils/math/SafeMath.sol";
 
 contract Collection is ERC721Enumerable, AccessControl {
     using SafeMath for uint256;
+    using Strings for uint256;
 
     // Sale Stage Info struct
     struct SaleStage {
         uint256 endTokens;
         uint256 weiPerToken;
     }
+    struct Batch {
+        uint256 endId;
+        string baseURI;
+    }
+
+    // Array of heroes batches
+    Batch[] internal _batches;
     // Array of sale stages
     SaleStage[] internal _saleStages;
     // Maximum allowed tokenSupply boundary. Can be extended by adding new stages.
@@ -83,6 +92,72 @@ contract Collection is ERC721Enumerable, AccessControl {
             SaleStage memory saleStage = _saleStages[saleStageIndex];
             return (previousSaleStage.endTokens, saleStage.endTokens, saleStage.weiPerToken);
         }
+    }
+
+    /**
+     * @notice Add tokens batch to bathes array
+     */
+    function addBatch(uint256 batchEndId, string memory baseURI) public {
+        uint256 batchesLength = _batches.length;
+
+        require(batchEndId > 0, "addBatch: batch endTokens must be non-zero");
+        if (batchesLength > 0) {
+            require(
+                batchEndId > _batches[batchesLength - 1].endId,
+                "addBatch: batchEndId must be greater than the endId of the last batch"
+            );
+        }
+
+        _batches.push(Batch(batchEndId, baseURI));
+    }
+
+    /**
+     * @notice Return token batch URI
+     */
+    function getBatch(uint256 tokenId) public view returns (Batch memory) {
+        require(_batches.length > 0, "getBatch: no batches");
+        require(
+            tokenId < _batches[_batches.length - 1].endId,
+            "getBatch: tokenId must be less then last token id in batches array"
+        );
+
+        for (uint256 i; i < _batches.length; i++) {
+            if (tokenId > _batches[i].endId) {
+                continue;
+            } else {
+                return _batches[i];
+            }
+        }
+    }
+
+    /**
+     * @notice Removes batch at the given index
+     */
+    function deleteBatch(uint256 batchIndex) public {
+        require(
+            _batches.length > batchIndex,
+            "deleteBatch: index out of batches length"
+        );
+        delete _batches[batchIndex];
+    }
+
+    /**
+     * @notice Return tokenURI
+     */
+    function tokenURI(uint256 tokenId)
+        public
+        view
+        override
+        returns (string memory)
+    {
+        string memory baseURI = getBatch(tokenId).baseURI;
+
+        return
+            bytes(baseURI).length > 0
+                ? string(
+                    abi.encodePacked(baseURI, "/", tokenId.toString(), ".json")
+                )
+                : "";
     }
 
     /**
