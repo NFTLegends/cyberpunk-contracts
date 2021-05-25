@@ -6,7 +6,7 @@ require('hardhat-deploy');
 require('hardhat-deploy-ethers');
 
 const accounts = {
-  mnemonic: process.env.MNEMONIC || 'test test test test test test test test test test test junk',
+  mnemonic: 'truck elbow mushroom wrong wall gossip odor ceiling plastic pole cost undo',
 };
 
 module.exports = {
@@ -40,9 +40,9 @@ module.exports = {
       tags: ['local'],
     },
     rinkeby: {
-      url: `wss://rinkeby.infura.io/ws/v3/${process.env.INFURA_API_KEY}`,
+      url: 'https://rinkeby.infura.io/v3/ddd04662161d4ff8925007116003eec2',
       accounts,
-      chainId: 3,
+      chainId: 4,
       live: true,
       saveDeployments: true,
       tags: ['staging'],
