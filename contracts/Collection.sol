@@ -52,6 +52,7 @@ contract Collection is ERC721Enumerable, AccessControl {
         _setupRole(SALE_ADMIN_ROLE, _msgSender());
         _setupRole(NAME_SETTER_ROLE, _msgSender());
         _setupRole(SKILL_SETTER_ROLE, _msgSender());
+        _setupRole(MAX_PURCHASE_SIZE_SETTER_ROLE, _msgSender());
     }
 
     /**

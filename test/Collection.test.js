@@ -1,4 +1,3 @@
-
 /* eslint-disable max-len */
 const { BN, expectRevert, expectEvent } = require('@openzeppelin/test-helpers');
 const { ethers } = require('hardhat');
@@ -527,6 +526,12 @@ contract('Collection : ERC721', function ([ deployer, others ]) {
       await this.token.addSaleStage(30, 100);
       this.maxPurchaseSizeRole = await this.token.MAX_PURCHASE_SIZE_SETTER_ROLE();
       await this.token.grantRole(this.maxPurchaseSizeRole, this.maxPurchaseSizeSetter.address);
+    });
+    it('deployer has MAX_PURCHASE_SIZE_SETTER_ROLE', async function () {
+      await this.token.setMaxPurchaseSize(newPurchaseSize, { from: this.owner.address });
+      price = await this.token.getTotalPriceFor(30);
+      await this.token.buy(30, { value: price });
+      expect(await this.token.totalSupply()).to.be.bignumber.equal('30');
     });
     it('MAX_PURCHASE_SIZE_SETTER_ROLE can change the purchase size', async function () {
       await this.token.setMaxPurchaseSize(newPurchaseSize, { from: this.maxPurchaseSizeSetter.address });
