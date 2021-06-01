@@ -43,6 +43,7 @@ contract Collection is ERC721Enumerable, AccessControl {
     bytes32 public constant SALE_ADMIN_ROLE = keccak256("SALE_ADMIN_ROLE");
     bytes32 public constant NAME_SETTER_ROLE = keccak256("NAME_SETTER_ROLE");
     bytes32 public constant SKILL_SETTER_ROLE = keccak256("SKILL_SETTER_ROLE");
+    bytes32 public constant MAX_PURCHASE_SIZE_SETTER_ROLE = keccak256("MAX_PURCHASE_SIZE_SETTER_ROLE");
 
     constructor() ERC721("CyberPunk", "CPN") {
         _setupRole(DEFAULT_ADMIN_ROLE, _msgSender());
@@ -343,5 +344,12 @@ contract Collection is ERC721Enumerable, AccessControl {
     function setSkill(uint256 id, uint256 newSkill) public onlyRole(SKILL_SETTER_ROLE) {
         _tokenSkill[id] = newSkill;
         emit SkillChange(id, newSkill);
+    }
+
+     /**
+     * @dev Change max purchase size.
+     */
+    function setMaxPurchaseSize(uint256 newPurchaseSize) public onlyRole(MAX_PURCHASE_SIZE_SETTER_ROLE) {
+        _maxPurchaseSize = newPurchaseSize;
     }
 }
