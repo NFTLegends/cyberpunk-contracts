@@ -18,7 +18,6 @@ contract('Collection : ERC721', function ([ deployer, others ]) {
     this.noRoleAddress = accounts[5];
     this.token = await CollectionMock.new();
   });
-
   context('Calculator test', function () {
     context('getSaleStage()', function () {
       it('reverts when there is no stages', async function () {
@@ -458,6 +457,19 @@ contract('Collection : ERC721', function ([ deployer, others ]) {
     });
   });
 
+  describe('deployer has SALE_ADMIN_ROLE', function () {
+    it('start sale', async function () {
+      expect(await this.token.start({ from: this.owner.address }));
+      const active = await this.token.saleActive();
+      expect(active).equal(true);
+    });
+    it('stop sale', async function () {
+      expect(await this.token.stop({ from: this.owner.address }));
+      const active = await this.token.saleActive();
+      expect(active).equal(false);
+    });
+  });
+
   describe('setName', function () {
     const newName = 'Abraham Lincoln';
     beforeEach(async function () {
@@ -465,6 +477,10 @@ contract('Collection : ERC721', function ([ deployer, others ]) {
       this.nameSetRole = await this.token.NAME_SETTER_ROLE();
       await this.token.grantRole(this.nameSetRole, this.nameSetterAddress.address);
       await this.token.mint(this.nameSetterAddress.address, token);
+    });
+    it('deployer has NAME_SETTER_ROLE', async function () {
+      expectEvent(await this.token.setName(0, newName, { from: this.owner.address }), 'NameChange', { index: '0', newName: newName });
+      expect(await this.token.getName(0)).to.be.bignumber.equal(newName);
     });
     it('NAME_SETTER_ROLE can change the name', async function () {
       expectEvent(await this.token.setName(0, newName, { from: this.nameSetterAddress.address }), 'NameChange', { index: '0', newName: newName });
@@ -485,6 +501,10 @@ contract('Collection : ERC721', function ([ deployer, others ]) {
       this.skillSetRole = await this.token.SKILL_SETTER_ROLE();
       await this.token.grantRole(this.skillSetRole, this.skillSetterAddress.address);
       await this.token.mint(this.skillSetterAddress.address, token);
+    });
+    it('deployer has SKILL_SETTER_ROLE', async function () {
+      expectEvent(await this.token.setSkill(0, newSkill, { from: this.owner.address }), 'SkillChange', { index: '0', newSkill: newSkill });
+      expect(await this.token.getSkill(0)).to.be.bignumber.equal(newSkill);
     });
     it('SKILL_SETTER_ROLE can change the skill', async function () {
       expectEvent(await this.token.setSkill(0, newSkill, { from: this.skillSetterAddress.address }), 'SkillChange', { index: '0', newSkill: newSkill });

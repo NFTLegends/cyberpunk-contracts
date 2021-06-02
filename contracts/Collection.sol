@@ -38,7 +38,7 @@ contract Collection is ERC721Enumerable, AccessControl {
     uint256 internal _maxPurchaseSize = 20;
     // Role with add & set sale stages permissions
     bytes32 public constant SALE_STAGES_MANAGER_ROLE = keccak256("SALE_STAGES_MANAGER_ROLE");
-    // Role with add & deletej permissions
+    // Role with add & delete permissions
     bytes32 public constant BATCH_MANAGER_ROLE = keccak256("BATCH_MANAGER_ROLE");
     bytes32 public constant SALE_ADMIN_ROLE = keccak256("SALE_ADMIN_ROLE");
     bytes32 public constant NAME_SETTER_ROLE = keccak256("NAME_SETTER_ROLE");
@@ -48,6 +48,9 @@ contract Collection is ERC721Enumerable, AccessControl {
         _setupRole(DEFAULT_ADMIN_ROLE, _msgSender());
         _setupRole(SALE_STAGES_MANAGER_ROLE, _msgSender());
         _setupRole(BATCH_MANAGER_ROLE, _msgSender());
+        _setupRole(SALE_ADMIN_ROLE, _msgSender());
+        _setupRole(NAME_SETTER_ROLE, _msgSender());
+        _setupRole(SKILL_SETTER_ROLE, _msgSender());
     }
 
     /**
