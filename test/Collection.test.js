@@ -14,7 +14,8 @@ contract('Collection : ERC721', function ([ deployer, others ]) {
     this.batchManagerAddress = accounts[1];
     this.saleAdminAddress = accounts[2];
     this.nameSetterAddress = accounts[3];
-    this.noRoleAddress = accounts[4];
+    this.skillSetterAddress = accounts[4];
+    this.noRoleAddress = accounts[5];
     this.token = await CollectionMock.new();
   });
 
@@ -472,6 +473,26 @@ contract('Collection : ERC721', function ([ deployer, others ]) {
     it('reverts without NAME_SETTER_ROLE', async function () {
       await expectRevert(
         this.token.setName(0, newName, { from: this.noRoleAddress.address }),
+        'VM Exception while processing transaction: revert AccessControl',
+      );
+    });
+  });
+
+  describe('setSkill', function () {
+    const newSkill = new BN(20);
+    beforeEach(async function () {
+      this.token = await ERC721Mock.new();
+      this.skillSetRole = await this.token.SKILL_SETTER_ROLE();
+      await this.token.grantRole(this.skillSetRole, this.skillSetterAddress.address);
+      await this.token.mint(this.skillSetterAddress.address, token);
+    });
+    it('SKILL_SETTER_ROLE can change the skill', async function () {
+      expectEvent(await this.token.setSkill(0, newSkill, { from: this.skillSetterAddress.address }), 'SkillChange', { index: '0', newSkill: newSkill });
+      expect(await this.token.getSkill(0)).to.be.bignumber.equal(newSkill);
+    });
+    it('reverts without SKILL_SETTER_ROLE', async function () {
+      await expectRevert(
+        this.token.setSkill(0, newSkill, { from: this.noRoleAddress.address }),
         'VM Exception while processing transaction: revert AccessControl',
       );
     });

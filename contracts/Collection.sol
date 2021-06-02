@@ -9,7 +9,9 @@ import "@openzeppelin/contracts/utils/math/SafeMath.sol";
 
 contract Collection is ERC721Enumerable, AccessControl {
     event NameChange (uint256 indexed index, string newName);
+    event SkillChange (uint256 indexed index, uint256 newSkill);
     mapping(uint256 => string) private _tokenName;
+    mapping(uint256 => uint256) private _tokenSkill;
 
     bool public saleActive = false;
 
@@ -40,6 +42,7 @@ contract Collection is ERC721Enumerable, AccessControl {
     bytes32 public constant BATCH_MANAGER_ROLE = keccak256("BATCH_MANAGER_ROLE");
     bytes32 public constant SALE_ADMIN_ROLE = keccak256("SALE_ADMIN_ROLE");
     bytes32 public constant NAME_SETTER_ROLE = keccak256("NAME_SETTER_ROLE");
+    bytes32 public constant SKILL_SETTER_ROLE = keccak256("SKILL_SETTER_ROLE");
 
     constructor() ERC721("CyberPunk", "CPN") {
         _setupRole(DEFAULT_ADMIN_ROLE, _msgSender());
@@ -303,6 +306,13 @@ contract Collection is ERC721Enumerable, AccessControl {
     }
 
     /**
+     * @dev Returns skill of the NFT at index
+     */
+    function getSkill(uint256 index) public view returns (uint256) {
+                return _tokenSkill[index];
+    }
+
+    /**
      * @dev Starts sale
      */
     function start() public onlyRole(SALE_ADMIN_ROLE) {
@@ -322,5 +332,13 @@ contract Collection is ERC721Enumerable, AccessControl {
     function setName(uint256 id, string memory newName) public onlyRole(NAME_SETTER_ROLE) {
         _tokenName[id] = newName;
         emit NameChange(id, newName);
+    }
+
+    /**
+     * @dev Change token skill
+     */
+    function setSkill(uint256 id, uint256 newSkill) public onlyRole(SKILL_SETTER_ROLE) {
+        _tokenSkill[id] = newSkill;
+        emit SkillChange(id, newSkill);
     }
 }
