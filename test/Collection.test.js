@@ -1,16 +1,19 @@
 /* eslint-disable max-len */
-const { expectRevert } = require('@openzeppelin/test-helpers');
+const { BN, expectRevert, expectEvent } = require('@openzeppelin/test-helpers');
 const { ethers } = require('hardhat');
 const { expect } = require('chai');
 
 const CollectionMock = artifacts.require('Collection');
+const ERC721Mock = artifacts.require('CollectionMock');
 
 contract('Collection : ERC721', function ([ deployer, others ]) {
+  const token = new BN('1');
   beforeEach(async function () {
     const accounts = await ethers.getSigners();
     this.owner = accounts[0];
     this.batchManagerAddress = accounts[1];
     this.saleAdminAddress = accounts[2];
+    this.nameSetterAddress = accounts[3];
     this.noRoleAddress = accounts[4];
     this.token = await CollectionMock.new();
   });
@@ -451,6 +454,26 @@ contract('Collection : ERC721', function ([ deployer, others ]) {
       await expectRevert(
         this.token.stop({ from: this.noRoleAddress.address }),
         'VM Exception while processing transaction: revert AccessControl');
+    });
+  });
+
+  describe('setName', function () {
+    const newName = 'Abraham Lincoln';
+    beforeEach(async function () {
+      this.token = await ERC721Mock.new();
+      this.nameSetRole = await this.token.NAME_SETTER_ROLE();
+      await this.token.grantRole(this.nameSetRole, this.nameSetterAddress.address);
+      await this.token.mint(this.nameSetterAddress.address, token);
+    });
+    it('NAME_SETTER_ROLE can change the name', async function () {
+      expectEvent(await this.token.setName(0, newName, { from: this.nameSetterAddress.address }), 'NameChange', { index: '0', newName: newName });
+      expect(await this.token.getName(0)).to.be.bignumber.equal(newName);
+    });
+    it('reverts without NAME_SETTER_ROLE', async function () {
+      await expectRevert(
+        this.token.setName(0, newName, { from: this.noRoleAddress.address }),
+        'VM Exception while processing transaction: revert AccessControl',
+      );
     });
   });
 });

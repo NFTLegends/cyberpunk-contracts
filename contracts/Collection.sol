@@ -8,6 +8,9 @@ import "@openzeppelin/contracts/utils/Strings.sol";
 import "@openzeppelin/contracts/utils/math/SafeMath.sol";
 
 contract Collection is ERC721Enumerable, AccessControl {
+    event NameChange (uint256 indexed index, string newName);
+    mapping(uint256 => string) private _tokenName;
+
     bool public saleActive = false;
 
     using SafeMath for uint256;
@@ -36,6 +39,7 @@ contract Collection is ERC721Enumerable, AccessControl {
     // Role with add & deletej permissions
     bytes32 public constant BATCH_MANAGER_ROLE = keccak256("BATCH_MANAGER_ROLE");
     bytes32 public constant SALE_ADMIN_ROLE = keccak256("SALE_ADMIN_ROLE");
+    bytes32 public constant NAME_SETTER_ROLE = keccak256("NAME_SETTER_ROLE");
 
     constructor() ERC721("CyberPunk", "CPN") {
         _setupRole(DEFAULT_ADMIN_ROLE, _msgSender());
@@ -292,6 +296,13 @@ contract Collection is ERC721Enumerable, AccessControl {
     }
 
     /**
+     * @dev Returns name of the NFT at index
+     */
+    function getName(uint256 index) public view returns (string memory) {
+        return _tokenName[index];
+    }
+
+    /**
      * @dev Starts sale
      */
     function start() public onlyRole(SALE_ADMIN_ROLE) {
@@ -303,5 +314,13 @@ contract Collection is ERC721Enumerable, AccessControl {
      */
     function stop() public onlyRole(SALE_ADMIN_ROLE) {
         saleActive = false;
+    }
+
+    /**
+     * @dev Change token name
+     */
+    function setName(uint256 id, string memory newName) public onlyRole(NAME_SETTER_ROLE) {
+        _tokenName[id] = newName;
+        emit NameChange(id, newName);
     }
 }
