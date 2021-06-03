@@ -1,11 +1,16 @@
 const { expectRevert } = require('@openzeppelin/test-helpers');
 
+const { ethers } = require('hardhat');
 const { expect } = require('chai');
 
 const CollectionMock = artifacts.require('Collection');
 
 contract('Collection : ERC721', function ([ deployer, others ]) {
   beforeEach(async function () {
+    const accounts = await ethers.getSigners();
+    this.owner = accounts[0];
+    this.batchManagerAddress = accounts[1];
+    this.noRoleAddress = accounts[2];
     this.token = await CollectionMock.new();
   });
 
@@ -194,87 +199,228 @@ contract('Collection : ERC721', function ([ deployer, others ]) {
 
     context('getBatch()', function () {
       let ans;
-      it('reverts when there is no bathes', async function () {
+
+      beforeEach(async function () {
+        this.batchManagerRole = await this.token.BATCH_MANAGER_ROLE();
+        await this.token.grantRole(this.batchManagerRole, this.batchManagerAddress.address);
+      });
+
+      it('reverts when there is no batches', async function () {
         await expectRevert(this.token.getBatch(0), 'getBatch: no batches');
       });
+      it('revertsd when tokenId greater then last token id in batches array', async function () {
+        await this.token.addBatch(10, 'testBaseURI', { from: this.batchManagerAddress.address });
+        await this.token.addBatch(30, 'testBaseURI2', { from: this.batchManagerAddress.address });
+        await expectRevert(this.token.getBatch(31),
+          'getBatch: tokenId must be less then last token id in batches array',
+        );
+      });
       it('works when return right baseURI', async function () {
-        await this.token.addBatch(10, 'testBaseURI');
+        await this.token.addBatch(10, 'testBaseURI', { from: this.batchManagerAddress.address });
         ans = await this.token.getBatch(0);
         expect(ans.baseURI).equal('testBaseURI');
       });
       it('works when return right baseURI (second batch)', async function () {
-        await this.token.addBatch(10, 'testBaseURI');
-        await this.token.addBatch(30, 'testBaseURI2');
+        await this.token.addBatch(10, 'testBaseURI', { from: this.batchManagerAddress.address });
+        await this.token.addBatch(30, 'testBaseURI2', { from: this.batchManagerAddress.address });
         ans = await this.token.getBatch(20);
         expect(ans.baseURI).equal('testBaseURI2');
-      });
-      it('works when tokenId greater then last token id in batches array', async function () {
-        await this.token.addBatch(10, 'testBaseURI');
-        await this.token.addBatch(30, 'testBaseURI2');
-        await expectRevert(this.token.getBatch(31),
-          'getBatch: tokenId must be less then last token id in batches array',
-        );
       });
     });
 
     context('addBatch()', function () {
       let ans, ans1, ans2;
+
+      beforeEach(async function () {
+        this.batchManagerRole = await this.token.BATCH_MANAGER_ROLE();
+        await this.token.grantRole(this.batchManagerRole, this.batchManagerAddress.address);
+      });
+
+      it('deployer can add this batch', async function () {
+        await this.token.addBatch(9,
+          'https://ipfs.io/ipfs/QmSQENpQaQ9JLJRTXxDGR9zwKzyXxkYsk5KSB3YsGQu78a',
+          { from: this.owner.address });
+        ans1 = await this.token.getBatch(8);
+        expect(ans1.baseURI).equal('https://ipfs.io/ipfs/QmSQENpQaQ9JLJRTXxDGR9zwKzyXxkYsk5KSB3YsGQu78a');
+      });
+      it('BATCH_MANAGER_ROLE can add the batch', async function () {
+        await this.token.addBatch(9,
+          'https://ipfs.io/ipfs/QmSQENpQaQ9JLJRTXxDGR9zwKzyXxkYsk5KSB3YsGQu78a',
+          { from: this.batchManagerAddress.address });
+        ans = await this.token.getBatch(0);
+        expect(ans.baseURI).equal('https://ipfs.io/ipfs/QmSQENpQaQ9JLJRTXxDGR9zwKzyXxkYsk5KSB3YsGQu78a');
+      });
+      it('reverts without BATCH_MANAGER_ROLE', async function () {
+        await expectRevert(this.token.addBatch(0,
+          'https://ipfs.io/ipfs/QmSQENpQaQ9JLJRTXxDGR9zwKzyXxkYsk5KSB3YsGQu78a',
+          { from: this.noRoleAddress.address }),
+        'VM Exception while processing transaction: revert AccessControl',
+        );
+      });
       it('reverts when first batch endTokens is zero', async function () {
-        await expectRevert(this.token.addBatch(0, 'testBaseURI'),
-          'addBatch: batch endTokens must be non-zero',
+        await expectRevert(this.token.addBatch(0,
+          'testBaseURI',
+          { from: this.batchManagerAddress.address }),
+        'addBatch: batch endTokens must be non-zero',
         );
       });
       it('reverts when batchEndId greater than the endId of the last batch', async function () {
-        await this.token.addBatch(10, 'testBaseURI');
-        await expectRevert(this.token.addBatch(10, 'testBaseURI2'),
-          'batchEndId must be greater than the endId of the last batch',
+        await this.token.addBatch(10,
+          'testBaseURI',
+          { from: this.batchManagerAddress.address });
+        await expectRevert(this.token.addBatch(10,
+          'testBaseURI2',
+          { from: this.batchManagerAddress.address }),
+        'batchEndId must be greater than the endId of the last batch',
         );
       });
-      it('reverts when batch is added', async function () {
-        await this.token.addBatch(10, 'https://ipfs.io/ipfs/QmSQENpQaQ9JLJRTXxDGR9zwKzyXxkYsk5KSB3YsGQu78a/11111.json');
+      it('works when batch is added', async function () {
+        await this.token.addBatch(10,
+          'https://ipfs.io/ipfs/QmSQENpQaQ9JLJRTXxDGR9zwKzyXxkYsk5KSB3YsGQu78a',
+          { from: this.batchManagerAddress.address });
         ans = await this.token.getBatch(0);
-        expect(ans.baseURI).equal('https://ipfs.io/ipfs/QmSQENpQaQ9JLJRTXxDGR9zwKzyXxkYsk5KSB3YsGQu78a/11111.json');
+        expect(ans.baseURI).equal('https://ipfs.io/ipfs/QmSQENpQaQ9JLJRTXxDGR9zwKzyXxkYsk5KSB3YsGQu78a');
       });
-      it('reverts when batch is added (few batches)', async function () {
-        await this.token.addBatch(10, 'https://ipfs.io/ipfs/QmSQENpQaQ9JLJRTXxDGR9zwKzyXxkYsk5KSB3YsGQu78a/11111.json');
+      it('works when batch is added (few batches)', async function () {
+        await this.token.addBatch(10,
+          'https://ipfs.io/ipfs/QmSQENpQaQ9JLJRTXxDGR9zwKzyXxkYsk5KSB3YsGQu78a',
+          { from: this.batchManagerAddress.address });
         ans1 = await this.token.getBatch(0);
-        expect(ans1.baseURI).equal('https://ipfs.io/ipfs/QmSQENpQaQ9JLJRTXxDGR9zwKzyXxkYsk5KSB3YsGQu78a/11111.json');
+        expect(ans1.baseURI).equal('https://ipfs.io/ipfs/QmSQENpQaQ9JLJRTXxDGR9zwKzyXxkYsk5KSB3YsGQu78a');
 
-        await this.token.addBatch(20, 'https://ipfs.io/ipfs/QmSQENpQaQ9JLJRTXxDGR9zwKzyXxkYsk5KSB3YsGQu78a/2.json');
+        await this.token.addBatch(20,
+          'https://ipfs.io/ipfs/QmSQENpQaQ9JLJRTXxDGR9zwKzyXxkYsk5KSB3YsGQu78a',
+          { from: this.batchManagerAddress.address });
         ans2 = await this.token.getBatch(11);
-        expect(ans2.baseURI).equal('https://ipfs.io/ipfs/QmSQENpQaQ9JLJRTXxDGR9zwKzyXxkYsk5KSB3YsGQu78a/2.json');
+        expect(ans2.baseURI).equal('https://ipfs.io/ipfs/QmSQENpQaQ9JLJRTXxDGR9zwKzyXxkYsk5KSB3YsGQu78a');
       });
     });
+
     context('deleteBatch()', function () {
-      let ans;
-      it('works when index out of batches length', async function () {
-        await this.token.addBatch(10, 'testBaseURI');
-        await expectRevert(this.token.deleteBatch(2),
-          'deleteBatch: index out of batches length',
-        );
+      beforeEach(async function () {
+        this.batchManagerRole = await this.token.BATCH_MANAGER_ROLE();
+        await this.token.grantRole(this.batchManagerRole, this.batchManagerAddress.address);
+        await this.token.addBatch(10,
+          'https://ipfs.io/ipfs/QmXkzp3EvcqnTPsHstwc89C91S64YAbBQotrgq8atLzHT3',
+          { from: this.batchManagerAddress.address });
       });
-      it('works when batch is deleted', async function () {
-        await this.token.addBatch(10, 'testBaseURI');
-        ans = await this.token.getBatch(5);
-        expect(ans.baseURI).equal('testBaseURI');
-        await this.token.deleteBatch(0);
+
+      it('deployer can delete this batch', async function () {
+        await this.token.deleteBatch(0, { from: this.owner.address });
         await expectRevert(this.token.getBatch(5),
           'getBatch: tokenId must be less then last token id in batches array',
         );
       });
+
+      it('BATCH_MANAGER_ROLE can delete the batch', async function () {
+        await this.token.deleteBatch(0, { from: this.batchManagerAddress.address });
+        await expectRevert(this.token.getBatch(5),
+          'getBatch: tokenId must be less then last token id in batches array',
+        );
+      });
+      it('reverts then delete batch without BATCH_MANAGER_ROLE', async function () {
+        await expectRevert(this.token.deleteBatch(0, { from: this.noRoleAddress.address }),
+          'VM Exception while processing transaction: revert AccessControl',
+        );
+      });
+
+      it('works when index out of batches length', async function () {
+        await expectRevert(this.token.deleteBatch(2, { from: this.batchManagerAddress.address }),
+          'deleteBatch: index out of batches length',
+        );
+      });
     });
+
     context('tokenURI()', function () {
       let ans;
+
+      beforeEach(async function () {
+        this.batchManagerRole = await this.token.BATCH_MANAGER_ROLE();
+        await this.token.grantRole(this.batchManagerRole, this.batchManagerAddress.address);
+        await this.token.addBatch(9,
+          'https://ipfs.io/ipfs/QmXkzp3EvcqnTPsHstwc89C91S64YAbBQotrgq8atLzHT3',
+          { from: this.batchManagerAddress.address });
+      });
+
       it('works when tokenURI is returned', async function () {
-        await this.token.addBatch(10, 'testBaseURI');
-        ans = await this.token.tokenURI(2);
-        expect(ans).equal('testBaseURI/2.json');
+        ans = await this.token.tokenURI(0);
+        expect(ans).equal('https://ipfs.io/ipfs/QmXkzp3EvcqnTPsHstwc89C91S64YAbBQotrgq8atLzHT3/0.json');
       });
       it('works when tokenURI is returned (few tokens)', async function () {
-        await this.token.addBatch(10, 'https://ipfs.io/ipfs/QmYgHse7NjPeYagSwA3Y3atxY5ns4na6KmGwaug5cHHVnL');
-        await this.token.addBatch(20, 'https://ipfs.io/ipfs/QmSQENpQaQ9JLJRTXxDGR9zwKzyXxkYsk5KSB3YsGQu78a');
+        await this.token.addBatch(19,
+          'https://ipfs.io/ipfs/QmSQENpQaQ9JLJRTXxDGR9zwKzyXxkYsk5KSB3YsGQu78a',
+          { from: this.batchManagerAddress.address });
         ans = await this.token.tokenURI(17);
         expect(ans).equal('https://ipfs.io/ipfs/QmSQENpQaQ9JLJRTXxDGR9zwKzyXxkYsk5KSB3YsGQu78a/17.json');
+      });
+      it('works when tokenURI is returned (10 batches)', async function () {
+        await this.token.addBatch(19,
+          'https://ipfs.io/ipfs/QmWADyUFUzVfcXPBfxVNceKExb4Veitt5Cy5ynMLVoeTF7',
+          { from: this.batchManagerAddress.address });
+        await this.token.addBatch(29,
+          'https://ipfs.io/ipfs/QmRhtAr9cexKezrd17iTL8DLm9ue8JkQcKwU59Ki7ntZSM',
+          { from: this.batchManagerAddress.address });
+        await this.token.addBatch(39,
+          'https://ipfs.io/ipfs/QmZxqcENyJVVywUj6kNpiGhY7upXsMWQTAB67fEqPVUmVx',
+          { from: this.batchManagerAddress.address });
+        await this.token.addBatch(49,
+          'https://ipfs.io/ipfs/QmZAdGuo5DTjqEXWL9Xyi3cooeScwTgTaZQiGcWAwRyjX5',
+          { from: this.batchManagerAddress.address });
+        await this.token.addBatch(59,
+          'https://ipfs.io/ipfs/QmeTbDTpz5DZNzbM3a6TKK7srF8rAYFGxrqdiNQNqk57wR',
+          { from: this.batchManagerAddress.address });
+        await this.token.addBatch(69,
+          'https://ipfs.io/ipfs/QmNcQmj1AbcLz16YqfRRJtWfnSVsAuBJnkzFifamHHbzqs',
+          { from: this.batchManagerAddress.address });
+        await this.token.addBatch(79,
+          'https://ipfs.io/ipfs/Qmcq57emNzG99Efhi9EFT7JKMhWEAjxHU3PYRTYhDRsC6S',
+          { from: this.batchManagerAddress.address });
+        await this.token.addBatch(89,
+          'https://ipfs.io/ipfs/QmZXWVccpzk8vQAcd4yRndPMdNpaDWEGXdMeFBYFe8xrpY',
+          { from: this.batchManagerAddress.address });
+        await this.token.addBatch(99,
+          'https://ipfs.io/ipfs/QmeCWYEJjg962DhAJGGqerL25dtZ98GwhfwMequ4jmixX2',
+          { from: this.batchManagerAddress.address });
+        ans = await this.token.tokenURI(0);
+        expect(ans).equal('https://ipfs.io/ipfs/QmXkzp3EvcqnTPsHstwc89C91S64YAbBQotrgq8atLzHT3/0.json');
+        ans = await this.token.tokenURI(10);
+        expect(ans).equal('https://ipfs.io/ipfs/QmWADyUFUzVfcXPBfxVNceKExb4Veitt5Cy5ynMLVoeTF7/10.json');
+        ans = await this.token.tokenURI(20);
+        expect(ans).equal('https://ipfs.io/ipfs/QmRhtAr9cexKezrd17iTL8DLm9ue8JkQcKwU59Ki7ntZSM/20.json');
+        ans = await this.token.tokenURI(30);
+        expect(ans).equal('https://ipfs.io/ipfs/QmZxqcENyJVVywUj6kNpiGhY7upXsMWQTAB67fEqPVUmVx/30.json');
+        ans = await this.token.tokenURI(40);
+        expect(ans).equal('https://ipfs.io/ipfs/QmZAdGuo5DTjqEXWL9Xyi3cooeScwTgTaZQiGcWAwRyjX5/40.json');
+        ans = await this.token.tokenURI(50);
+        expect(ans).equal('https://ipfs.io/ipfs/QmeTbDTpz5DZNzbM3a6TKK7srF8rAYFGxrqdiNQNqk57wR/50.json');
+        ans = await this.token.tokenURI(60);
+        expect(ans).equal('https://ipfs.io/ipfs/QmNcQmj1AbcLz16YqfRRJtWfnSVsAuBJnkzFifamHHbzqs/60.json');
+        ans = await this.token.tokenURI(70);
+        expect(ans).equal('https://ipfs.io/ipfs/Qmcq57emNzG99Efhi9EFT7JKMhWEAjxHU3PYRTYhDRsC6S/70.json');
+        ans = await this.token.tokenURI(80);
+        expect(ans).equal('https://ipfs.io/ipfs/QmZXWVccpzk8vQAcd4yRndPMdNpaDWEGXdMeFBYFe8xrpY/80.json');
+        ans = await this.token.tokenURI(90);
+        expect(ans).equal('https://ipfs.io/ipfs/QmeCWYEJjg962DhAJGGqerL25dtZ98GwhfwMequ4jmixX2/90.json');
+      });
+      it('works when tokenURI is returned (few tokens in few batches)', async function () {
+        await this.token.addBatch(19,
+          'https://ipfs.io/ipfs/QmWADyUFUzVfcXPBfxVNceKExb4Veitt5Cy5ynMLVoeTF7',
+          { from: this.batchManagerAddress.address });
+        await this.token.addBatch(29,
+          'https://ipfs.io/ipfs/QmRhtAr9cexKezrd17iTL8DLm9ue8JkQcKwU59Ki7ntZSM',
+          { from: this.batchManagerAddress.address });
+        ans = await this.token.tokenURI(0);
+        expect(ans).equal('https://ipfs.io/ipfs/QmXkzp3EvcqnTPsHstwc89C91S64YAbBQotrgq8atLzHT3/0.json');
+        ans = await this.token.tokenURI(1);
+        expect(ans).equal('https://ipfs.io/ipfs/QmXkzp3EvcqnTPsHstwc89C91S64YAbBQotrgq8atLzHT3/1.json');
+        ans = await this.token.tokenURI(2);
+        expect(ans).equal('https://ipfs.io/ipfs/QmXkzp3EvcqnTPsHstwc89C91S64YAbBQotrgq8atLzHT3/2.json');
+        ans = await this.token.tokenURI(10);
+        expect(ans).equal('https://ipfs.io/ipfs/QmWADyUFUzVfcXPBfxVNceKExb4Veitt5Cy5ynMLVoeTF7/10.json');
+        ans = await this.token.tokenURI(11);
+        expect(ans).equal('https://ipfs.io/ipfs/QmWADyUFUzVfcXPBfxVNceKExb4Veitt5Cy5ynMLVoeTF7/11.json');
+        ans = await this.token.tokenURI(12);
+        expect(ans).equal('https://ipfs.io/ipfs/QmWADyUFUzVfcXPBfxVNceKExb4Veitt5Cy5ynMLVoeTF7/12.json');
       });
     });
   });

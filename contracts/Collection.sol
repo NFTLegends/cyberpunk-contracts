@@ -31,10 +31,13 @@ contract Collection is ERC721Enumerable, AccessControl {
     uint256 internal _maxPurchaseSize = 20;
     // Role with add & set sale stages permissions
     bytes32 public constant SALE_STAGES_MANAGER_ROLE = keccak256("SALE_STAGES_MANAGER_ROLE");
+    // Role with add & deletej permissions
+    bytes32 public constant BATCH_MANAGER_ROLE = keccak256("BATCH_MANAGER_ROLE");
 
     constructor() ERC721("CyberPunk", "CPN") {
         _setupRole(DEFAULT_ADMIN_ROLE, _msgSender());
         _setupRole(SALE_STAGES_MANAGER_ROLE, _msgSender());
+        _setupRole(BATCH_MANAGER_ROLE, _msgSender());
     }
 
     /**
@@ -95,23 +98,6 @@ contract Collection is ERC721Enumerable, AccessControl {
     }
 
     /**
-     * @notice Add tokens batch to bathes array
-     */
-    function addBatch(uint256 batchEndId, string memory baseURI) public {
-        uint256 batchesLength = _batches.length;
-
-        require(batchEndId > 0, "addBatch: batch endTokens must be non-zero");
-        if (batchesLength > 0) {
-            require(
-                batchEndId > _batches[batchesLength - 1].endId,
-                "addBatch: batchEndId must be greater than the endId of the last batch"
-            );
-        }
-
-        _batches.push(Batch(batchEndId, baseURI));
-    }
-
-    /**
      * @notice Return token batch URI
      */
     function getBatch(uint256 tokenId) public view returns (Batch memory) {
@@ -131,17 +117,6 @@ contract Collection is ERC721Enumerable, AccessControl {
     }
 
     /**
-     * @notice Removes batch at the given index
-     */
-    function deleteBatch(uint256 batchIndex) public {
-        require(
-            _batches.length > batchIndex,
-            "deleteBatch: index out of batches length"
-        );
-        delete _batches[batchIndex];
-    }
-
-    /**
      * @notice Return tokenURI
      */
     function tokenURI(uint256 tokenId)
@@ -158,6 +133,40 @@ contract Collection is ERC721Enumerable, AccessControl {
                     abi.encodePacked(baseURI, "/", tokenId.toString(), ".json")
                 )
                 : "";
+    }
+
+    /**
+     * @notice Add tokens batch to batches array
+     */
+    function addBatch(uint256 batchEndId, string memory baseURI)
+    external
+    onlyRole(BATCH_MANAGER_ROLE)
+        {
+        uint256 batchesLength = _batches.length;
+
+        require(batchEndId > 0, "addBatch: batch endTokens must be non-zero");
+        if (batchesLength > 0) {
+            require(
+                batchEndId > _batches[batchesLength - 1].endId,
+                "addBatch: batchEndId must be greater than the endId of the last batch"
+            );
+        }
+
+        _batches.push(Batch(batchEndId, baseURI));
+    }
+
+    /**
+     * @notice Removes batch at the given index
+     */
+    function deleteBatch(uint256 batchIndex)
+    external
+    onlyRole(BATCH_MANAGER_ROLE)
+        {
+        require(
+            _batches.length > batchIndex,
+            "deleteBatch: index out of batches length"
+        );
+        delete _batches[batchIndex];
     }
 
     /**
