@@ -16,6 +16,7 @@ contract('Collection : ERC721', function ([ deployer, others ]) {
     this.nameSetterAddress = accounts[3];
     this.skillSetterAddress = accounts[4];
     this.noRoleAddress = accounts[5];
+    this.maxPurchaseSizeSetter = accounts[6];
     this.token = await CollectionMock.new();
   });
   context('Calculator test', function () {
@@ -513,6 +514,42 @@ contract('Collection : ERC721', function ([ deployer, others ]) {
     it('reverts without SKILL_SETTER_ROLE', async function () {
       await expectRevert(
         this.token.setSkill(0, newSkill, { from: this.noRoleAddress.address }),
+        'VM Exception while processing transaction: revert AccessControl',
+      );
+    });
+  });
+
+  describe('setMaxPurchaseSize', function () {
+    let price;
+    const newPurchaseSize = new BN(30);
+    beforeEach(async function () {
+      await this.token.addSaleStage(30, 100);
+      this.maxPurchaseSizeRole = await this.token.MAX_PURCHASE_SIZE_SETTER_ROLE();
+      await this.token.grantRole(this.maxPurchaseSizeRole, this.maxPurchaseSizeSetter.address);
+    });
+    it('deployer has MAX_PURCHASE_SIZE_SETTER_ROLE', async function () {
+      await this.token.setMaxPurchaseSize(newPurchaseSize, { from: this.owner.address });
+      price = await this.token.getTotalPriceFor(30);
+      await this.token.buy(30, { value: price });
+      expect(await this.token.totalSupply()).to.be.bignumber.equal('30');
+    });
+    it('MAX_PURCHASE_SIZE_SETTER_ROLE can change the purchase size', async function () {
+      await this.token.setMaxPurchaseSize(newPurchaseSize, { from: this.maxPurchaseSizeSetter.address });
+      price = await this.token.getTotalPriceFor(30);
+      await this.token.buy(30, { value: price });
+      expect(await this.token.totalSupply()).to.be.bignumber.equal('30');
+    });
+    it('reverts when trying to buy more than _maxPurchaseSize nft', async function () {
+      await this.token.setMaxPurchaseSize(newPurchaseSize, { from: this.maxPurchaseSizeSetter.address });
+      price = await this.token.getTotalPriceFor(31);
+      await expectRevert(
+        this.token.buy(31, { value: price }),
+        'buy: You can not buy more than _maxPurchaseSize NFTs at once',
+      );
+    });
+    it('reverts without MAX_PURCHASE_SIZE_SETTER_ROLE', async function () {
+      await expectRevert(
+        this.token.setMaxPurchaseSize(newPurchaseSize, { from: this.noRoleAddress.address }),
         'VM Exception while processing transaction: revert AccessControl',
       );
     });
