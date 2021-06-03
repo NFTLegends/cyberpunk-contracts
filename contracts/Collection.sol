@@ -31,10 +31,13 @@ contract Collection is ERC721Enumerable, AccessControl {
     uint256 internal _maxPurchaseSize = 20;
     // Role with add & set sale stages permissions
     bytes32 public constant SALE_STAGES_MANAGER_ROLE = keccak256("SALE_STAGES_MANAGER_ROLE");
+    // Role with add & deletej permissions
+    bytes32 public constant BATCH_MANAGER_ROLE = keccak256("BATCH_MANAGER_ROLE");
 
     constructor() ERC721("CyberPunk", "CPN") {
         _setupRole(DEFAULT_ADMIN_ROLE, _msgSender());
         _setupRole(SALE_STAGES_MANAGER_ROLE, _msgSender());
+        _setupRole(BATCH_MANAGER_ROLE, _msgSender());
     }
 
     /**
@@ -137,6 +140,7 @@ contract Collection is ERC721Enumerable, AccessControl {
      */
     function addBatch(uint256 batchEndId, string memory baseURI)
     external
+    onlyRole(BATCH_MANAGER_ROLE)
         {
         uint256 batchesLength = _batches.length;
 
@@ -156,6 +160,7 @@ contract Collection is ERC721Enumerable, AccessControl {
      */
     function deleteBatch(uint256 batchIndex)
     external
+    onlyRole(BATCH_MANAGER_ROLE)
         {
         require(
             _batches.length > batchIndex,
