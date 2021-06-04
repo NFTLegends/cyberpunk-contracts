@@ -183,11 +183,11 @@ contract('Collection : ERC721', function ([ deployer, others ]) {
         await expectRevert(this.token.buy(0, { value: 0 }), 'buy: nfts cannot be 0');
       });
 
-      it('reverts when trying to buy more than _maxPurchaseSize nft', async function () {
+      it('reverts when trying to buy more than maxPurchaseSize nft', async function () {
         price = await this.token.getTotalPriceFor(1);
         await expectRevert(
           this.token.buy(21, { value: 0 }),
-          'buy: You can not buy more than _maxPurchaseSize NFTs at once',
+          'buy: You can not buy more than maxPurchaseSize NFTs at once',
         );
       });
 
@@ -430,6 +430,17 @@ contract('Collection : ERC721', function ([ deployer, others ]) {
     });
   });
 
+  context('maxPurchaseSize', function () {
+    it('return correct value', async function () {
+      await this.token.setMaxPurchaseSize(35, { from: this.owner.address });
+      expect(await this.token.maxPurchaseSize()).to.be.bignumber.equal('35');
+      await this.token.setMaxPurchaseSize(40, { from: this.owner.address });
+      expect(await this.token.maxPurchaseSize()).to.be.bignumber.equal('40');
+      await this.token.setMaxPurchaseSize(10, { from: this.owner.address });
+      expect(await this.token.maxPurchaseSize()).to.be.bignumber.equal('10');
+    });
+  });
+
   describe('with Admin role', function () {
     beforeEach(async function () {
       this.saleAdminRole = await this.token.SALE_ADMIN_ROLE();
@@ -539,12 +550,12 @@ contract('Collection : ERC721', function ([ deployer, others ]) {
       await this.token.buy(30, { value: price });
       expect(await this.token.totalSupply()).to.be.bignumber.equal('30');
     });
-    it('reverts when trying to buy more than _maxPurchaseSize nft', async function () {
+    it('reverts when trying to buy more than maxPurchaseSize nft', async function () {
       await this.token.setMaxPurchaseSize(newPurchaseSize, { from: this.maxPurchaseSizeSetter.address });
       price = await this.token.getTotalPriceFor(31);
       await expectRevert(
         this.token.buy(31, { value: price }),
-        'buy: You can not buy more than _maxPurchaseSize NFTs at once',
+        'buy: You can not buy more than maxPurchaseSize NFTs at once',
       );
     });
     it('reverts without MAX_PURCHASE_SIZE_SETTER_ROLE', async function () {
