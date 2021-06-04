@@ -35,7 +35,7 @@ contract Collection is ERC721Enumerable, AccessControl {
     // Maximum allowed tokenSupply boundary. Can be extended by adding new stages.
     uint256 internal _maxTotalSupply = 0;
     // Max NFTs that can be bought at once.
-    uint256 internal _maxPurchaseSize = 20;
+    uint256 public maxPurchaseSize = 20;
     // Role with add & set sale stages permissions
     bytes32 public constant SALE_STAGES_MANAGER_ROLE = keccak256("SALE_STAGES_MANAGER_ROLE");
     // Role with add & delete permissions
@@ -269,7 +269,7 @@ contract Collection is ERC721Enumerable, AccessControl {
     function buy(uint256 nfts) public payable {
         require(totalSupply() < _maxTotalSupply, "buy: Sale has already ended");
         require(nfts > 0, "buy: nfts cannot be 0");
-        require(nfts <= _maxPurchaseSize, "buy: You can not buy more than _maxPurchaseSize NFTs at once");
+        require(nfts <= maxPurchaseSize, "buy: You can not buy more than maxPurchaseSize NFTs at once");
         require(totalSupply().add(nfts) <= _maxTotalSupply, "buy: Exceeds _maxTotalSupply");
         require(getTotalPriceFor(nfts) == msg.value, "buy: Ether value sent is not correct");
 
@@ -351,6 +351,6 @@ contract Collection is ERC721Enumerable, AccessControl {
      * @dev Change max purchase size.
      */
     function setMaxPurchaseSize(uint256 newPurchaseSize) public onlyRole(MAX_PURCHASE_SIZE_SETTER_ROLE) {
-        _maxPurchaseSize = newPurchaseSize;
+        maxPurchaseSize = newPurchaseSize;
     }
 }
