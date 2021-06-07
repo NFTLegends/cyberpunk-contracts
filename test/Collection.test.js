@@ -17,6 +17,7 @@ contract('Collection : ERC721', function ([ deployer, others ]) {
     this.skillSetterAddress = accounts[4];
     this.noRoleAddress = accounts[5];
     this.maxPurchaseSizeSetter = accounts[6];
+    this.mintMultipleSetter = accounts[7];
     this.token = await CollectionMock.new();
   });
   context('Calculator test', function () {
@@ -160,7 +161,7 @@ contract('Collection : ERC721', function ([ deployer, others ]) {
         await this.token.addSaleStage(10, 100);
       });
 
-      it('works', async function () {
+      it('token purchase', async function () {
         price = await this.token.getTotalPriceFor(1);
         await this.token.buy(1, { value: price });
         expect(await this.token.totalSupply()).to.be.bignumber.equal('1');
@@ -175,11 +176,11 @@ contract('Collection : ERC721', function ([ deployer, others ]) {
         await this.token.buy(10, { value: price });
         expect(await this.token.totalSupply()).to.be.bignumber.equal('10');
 
+        price = await this.token.getTotalPriceFor(10);
         await expectRevert(this.token.buy(10, { value: price }), 'buy: Sale has already ended');
       });
 
       it('reverts when trying to buy 0 nft', async function () {
-        price = await this.token.getTotalPriceFor(1);
         await expectRevert(this.token.buy(0, { value: 0 }), 'buy: nfts cannot be 0');
       });
 
@@ -192,13 +193,55 @@ contract('Collection : ERC721', function ([ deployer, others ]) {
       });
 
       it('reverts when trying to buy nfts that exceeds totalSupply', async function () {
-        price = await this.token.getTotalPriceFor(1);
-        await expectRevert(this.token.buy(20, { value: 0 }), 'buy: Exceeds _maxTotalSupply');
+        price = await this.token.getTotalPriceFor(20);
+        await expectRevert(this.token.buy(20, { value: price }), 'buy: Exceeds _maxTotalSupply');
       });
 
       it('reverts when send incorrect ETH value', async function () {
         price = await this.token.getTotalPriceFor(5);
         await expectRevert(this.token.buy(5, { value: 0 }), 'buy: Ether value sent is not correct');
+      });
+    });
+
+    context('mintMultiple()', function () {
+      beforeEach(async function () {
+        await this.token.addSaleStage(10, 100);
+        this.mintMultipleRole = await this.token.MINTER_ROLE();
+        await this.token.grantRole(this.mintMultipleRole, this.mintMultipleSetter.address);
+      });
+
+      it('deployer has MINTER_ROLE', async function () {
+        await this.token.mintMultiple(this.mintMultipleSetter.address, 1, { from: this.owner.address });
+        expect(await this.token.totalSupply()).to.be.bignumber.equal('1');
+      });
+
+      it('token purchase', async function () {
+        await this.token.mintMultiple(this.mintMultipleSetter.address, 1, { from: this.mintMultipleSetter.address });
+        expect(await this.token.totalSupply()).to.be.bignumber.equal('1');
+
+        await this.token.mintMultiple(this.mintMultipleSetter.address, 2, { from: this.mintMultipleSetter.address });
+        expect(await this.token.totalSupply()).to.be.bignumber.equal('3');
+      });
+
+      it('reverts when trying to buy after sale end', async function () {
+        await this.token.mintMultiple(this.mintMultipleSetter.address, 10, { from: this.mintMultipleSetter.address });
+        expect(await this.token.totalSupply()).to.be.bignumber.equal('10');
+
+        await expectRevert(this.token.mintMultiple(this.mintMultipleSetter.address, 10, { from: this.mintMultipleSetter.address }), 'buy: Sale has already ended');
+      });
+
+      it('reverts when trying to buy 0 nft', async function () {
+        await expectRevert(this.token.mintMultiple(this.mintMultipleSetter.address, 0, { from: this.mintMultipleSetter.address }), 'buy: nfts cannot be 0');
+      });
+
+      it('reverts when trying to buy nfts that exceeds totalSupply', async function () {
+        await expectRevert(this.token.mintMultiple(this.mintMultipleSetter.address, 20, { from: this.mintMultipleSetter.address }), 'buy: Exceeds _maxTotalSupply');
+      });
+
+      it('without Admin role, function should revert', async function () {
+        await expectRevert(
+          this.token.mintMultiple(this.owner.address, 1, { from: this.noRoleAddress.address }),
+          'VM Exception while processing transaction: revert AccessControl');
       });
     });
 

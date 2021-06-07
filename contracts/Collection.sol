@@ -44,6 +44,7 @@ contract Collection is ERC721Enumerable, AccessControl {
     bytes32 public constant NAME_SETTER_ROLE = keccak256("NAME_SETTER_ROLE");
     bytes32 public constant SKILL_SETTER_ROLE = keccak256("SKILL_SETTER_ROLE");
     bytes32 public constant MAX_PURCHASE_SIZE_SETTER_ROLE = keccak256("MAX_PURCHASE_SIZE_SETTER_ROLE");
+    bytes32 public constant MINTER_ROLE = keccak256("MINTER_ROLE");
 
     constructor() ERC721("CyberPunk", "CPN") {
         _setupRole(DEFAULT_ADMIN_ROLE, _msgSender());
@@ -53,6 +54,7 @@ contract Collection is ERC721Enumerable, AccessControl {
         _setupRole(NAME_SETTER_ROLE, _msgSender());
         _setupRole(SKILL_SETTER_ROLE, _msgSender());
         _setupRole(MAX_PURCHASE_SIZE_SETTER_ROLE, _msgSender());
+        _setupRole(MINTER_ROLE, _msgSender());
     }
 
     /**
@@ -266,17 +268,31 @@ contract Collection is ERC721Enumerable, AccessControl {
     /**
      * @notice Method to purchase and get random available NFTs.
      */
-    function buy(uint256 nfts) public payable {
+    function _mintMultiple(address to, uint256 nfts) internal {
         require(totalSupply() < _maxTotalSupply, "buy: Sale has already ended");
         require(nfts > 0, "buy: nfts cannot be 0");
-        require(nfts <= maxPurchaseSize, "buy: You can not buy more than maxPurchaseSize NFTs at once");
         require(totalSupply().add(nfts) <= _maxTotalSupply, "buy: Exceeds _maxTotalSupply");
-        require(getTotalPriceFor(nfts) == msg.value, "buy: Ether value sent is not correct");
 
         for (uint i = 0; i < nfts; i++) {
             uint256 mintIndex = _getRandomAvailableIndex();
-            _safeMint(msg.sender, mintIndex);
+            _safeMint(to, mintIndex);
         }
+    }
+
+    /**
+     * @notice Mint a set of random NFTs without purchase (for MINTER_ROLE only).
+     */
+    function mintMultiple(address to, uint256 nfts) public onlyRole(MINTER_ROLE){
+        _mintMultiple(to, nfts);
+    }
+
+    /**
+     * @notice Method to purchase and get random available NFTs.
+     */
+    function buy(uint256 nfts) public payable {
+        require(nfts <= maxPurchaseSize, "buy: You can not buy more than maxPurchaseSize NFTs at once");
+        require(getTotalPriceFor(nfts) == msg.value, "buy: Ether value sent is not correct");
+        _mintMultiple(msg.sender, nfts);
     }
 
     /**
