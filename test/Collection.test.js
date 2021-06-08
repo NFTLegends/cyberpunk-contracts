@@ -10,6 +10,7 @@ contract('Collection : ERC721', function ([ deployer, others ]) {
   const token = new BN('1');
   beforeEach(async function () {
     const accounts = await ethers.getSigners();
+    this.provider = ethers.getDefaultProvider();
     this.owner = accounts[0];
     this.batchManagerAddress = accounts[1];
     this.saleAdminAddress = accounts[2];
@@ -18,6 +19,7 @@ contract('Collection : ERC721', function ([ deployer, others ]) {
     this.noRoleAddress = accounts[5];
     this.maxPurchaseSizeSetter = accounts[6];
     this.mintMultipleSetter = accounts[7];
+    this.vault = accounts[8];
     this.token = await CollectionMock.new();
   });
   context('Calculator test', function () {
@@ -158,6 +160,7 @@ contract('Collection : ERC721', function ([ deployer, others ]) {
       let price;
 
       beforeEach(async function () {
+        await this.token.setVault(this.vault.address, { from: this.owner.address });
         await this.token.addSaleStage(10, 100);
         await this.token.setDefaultUri('https://nftlegends.io/');
         this.saleAdminRole = await this.token.SALE_ADMIN_ROLE();
@@ -173,6 +176,14 @@ contract('Collection : ERC721', function ([ deployer, others ]) {
         price = await this.token.getTotalPriceFor(2);
         await this.token.buy(2, { value: price });
         expect(await this.token.totalSupply()).to.be.bignumber.equal('3');
+      });
+
+      it('eth goes to vault', async function () {
+        const vaultBalanceBefore = await this.vault.getBalance();
+        price = await this.token.getTotalPriceFor(2);
+        await this.token.buy(2, { value: price });
+        const vaultBalanceAfter = await this.vault.getBalance();
+        expect(vaultBalanceAfter.sub(vaultBalanceBefore).toString()).to.be.bignumber.equal(price.toString());
       });
 
       it('reverts when trying to buy after sale end', async function () {
@@ -510,6 +521,7 @@ contract('Collection : ERC721', function ([ deployer, others ]) {
     });
     it('start sale', async function () {
       await this.token.setDefaultUri('https://nftlegends.io/');
+      await this.token.setVault(this.vault.address, { from: this.owner.address });
       expect(await this.token.start({ from: this.saleAdminAddress.address }));
       const active = await this.token.saleActive();
       expect(active).equal(true);
@@ -543,6 +555,7 @@ contract('Collection : ERC721', function ([ deployer, others ]) {
 
   describe('without Admin role, start and stop should revert', function () {
     it('exception', async function () {
+      await this.token.setVault(this.owner.address, { from: this.owner.address });
       await expectRevert(
         this.token.start({ from: this.noRoleAddress.address }),
         'VM Exception while processing transaction: revert AccessControl');
@@ -555,6 +568,7 @@ contract('Collection : ERC721', function ([ deployer, others ]) {
   describe('deployer has SALE_ADMIN_ROLE', function () {
     it('start sale', async function () {
       await this.token.setDefaultUri('https://nftlegends.io/');
+      await this.token.setVault(this.vault.address, { from: this.owner.address });
       expect(await this.token.start({ from: this.owner.address }));
       const active = await this.token.saleActive();
       expect(active).equal(true);
@@ -563,6 +577,24 @@ contract('Collection : ERC721', function ([ deployer, others ]) {
       expect(await this.token.stop({ from: this.owner.address }));
       const active = await this.token.saleActive();
       expect(active).equal(false);
+    });
+  });
+
+  describe('without vault address, start should revert', function () {
+    it('exception', async function () {
+      await expectRevert(
+        this.token.start({ from: this.noRoleAddress.address }),
+        'VM Exception while processing transaction: revert AccessControl');
+    });
+  });
+
+  describe('setVault', function () {
+    it('vault is undefined on begin', async function () {
+      expect(await this.token.vault()).to.be.bignumber.equal('0x0000000000000000000000000000000000000000');
+    });
+    it('changing value', async function () {
+      await this.token.setVault(this.vault.address, { from: this.owner.address });
+      expect(await this.token.vault()).to.be.bignumber.equal(this.vault.address);
     });
   });
 
@@ -619,6 +651,7 @@ contract('Collection : ERC721', function ([ deployer, others ]) {
     const newPurchaseSize = new BN(30);
     beforeEach(async function () {
       await this.token.addSaleStage(30, 100);
+      await this.token.setVault(this.vault.address, { from: this.owner.address });
       await this.token.setDefaultUri('https://nftlegends.io/');
       this.saleAdminRole = await this.token.SALE_ADMIN_ROLE();
       await this.token.grantRole(this.saleAdminRole, this.saleAdminAddress.address);
