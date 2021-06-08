@@ -56,6 +56,9 @@ module.exports = {
       tags: ['production'],
     },
   },
+  etherscan: {
+    apiKey: process.env.ETHERSCAN_API_KEY,
+  },
   solidity: {
     compilers: [
       {
