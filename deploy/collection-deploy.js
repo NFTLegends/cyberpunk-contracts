@@ -40,7 +40,7 @@ module.exports = async ({
       { from: deployer })).wait();
     await (await collection.addBatch('239', 'ipfs://ipfs/QmcqTTX4kM4BrSkkVkYDZyttYXSs6q9Y8RxHzKPCAhUaYW',
       { from: deployer })).wait();
-    await (await collection.addBatch('279', 'ipfs://ipfs/QmVsKPsLY5sxefnChe9efoXeKefVjJRisWfca7k7ewqAg5',
+    await (await collection.addBatch('269', 'ipfs://ipfs/QmVsKPsLY5sxefnChe9efoXeKefVjJRisWfca7k7ewqAg5',
       { from: deployer })).wait();
     await (await collection.addBatch('299', 'ipfs://ipfs/QmPmn5PrAKHT8N3YUM5u8YQRdDqEjpmvskgS7CeX7HAGDr',
       { from: deployer })).wait();
