@@ -19,7 +19,8 @@ contract('Collection : ERC721', function ([ deployer, others ]) {
     this.noRoleAddress = accounts[5];
     this.maxPurchaseSizeSetter = accounts[6];
     this.mintMultipleSetter = accounts[7];
-    this.vault = accounts[8];
+    this.setterDefaultRarityAddress = accounts[8];
+    this.vault = accounts[9];
     this.token = await CollectionMock.new();
   });
   context('Calculator test', function () {
@@ -278,20 +279,20 @@ contract('Collection : ERC721', function ([ deployer, others ]) {
         await expectRevert(this.token.getBatch(0), 'getBatch: no batches');
       });
       it('revertsd when tokenId greater then last token id in batches array', async function () {
-        await this.token.addBatch(10, 'testBaseURI', { from: this.batchManagerAddress.address });
-        await this.token.addBatch(30, 'testBaseURI2', { from: this.batchManagerAddress.address });
+        await this.token.addBatch(10, 'testBaseURI', 12, { from: this.batchManagerAddress.address });
+        await this.token.addBatch(30, 'testBaseURI2', 7, { from: this.batchManagerAddress.address });
         await expectRevert(this.token.getBatch(31),
           'getBatch: tokenId must be less then last token id in batches array',
         );
       });
       it('works when return right baseURI', async function () {
-        await this.token.addBatch(10, 'testBaseURI', { from: this.batchManagerAddress.address });
+        await this.token.addBatch(10, 'testBaseURI', 99, { from: this.batchManagerAddress.address });
         ans = await this.token.getBatch(0);
         expect(ans.baseURI).equal('testBaseURI');
       });
       it('works when return right baseURI (second batch)', async function () {
-        await this.token.addBatch(10, 'testBaseURI', { from: this.batchManagerAddress.address });
-        await this.token.addBatch(30, 'testBaseURI2', { from: this.batchManagerAddress.address });
+        await this.token.addBatch(10, 'testBaseURI', 84, { from: this.batchManagerAddress.address });
+        await this.token.addBatch(30, 'testBaseURI2', 1, { from: this.batchManagerAddress.address });
         ans = await this.token.getBatch(20);
         expect(ans.baseURI).equal('testBaseURI2');
       });
@@ -307,58 +308,58 @@ contract('Collection : ERC721', function ([ deployer, others ]) {
 
       it('deployer can add this batch', async function () {
         await this.token.addBatch(9,
-          'https://ipfs.io/ipfs/QmSQENpQaQ9JLJRTXxDGR9zwKzyXxkYsk5KSB3YsGQu78a',
+          'https://ipfs.io/ipfs/QmSQENpQaQ9JLJRTXxDGR9zwKzyXxkYsk5KSB3YsGQu78a', 56,
           { from: this.owner.address });
         ans1 = await this.token.getBatch(8);
         expect(ans1.baseURI).equal('https://ipfs.io/ipfs/QmSQENpQaQ9JLJRTXxDGR9zwKzyXxkYsk5KSB3YsGQu78a');
       });
       it('BATCH_MANAGER_ROLE can add the batch', async function () {
         await this.token.addBatch(9,
-          'https://ipfs.io/ipfs/QmSQENpQaQ9JLJRTXxDGR9zwKzyXxkYsk5KSB3YsGQu78a',
+          'https://ipfs.io/ipfs/QmSQENpQaQ9JLJRTXxDGR9zwKzyXxkYsk5KSB3YsGQu78a', 78,
           { from: this.batchManagerAddress.address });
         ans = await this.token.getBatch(0);
         expect(ans.baseURI).equal('https://ipfs.io/ipfs/QmSQENpQaQ9JLJRTXxDGR9zwKzyXxkYsk5KSB3YsGQu78a');
       });
       it('reverts without BATCH_MANAGER_ROLE', async function () {
         await expectRevert(this.token.addBatch(0,
-          'https://ipfs.io/ipfs/QmSQENpQaQ9JLJRTXxDGR9zwKzyXxkYsk5KSB3YsGQu78a',
+          'https://ipfs.io/ipfs/QmSQENpQaQ9JLJRTXxDGR9zwKzyXxkYsk5KSB3YsGQu78a', 59,
           { from: this.noRoleAddress.address }),
         'VM Exception while processing transaction: revert AccessControl',
         );
       });
       it('reverts when first batch endTokens is zero', async function () {
         await expectRevert(this.token.addBatch(0,
-          'testBaseURI',
+          'testBaseURI', 40,
           { from: this.batchManagerAddress.address }),
         'addBatch: batch endTokens must be non-zero',
         );
       });
       it('reverts when batchEndId greater than the endId of the last batch', async function () {
         await this.token.addBatch(10,
-          'testBaseURI',
+          'testBaseURI', 67,
           { from: this.batchManagerAddress.address });
         await expectRevert(this.token.addBatch(10,
-          'testBaseURI2',
+          'testBaseURI2', 91,
           { from: this.batchManagerAddress.address }),
         'batchEndId must be greater than the endId of the last batch',
         );
       });
       it('works when batch is added', async function () {
         await this.token.addBatch(10,
-          'https://ipfs.io/ipfs/QmSQENpQaQ9JLJRTXxDGR9zwKzyXxkYsk5KSB3YsGQu78a',
+          'https://ipfs.io/ipfs/QmSQENpQaQ9JLJRTXxDGR9zwKzyXxkYsk5KSB3YsGQu78a', 97,
           { from: this.batchManagerAddress.address });
         ans = await this.token.getBatch(0);
         expect(ans.baseURI).equal('https://ipfs.io/ipfs/QmSQENpQaQ9JLJRTXxDGR9zwKzyXxkYsk5KSB3YsGQu78a');
       });
       it('works when batch is added (few batches)', async function () {
         await this.token.addBatch(10,
-          'https://ipfs.io/ipfs/QmSQENpQaQ9JLJRTXxDGR9zwKzyXxkYsk5KSB3YsGQu78a',
+          'https://ipfs.io/ipfs/QmSQENpQaQ9JLJRTXxDGR9zwKzyXxkYsk5KSB3YsGQu78a', 34,
           { from: this.batchManagerAddress.address });
         ans1 = await this.token.getBatch(0);
         expect(ans1.baseURI).equal('https://ipfs.io/ipfs/QmSQENpQaQ9JLJRTXxDGR9zwKzyXxkYsk5KSB3YsGQu78a');
 
         await this.token.addBatch(20,
-          'https://ipfs.io/ipfs/QmSQENpQaQ9JLJRTXxDGR9zwKzyXxkYsk5KSB3YsGQu78a',
+          'https://ipfs.io/ipfs/QmSQENpQaQ9JLJRTXxDGR9zwKzyXxkYsk5KSB3YsGQu78a', 38,
           { from: this.batchManagerAddress.address });
         ans2 = await this.token.getBatch(11);
         expect(ans2.baseURI).equal('https://ipfs.io/ipfs/QmSQENpQaQ9JLJRTXxDGR9zwKzyXxkYsk5KSB3YsGQu78a');
@@ -370,7 +371,7 @@ contract('Collection : ERC721', function ([ deployer, others ]) {
         this.batchManagerRole = await this.token.BATCH_MANAGER_ROLE();
         await this.token.grantRole(this.batchManagerRole, this.batchManagerAddress.address);
         await this.token.addBatch(10,
-          'https://ipfs.io/ipfs/QmXkzp3EvcqnTPsHstwc89C91S64YAbBQotrgq8atLzHT3',
+          'https://ipfs.io/ipfs/QmXkzp3EvcqnTPsHstwc89C91S64YAbBQotrgq8atLzHT3', 69,
           { from: this.batchManagerAddress.address });
       });
 
@@ -407,14 +408,14 @@ contract('Collection : ERC721', function ([ deployer, others ]) {
         this.batchManagerRole = await this.token.BATCH_MANAGER_ROLE();
         await this.token.grantRole(this.batchManagerRole, this.batchManagerAddress.address);
         await this.token.addBatch(9,
-          'https://ipfs.io/ipfs/QmXkzp3EvcqnTPsHstwc89C91S64YAbBQotrgq8atLzHT3',
+          'https://ipfs.io/ipfs/QmXkzp3EvcqnTPsHstwc89C91S64YAbBQotrgq8atLzHT3', 67,
           { from: this.batchManagerAddress.address });
       });
 
       it('return defaultUri on try get token with more than max id', async function () {
         await this.token.setDefaultUri('https://nftlegends.io/');
         await this.token.addBatch(19,
-          'https://ipfs.io/ipfs/QmSQENpQaQ9JLJRTXxDGR9zwKzyXxkYsk5KSB3YsGQu78a',
+          'https://ipfs.io/ipfs/QmSQENpQaQ9JLJRTXxDGR9zwKzyXxkYsk5KSB3YsGQu78a', 88,
           { from: this.batchManagerAddress.address });
         ans = await this.token.tokenURI(20);
         expect(ans).equal('https://nftlegends.io/');
@@ -426,38 +427,38 @@ contract('Collection : ERC721', function ([ deployer, others ]) {
       });
       it('works when tokenURI is returned (few tokens)', async function () {
         await this.token.addBatch(19,
-          'https://ipfs.io/ipfs/QmSQENpQaQ9JLJRTXxDGR9zwKzyXxkYsk5KSB3YsGQu78a',
+          'https://ipfs.io/ipfs/QmSQENpQaQ9JLJRTXxDGR9zwKzyXxkYsk5KSB3YsGQu78a', 71,
           { from: this.batchManagerAddress.address });
         ans = await this.token.tokenURI(17);
         expect(ans).equal('https://ipfs.io/ipfs/QmSQENpQaQ9JLJRTXxDGR9zwKzyXxkYsk5KSB3YsGQu78a/17.json');
       });
       it('works when tokenURI is returned (10 batches)', async function () {
         await this.token.addBatch(19,
-          'https://ipfs.io/ipfs/QmWADyUFUzVfcXPBfxVNceKExb4Veitt5Cy5ynMLVoeTF7',
+          'https://ipfs.io/ipfs/QmWADyUFUzVfcXPBfxVNceKExb4Veitt5Cy5ynMLVoeTF7', 11,
           { from: this.batchManagerAddress.address });
         await this.token.addBatch(29,
-          'https://ipfs.io/ipfs/QmRhtAr9cexKezrd17iTL8DLm9ue8JkQcKwU59Ki7ntZSM',
+          'https://ipfs.io/ipfs/QmRhtAr9cexKezrd17iTL8DLm9ue8JkQcKwU59Ki7ntZSM', 12,
           { from: this.batchManagerAddress.address });
         await this.token.addBatch(39,
-          'https://ipfs.io/ipfs/QmZxqcENyJVVywUj6kNpiGhY7upXsMWQTAB67fEqPVUmVx',
+          'https://ipfs.io/ipfs/QmZxqcENyJVVywUj6kNpiGhY7upXsMWQTAB67fEqPVUmVx', 13,
           { from: this.batchManagerAddress.address });
         await this.token.addBatch(49,
-          'https://ipfs.io/ipfs/QmZAdGuo5DTjqEXWL9Xyi3cooeScwTgTaZQiGcWAwRyjX5',
+          'https://ipfs.io/ipfs/QmZAdGuo5DTjqEXWL9Xyi3cooeScwTgTaZQiGcWAwRyjX5', 14,
           { from: this.batchManagerAddress.address });
         await this.token.addBatch(59,
-          'https://ipfs.io/ipfs/QmeTbDTpz5DZNzbM3a6TKK7srF8rAYFGxrqdiNQNqk57wR',
+          'https://ipfs.io/ipfs/QmeTbDTpz5DZNzbM3a6TKK7srF8rAYFGxrqdiNQNqk57wR', 15,
           { from: this.batchManagerAddress.address });
         await this.token.addBatch(69,
-          'https://ipfs.io/ipfs/QmNcQmj1AbcLz16YqfRRJtWfnSVsAuBJnkzFifamHHbzqs',
+          'https://ipfs.io/ipfs/QmNcQmj1AbcLz16YqfRRJtWfnSVsAuBJnkzFifamHHbzqs', 16,
           { from: this.batchManagerAddress.address });
         await this.token.addBatch(79,
-          'https://ipfs.io/ipfs/Qmcq57emNzG99Efhi9EFT7JKMhWEAjxHU3PYRTYhDRsC6S',
+          'https://ipfs.io/ipfs/Qmcq57emNzG99Efhi9EFT7JKMhWEAjxHU3PYRTYhDRsC6S', 17,
           { from: this.batchManagerAddress.address });
         await this.token.addBatch(89,
-          'https://ipfs.io/ipfs/QmZXWVccpzk8vQAcd4yRndPMdNpaDWEGXdMeFBYFe8xrpY',
+          'https://ipfs.io/ipfs/QmZXWVccpzk8vQAcd4yRndPMdNpaDWEGXdMeFBYFe8xrpY', 18,
           { from: this.batchManagerAddress.address });
         await this.token.addBatch(99,
-          'https://ipfs.io/ipfs/QmeCWYEJjg962DhAJGGqerL25dtZ98GwhfwMequ4jmixX2',
+          'https://ipfs.io/ipfs/QmeCWYEJjg962DhAJGGqerL25dtZ98GwhfwMequ4jmixX2', 19,
           { from: this.batchManagerAddress.address });
         ans = await this.token.tokenURI(0);
         expect(ans).equal('https://ipfs.io/ipfs/QmXkzp3EvcqnTPsHstwc89C91S64YAbBQotrgq8atLzHT3/0.json');
@@ -482,10 +483,10 @@ contract('Collection : ERC721', function ([ deployer, others ]) {
       });
       it('works when tokenURI is returned (few tokens in few batches)', async function () {
         await this.token.addBatch(19,
-          'https://ipfs.io/ipfs/QmWADyUFUzVfcXPBfxVNceKExb4Veitt5Cy5ynMLVoeTF7',
+          'https://ipfs.io/ipfs/QmWADyUFUzVfcXPBfxVNceKExb4Veitt5Cy5ynMLVoeTF7', 2,
           { from: this.batchManagerAddress.address });
         await this.token.addBatch(29,
-          'https://ipfs.io/ipfs/QmRhtAr9cexKezrd17iTL8DLm9ue8JkQcKwU59Ki7ntZSM',
+          'https://ipfs.io/ipfs/QmRhtAr9cexKezrd17iTL8DLm9ue8JkQcKwU59Ki7ntZSM', 3,
           { from: this.batchManagerAddress.address });
         ans = await this.token.tokenURI(0);
         expect(ans).equal('https://ipfs.io/ipfs/QmXkzp3EvcqnTPsHstwc89C91S64YAbBQotrgq8atLzHT3/0.json');
@@ -500,6 +501,53 @@ contract('Collection : ERC721', function ([ deployer, others ]) {
         ans = await this.token.tokenURI(12);
         expect(ans).equal('https://ipfs.io/ipfs/QmWADyUFUzVfcXPBfxVNceKExb4Veitt5Cy5ynMLVoeTF7/12.json');
       });
+    });
+  });
+
+  context('getRarity()', function () {
+    const rarity1 = new BN('99');
+    const rarity2 = new BN('1');
+    const rarity3 = new BN('47');
+    beforeEach(async function () {
+      this.batchManagerRole = await this.token.BATCH_MANAGER_ROLE();
+      await this.token.grantRole(this.batchManagerRole, this.batchManagerAddress.address);
+    });
+
+    it('rarity of the NFT at token Id', async function () {
+      await this.token.addBatch(10, 'testBaseURI', rarity1, { from: this.batchManagerAddress.address });
+      await this.token.addBatch(20, 'testBaseURI', rarity2, { from: this.batchManagerAddress.address });
+      await this.token.addBatch(30, 'testBaseURI', rarity3, { from: this.batchManagerAddress.address });
+      expect(await this.token.getRarity(1)).is.be.bignumber.equal(rarity1);
+      expect(await this.token.getRarity(11)).is.be.bignumber.equal(rarity2);
+      expect(await this.token.getRarity(21)).is.be.bignumber.equal(rarity3);
+    });
+
+    it('return default rarity', async function () {
+      const defRarity = new BN('1');
+      await this.token.setDefaultRarity(defRarity);
+      await this.token.addBatch(10, 'testBaseURI', rarity1, { from: this.batchManagerAddress.address });
+      expect(await this.token.getRarity(87)).is.be.bignumber.equal(defRarity);
+    });
+  });
+
+  describe('setDefaultRarity', function () {
+    const defRarity = new BN('1');
+    beforeEach(async function () {
+      this.batchManagerRole = await this.token.BATCH_MANAGER_ROLE();
+      await this.token.grantRole(this.batchManagerRole, this.batchManagerAddress.address);
+      this.defaultRarityRole = await this.token.DEFAULT_RARITY_SETTER_ROLE();
+      await this.token.grantRole(this.defaultRarityRole, this.setterDefaultRarityAddress.address);
+    });
+    it('DEFAULT_RARITY_SETTER_ROLE can set default rarity', async function () {
+      await this.token.setDefaultRarity(defRarity, { from: this.setterDefaultRarityAddress.address });
+      await this.token.addBatch(10, 'testBaseURI', 99, { from: this.batchManagerAddress.address });
+      expect(await this.token.getRarity(998)).is.be.bignumber.equal(defRarity);
+    });
+    it('reverts without DEFAULT_RARITY_SETTER_ROLE', async function () {
+      await expectRevert(
+        this.token.setDefaultRarity(defRarity, { from: this.noRoleAddress.address }),
+        'VM Exception while processing transaction: revert AccessControl',
+      );
     });
   });
 
