@@ -48,6 +48,8 @@ contract Collection is ERC721Enumerable, AccessControl {
     bytes32 public constant MAX_PURCHASE_SIZE_SETTER_ROLE = keccak256("MAX_PURCHASE_SIZE_SETTER_ROLE");
     bytes32 public constant MINTER_ROLE = keccak256("MINTER_ROLE");
     bytes32 public constant DEFAULT_URI_SETTER_ROLE = keccak256("DEFAULT_URI_SETTER_ROLE");
+    bytes32 public constant VAULT_SETTER_ROLE = keccak256("VAULT_SETTER_ROLE");
+    address payable public vault;
 
     constructor() ERC721("CyberPunk", "CPN") {
         _setupRole(DEFAULT_ADMIN_ROLE, _msgSender());
@@ -59,6 +61,7 @@ contract Collection is ERC721Enumerable, AccessControl {
         _setupRole(MAX_PURCHASE_SIZE_SETTER_ROLE, _msgSender());
         _setupRole(MINTER_ROLE, _msgSender());
         _setupRole(DEFAULT_URI_SETTER_ROLE, _msgSender());
+        _setupRole(VAULT_SETTER_ROLE, _msgSender());
     }
 
     /**
@@ -298,9 +301,11 @@ contract Collection is ERC721Enumerable, AccessControl {
      * @notice Method to purchase and get random available NFTs.
      */
     function buy(uint256 nfts) public payable {
+        require(vault != address(0), "buy: Vault is undefined");
         require(nfts <= maxPurchaseSize, "buy: You can not buy more than maxPurchaseSize NFTs at once");
         require(getTotalPriceFor(nfts) == msg.value, "buy: Ether value sent is not correct");
         require(saleActive, "buy: Sale is not active");
+        vault.transfer(msg.value);
         _mintMultiple(msg.sender, nfts);
     }
 
@@ -347,6 +352,7 @@ contract Collection is ERC721Enumerable, AccessControl {
      */
     function start() public onlyRole(SALE_ADMIN_ROLE) {
         require(bytes(_defaultUri).length > 0, "start: _defaultUri is undefined");
+        require(vault != address(0), "start: Vault is undefined");
         saleActive = true;
     }
 
@@ -385,5 +391,12 @@ contract Collection is ERC721Enumerable, AccessControl {
      */
     function setDefaultUri(string memory uri) public onlyRole (DEFAULT_URI_SETTER_ROLE) {
         _defaultUri = uri;
+    }
+        
+    /**
+     * @dev Change vault.
+     */
+    function setVault(address payable newVault ) public onlyRole (VAULT_SETTER_ROLE) {
+        vault = newVault;
     }
 }
