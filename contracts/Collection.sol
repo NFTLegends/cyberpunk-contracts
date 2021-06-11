@@ -36,6 +36,8 @@ contract Collection is ERC721Enumerable, AccessControl {
     uint256 internal _maxTotalSupply = 0;
     // Max NFTs that can be bought at once.
     uint256 public maxPurchaseSize = 20;
+
+    string internal _defaultUri;
     // Role with add & set sale stages permissions
     bytes32 public constant SALE_STAGES_MANAGER_ROLE = keccak256("SALE_STAGES_MANAGER_ROLE");
     // Role with add & delete permissions
@@ -45,6 +47,7 @@ contract Collection is ERC721Enumerable, AccessControl {
     bytes32 public constant SKILL_SETTER_ROLE = keccak256("SKILL_SETTER_ROLE");
     bytes32 public constant MAX_PURCHASE_SIZE_SETTER_ROLE = keccak256("MAX_PURCHASE_SIZE_SETTER_ROLE");
     bytes32 public constant MINTER_ROLE = keccak256("MINTER_ROLE");
+    bytes32 public constant DEFAULT_URI_SETTER_ROLE = keccak256("DEFAULT_URI_SETTER_ROLE");
 
     constructor() ERC721("CyberPunk", "CPN") {
         _setupRole(DEFAULT_ADMIN_ROLE, _msgSender());
@@ -55,6 +58,7 @@ contract Collection is ERC721Enumerable, AccessControl {
         _setupRole(SKILL_SETTER_ROLE, _msgSender());
         _setupRole(MAX_PURCHASE_SIZE_SETTER_ROLE, _msgSender());
         _setupRole(MINTER_ROLE, _msgSender());
+        _setupRole(DEFAULT_URI_SETTER_ROLE, _msgSender());
     }
 
     /**
@@ -142,6 +146,10 @@ contract Collection is ERC721Enumerable, AccessControl {
         override
         returns (string memory)
     {
+        if (tokenId > _batches[_batches.length - 1].endId) {
+            return _defaultUri;
+        }
+
         string memory baseURI = getBatch(tokenId).baseURI;
 
         return
@@ -337,6 +345,7 @@ contract Collection is ERC721Enumerable, AccessControl {
      * @dev Starts sale
      */
     function start() public onlyRole(SALE_ADMIN_ROLE) {
+        require(bytes(_defaultUri).length > 0, "start: _defaultUri is undefined");
         saleActive = true;
     }
 
@@ -368,5 +377,12 @@ contract Collection is ERC721Enumerable, AccessControl {
      */
     function setMaxPurchaseSize(uint256 newPurchaseSize) public onlyRole(MAX_PURCHASE_SIZE_SETTER_ROLE) {
         maxPurchaseSize = newPurchaseSize;
+    }
+
+     /**
+     * @dev Set defaultUri.
+     */
+    function setDefaultUri(string memory uri) public onlyRole (DEFAULT_URI_SETTER_ROLE) {
+        _defaultUri = uri;
     }
 }

@@ -900,12 +900,6 @@ function shouldBehaveLikeERC721Metadata (errorPrefix, name, symbol, owner) {
         await this.token.mint(owner, firstTokenId);
       });
 
-      it('reverts when queried for non existent token id', async function () {
-        await expectRevert(
-          this.token.tokenURI(nonExistentTokenId), 'getBatch: tokenId must be less then last token id in batches array',
-        );
-      });
-
       describe('base URI', function () {
         beforeEach(function () {
           if (this.token.setBaseURI === undefined) {

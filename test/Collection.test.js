@@ -390,6 +390,15 @@ contract('Collection : ERC721', function ([ deployer, others ]) {
           { from: this.batchManagerAddress.address });
       });
 
+      it('return defaultUri on try get token with more than max id', async function () {
+        await this.token.setDefaultUri('https://nftlegends.io/');
+        await this.token.addBatch(19,
+          'https://ipfs.io/ipfs/QmSQENpQaQ9JLJRTXxDGR9zwKzyXxkYsk5KSB3YsGQu78a',
+          { from: this.batchManagerAddress.address });
+        ans = await this.token.tokenURI(20);
+        expect(ans).equal('https://nftlegends.io/');
+      });
+
       it('works when tokenURI is returned', async function () {
         ans = await this.token.tokenURI(0);
         expect(ans).equal('https://ipfs.io/ipfs/QmXkzp3EvcqnTPsHstwc89C91S64YAbBQotrgq8atLzHT3/0.json');
@@ -490,6 +499,7 @@ contract('Collection : ERC721', function ([ deployer, others ]) {
       await this.token.grantRole(this.saleAdminRole, this.saleAdminAddress.address);
     });
     it('start sale', async function () {
+      await this.token.setDefaultUri('https://nftlegends.io/');
       expect(await this.token.start({ from: this.saleAdminAddress.address }));
       const active = await this.token.saleActive();
       expect(active).equal(true);
@@ -498,6 +508,26 @@ contract('Collection : ERC721', function ([ deployer, others ]) {
       expect(await this.token.stop({ from: this.saleAdminAddress.address }));
       const active = await this.token.saleActive();
       expect(active).equal(false);
+    });
+  });
+
+  describe('without _defaultUri, start should revert', function () {
+    beforeEach(async function () {
+      this.saleAdminRole = await this.token.SALE_ADMIN_ROLE();
+      await this.token.grantRole(this.saleAdminRole, this.saleAdminAddress.address);
+    });
+    it('exception', async function () {
+      await expectRevert(
+        this.token.start({ from: this.saleAdminAddress.address }),
+        'VM Exception while processing transaction: revert start: _defaultUri is undefined');
+    });
+  });
+
+  describe('without defaultUri role, setDefaultUri should revert', function () {
+    it('exception', async function () {
+      await expectRevert(
+        this.token.setDefaultUri('https://nftlegends.io/', { from: this.noRoleAddress.address }),
+        'VM Exception while processing transaction: revert AccessControl');
     });
   });
 
@@ -514,6 +544,7 @@ contract('Collection : ERC721', function ([ deployer, others ]) {
 
   describe('deployer has SALE_ADMIN_ROLE', function () {
     it('start sale', async function () {
+      await this.token.setDefaultUri('https://nftlegends.io/');
       expect(await this.token.start({ from: this.owner.address }));
       const active = await this.token.saleActive();
       expect(active).equal(true);
