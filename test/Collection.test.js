@@ -159,6 +159,10 @@ contract('Collection : ERC721', function ([ deployer, others ]) {
 
       beforeEach(async function () {
         await this.token.addSaleStage(10, 100);
+        await this.token.setDefaultUri('https://nftlegends.io/');
+        this.saleAdminRole = await this.token.SALE_ADMIN_ROLE();
+        await this.token.grantRole(this.saleAdminRole, this.saleAdminAddress.address);
+        await this.token.start({ from: this.saleAdminAddress.address });
       });
 
       it('token purchase', async function () {
@@ -200,6 +204,12 @@ contract('Collection : ERC721', function ([ deployer, others ]) {
       it('reverts when send incorrect ETH value', async function () {
         price = await this.token.getTotalPriceFor(5);
         await expectRevert(this.token.buy(5, { value: 0 }), 'buy: Ether value sent is not correct');
+      });
+
+      it('reverts when trying to buy when sale is not active', async function () {
+        price = await this.token.getTotalPriceFor(1);
+        await this.token.stop({ from: this.saleAdminAddress.address });
+        await expectRevert(this.token.buy(1, { value: price }), 'buy: Sale is not active');
       });
     });
 
@@ -609,6 +619,10 @@ contract('Collection : ERC721', function ([ deployer, others ]) {
     const newPurchaseSize = new BN(30);
     beforeEach(async function () {
       await this.token.addSaleStage(30, 100);
+      await this.token.setDefaultUri('https://nftlegends.io/');
+      this.saleAdminRole = await this.token.SALE_ADMIN_ROLE();
+      await this.token.grantRole(this.saleAdminRole, this.saleAdminAddress.address);
+      await this.token.start({ from: this.saleAdminAddress.address });
       this.maxPurchaseSizeRole = await this.token.MAX_PURCHASE_SIZE_SETTER_ROLE();
       await this.token.grantRole(this.maxPurchaseSizeRole, this.maxPurchaseSizeSetter.address);
     });

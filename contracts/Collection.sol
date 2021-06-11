@@ -300,6 +300,7 @@ contract Collection is ERC721Enumerable, AccessControl {
     function buy(uint256 nfts) public payable {
         require(nfts <= maxPurchaseSize, "buy: You can not buy more than maxPurchaseSize NFTs at once");
         require(getTotalPriceFor(nfts) == msg.value, "buy: Ether value sent is not correct");
+        require(saleActive, "buy: Sale is not active");
         _mintMultiple(msg.sender, nfts);
     }
 
