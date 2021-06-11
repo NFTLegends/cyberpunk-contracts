@@ -26,6 +26,7 @@ contract Collection is ERC721Enumerable, AccessControl {
     struct Batch {
         uint256 endId;
         string baseURI;
+        uint256 rarity;
     }
 
     // Array of heroes batches
@@ -38,6 +39,7 @@ contract Collection is ERC721Enumerable, AccessControl {
     uint256 public maxPurchaseSize = 20;
 
     string internal _defaultUri;
+    uint256 internal _defaultRarity;
     // Role with add & set sale stages permissions
     bytes32 public constant SALE_STAGES_MANAGER_ROLE = keccak256("SALE_STAGES_MANAGER_ROLE");
     // Role with add & delete permissions
@@ -48,6 +50,7 @@ contract Collection is ERC721Enumerable, AccessControl {
     bytes32 public constant MAX_PURCHASE_SIZE_SETTER_ROLE = keccak256("MAX_PURCHASE_SIZE_SETTER_ROLE");
     bytes32 public constant MINTER_ROLE = keccak256("MINTER_ROLE");
     bytes32 public constant DEFAULT_URI_SETTER_ROLE = keccak256("DEFAULT_URI_SETTER_ROLE");
+    bytes32 public constant DEFAULT_RARITY_SETTER_ROLE = keccak256("DEFAULT_RARITY_SETTER_ROLE");
     bytes32 public constant VAULT_SETTER_ROLE = keccak256("VAULT_SETTER_ROLE");
     address payable public vault;
 
@@ -62,6 +65,7 @@ contract Collection is ERC721Enumerable, AccessControl {
         _setupRole(MINTER_ROLE, _msgSender());
         _setupRole(DEFAULT_URI_SETTER_ROLE, _msgSender());
         _setupRole(VAULT_SETTER_ROLE, _msgSender());
+        _setupRole(DEFAULT_RARITY_SETTER_ROLE, _msgSender());
     }
 
     /**
@@ -166,7 +170,7 @@ contract Collection is ERC721Enumerable, AccessControl {
     /**
      * @notice Add tokens batch to batches array
      */
-    function addBatch(uint256 batchEndId, string memory baseURI)
+    function addBatch(uint256 batchEndId, string memory baseURI, uint256 rarity)
     external
     onlyRole(BATCH_MANAGER_ROLE)
         {
@@ -180,7 +184,7 @@ contract Collection is ERC721Enumerable, AccessControl {
             );
         }
 
-        _batches.push(Batch(batchEndId, baseURI));
+        _batches.push(Batch(batchEndId, baseURI, rarity));
     }
 
     /**
@@ -334,6 +338,16 @@ contract Collection is ERC721Enumerable, AccessControl {
     }
 
     /**
+     * @dev Returns rarity of the NFT at token Id
+     */
+    function getRarity(uint256 tokenId) public view returns (uint256) {
+        if (tokenId > _batches[_batches.length - 1].endId) {
+            return _defaultRarity;
+        }
+        return getBatch(tokenId).rarity;
+    }
+
+    /**
      * @dev Returns name of the NFT at index
      */
     function getName(uint256 index) public view returns (string memory) {
@@ -398,5 +412,12 @@ contract Collection is ERC721Enumerable, AccessControl {
      */
     function setVault(address payable newVault ) public onlyRole (VAULT_SETTER_ROLE) {
         vault = newVault;
+    }
+
+    /**
+     * @dev Set defaultRarity.
+     */
+    function setDefaultRarity(uint256 rarity) public onlyRole(DEFAULT_RARITY_SETTER_ROLE) {
+        _defaultRarity = rarity;
     }
 }
