@@ -19,30 +19,18 @@ module.exports = async ({
   const collection = await ethers.getContract('Collection');
 
   if (chainId === '31337' || chainId === '1337' || chainId === '4') {
+    console.log('Add Role');
+    await (this.batchManagerRole = await collection.BATCH_MANAGER_ROLE());
+    await (await collection.grantRole(this.batchManagerRole, '0xb30eB58f2e560E3b5dadaE5F6c3558Ececb46C35')).wait();
+    await (this.vaultRole = await collection.VAULT_SETTER_ROLE());
+    await (await collection.grantRole(this.vaultRole, '0xb30eB58f2e560E3b5dadaE5F6c3558Ececb46C35')).wait();
+    await (this.saleAdminRole = await collection.SALE_ADMIN_ROLE());
+    await (await collection.grantRole(this.saleAdminRole, '0xb30eB58f2e560E3b5dadaE5F6c3558Ececb46C35')).wait();
+    await (this.defaultUriRole = await collection.DEFAULT_URI_SETTER_ROLE());
+    await (await collection.grantRole(this.defaultUriRole, '0xb30eB58f2e560E3b5dadaE5F6c3558Ececb46C35')).wait();
     console.log('Add saleStages');
     await (await collection.addSaleStage('100', '100000000000000', { from: deployer })).wait();
     await (await collection.addSaleStage('200', '1000000000000000', { from: deployer })).wait();
     await (await collection.addSaleStage('300', '10000000000000000', { from: deployer })).wait();
-    console.log('Add batches');
-    await (await collection.addBatch('29', 'ipfs://ipfs/QmRdaLo9hs1UJiFbYW9E8owcBGTBC58hj1NnFwpwM878T1',
-      { from: deployer })).wait();
-    await (await collection.addBatch('59', 'ipfs://ipfs/QmPTpLEwZi84RTRYX2gFnh1SntZyeX1RCH6GANb8L2WMKg',
-      { from: deployer })).wait();
-    await (await collection.addBatch('89', 'ipfs://ipfs/QmYAiVT5CnbFDEW4w9VJowxwwddCNwQQkaThLWKbexSXfn',
-      { from: deployer })).wait();
-    await (await collection.addBatch('119', 'ipfs://ipfs/QmXXAFxQMNy8emeGtodbnyWVXAWExpP7oxhgUe9sg5xDLZ',
-      { from: deployer })).wait();
-    await (await collection.addBatch('149', 'ipfs://ipfs/QmdzMaqQRQ3SFTTB7zWauUUnvaUezEiGeFMnW9NyaJurB5',
-      { from: deployer })).wait();
-    await (await collection.addBatch('179', 'ipfs://ipfs/QmQ5f8TeQVdraVt8JDyEjmjdhvtGiFNXvGpHbABDkAvPeQ',
-      { from: deployer })).wait();
-    await (await collection.addBatch('209', 'ipfs://ipfs/QmeNA2sipZaDSJ2QFEppDUF7G3K2GhRMRccwfd9zJ42eVZ',
-      { from: deployer })).wait();
-    await (await collection.addBatch('239', 'ipfs://ipfs/QmcqTTX4kM4BrSkkVkYDZyttYXSs6q9Y8RxHzKPCAhUaYW',
-      { from: deployer })).wait();
-    await (await collection.addBatch('269', 'ipfs://ipfs/QmVsKPsLY5sxefnChe9efoXeKefVjJRisWfca7k7ewqAg5',
-      { from: deployer })).wait();
-    await (await collection.addBatch('299', 'ipfs://ipfs/QmPmn5PrAKHT8N3YUM5u8YQRdDqEjpmvskgS7CeX7HAGDr',
-      { from: deployer })).wait();
   }
 };
