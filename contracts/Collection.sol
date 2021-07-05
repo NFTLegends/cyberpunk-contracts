@@ -153,7 +153,7 @@ contract Collection is ERC721Enumerable, AccessControl {
         override
         returns (string memory)
     {
-        if (tokenId > _batches[_batches.length - 1].endId) {
+        if (_batches.length == 0 || tokenId > _batches[_batches.length - 1].endId) {
             return _defaultUri;
         }
 
