@@ -29,8 +29,9 @@ module.exports = async ({
     await (this.defaultUriRole = await collection.DEFAULT_URI_SETTER_ROLE());
     await (await collection.grantRole(this.defaultUriRole, '0xb30eB58f2e560E3b5dadaE5F6c3558Ececb46C35')).wait();
     console.log('Add saleStages');
-    await (await collection.addSaleStage('100', '100000000000000', { from: deployer })).wait();
-    await (await collection.addSaleStage('200', '1000000000000000', { from: deployer })).wait();
-    await (await collection.addSaleStage('300', '10000000000000000', { from: deployer })).wait();
+    await (await collection.addSaleStage('1', '100000000000000', { from: deployer })).wait();
+    await (await collection.addSaleStage('2', '1000000000000000', { from: deployer })).wait();
+    await (await collection.addSaleStage('3', '10000000000000000', { from: deployer })).wait();
+    await (await collection.addSaleStage('4', '100000000000000000', { from: deployer })).wait();
   }
 };
