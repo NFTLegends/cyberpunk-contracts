@@ -294,6 +294,10 @@ contract Collection is ERC721Enumerable, AccessControl {
         }
     }
 
+    function mint(address to, uint256 mintIndex) public onlyRole(MINTER_ROLE) {
+        _safeMint(to, mintIndex);
+    }
+
     /**
      * @notice Mint a set of random NFTs without purchase (for MINTER_ROLE only).
      */

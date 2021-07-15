@@ -21,10 +21,6 @@ contract CollectionMock is Collection {
         return _exists(tokenId);
     }
 
-    function mint(address to, uint256 tokenId) public {
-        _mint(to, tokenId);
-    }
-
     function safeMint(address to, uint256 tokenId) public {
         _safeMint(to, tokenId);
     }

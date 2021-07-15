@@ -15,7 +15,8 @@
     "lint": "npm run lint:js && npm run lint:sol",
     "lint:js": "eslint --ignore-path .gitignore .",
     "lint:js:fix": "eslint --ignore-path .gitignore . --fix",
-    "lint:sol": "solhint --max-warnings 0 \"contracts/**/*.sol\""
+    "lint:sol": "solhint --max-warnings 0 \"contracts/**/*.sol\"",
+    "format": "prettier-eslint --write \"{,!(node_modules)/**/}*.{ts,tsx,js,jsx}\""
   },
   "devDependencies": {
     "@nomiclabs/hardhat-etherscan": "^2.1.2",
@@ -33,6 +34,7 @@
     "hardhat": "^2.2.1",
     "hardhat-deploy": "^0.7.5",
     "hardhat-deploy-ethers": "^0.3.0-beta.7",
+    "prettier-eslint-cli": "^5.0.1",
     "solhint": "^3.3.4",
     "solidity-coverage": "^0.7.16"
   },
