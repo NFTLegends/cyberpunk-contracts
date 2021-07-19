@@ -142,6 +142,7 @@ contract Collection is ERC721Enumerable, AccessControl {
                 return _batches[i];
             }
         }
+        revert("description");
     }
 
     /**
@@ -209,12 +210,12 @@ contract Collection is ERC721Enumerable, AccessControl {
         onlyRole(SALE_STAGES_MANAGER_ROLE)
     {
         require(weiPerToken > 0, "addSaleStage: weiPerToken must be non-zero");
-        uint256 saleStagesLength = _saleStages.length;
-        if (0 == saleStagesLength) {
+        uint256 _saleStagesLength = _saleStages.length;
+        if (0 == _saleStagesLength) {
             require(endTokens > 0, "addSaleStage: first stage endTokens must be non-zero");
         }
         else {
-            (,uint256 currentSaleStageEndTokens,) = getSaleStage(saleStagesLength.sub(1));
+            (,uint256 currentSaleStageEndTokens,) = getSaleStage(_saleStagesLength.sub(1));
             require(endTokens > currentSaleStageEndTokens, "addSaleStage: new endTokens must be more than current last");
         }
 
@@ -229,14 +230,14 @@ contract Collection is ERC721Enumerable, AccessControl {
         external
         onlyRole(SALE_STAGES_MANAGER_ROLE)
     {
-        uint256 saleStagesLength = _saleStages.length;
-        require(saleStageIndex < saleStagesLength, "setSaleStage: saleStage with this index does not exist");
+        uint256 _saleStagesLength = _saleStages.length;
+        require(saleStageIndex < _saleStagesLength, "setSaleStage: saleStage with this index does not exist");
         require(weiPerToken > 0, "setSaleStage: weiPerToken must be non-zero");
 
         (uint256 previousSaleStageEndTokens,,) = getSaleStage(saleStageIndex);
         require(endTokens > previousSaleStageEndTokens, "setSaleStage: new endTokens must be more than in previous stage");
 
-        if (saleStageIndex.add(1) < saleStagesLength) {
+        if (saleStageIndex.add(1) < _saleStagesLength) {
             (,uint256 nextSaleStageEndTokens,) = getSaleStage(saleStageIndex.add(1));
             require(endTokens > nextSaleStageEndTokens, "setSaleStage: new endTokens must be less than in next stage");
         }
@@ -248,7 +249,7 @@ contract Collection is ERC721Enumerable, AccessControl {
      * @notice Returns summary price for given number of tokens.
      */
     function getTotalPriceFor(uint256 tokens) public view returns (uint256) {
-        uint256 saleStagesLength = _saleStages.length;
+        uint256 _saleStagesLength = _saleStages.length;
         uint256 totalSupply = totalSupply();
         uint256 tokensLeft = tokens;
 
@@ -256,7 +257,7 @@ contract Collection is ERC721Enumerable, AccessControl {
         uint256 tokensDiff;
 
         SaleStage memory saleStage;
-        for (uint256 i = 0; i < saleStagesLength; i++) {
+        for (uint256 i = 0; i < _saleStagesLength; i++) {
             saleStage = _saleStages[i];
             if (totalSupply > saleStage.endTokens)
                 continue;
