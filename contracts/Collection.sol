@@ -427,7 +427,7 @@ contract Collection is ERC721Enumerable, AccessControl {
     function setDefaultUri(string memory uri) public onlyRole (DEFAULT_URI_SETTER_ROLE) {
         _defaultUri = uri;
     }
-        
+
     /**
      * @dev Change vault.
      */
