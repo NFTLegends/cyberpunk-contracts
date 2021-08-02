@@ -464,7 +464,6 @@ contract('Collection : ERC721', function([deployer, others]) {
 
       it('return defaultUri on try get token with more than max id', async function() {
         await this.token.setDefaultUri('https://nftlegends.io/');
-
         await this.token.addBatch(19, 'ipfs://QmSQENpQaQ9JLJRTXxDGR9zwKzyXxkYsk5KSB3YsGQu78a', 88, {
           from: this.batchManagerAddress.address,
         });
@@ -542,6 +541,7 @@ contract('Collection : ERC721', function([deployer, others]) {
         await this.token.addBatch(29, 'ipfs://QmRhtAr9cexKezrd17iTL8DLm9ue8JkQcKwU59Ki7ntZSM', 3, {
           from: this.batchManagerAddress.address,
         });
+
         ans = await this.token.tokenURI(0);
         expect(ans).equal('ipfs://QmXkzp3EvcqnTPsHstwc89C91S64YAbBQotrgq8atLzHT3/0.json');
         ans = await this.token.tokenURI(1);
@@ -568,15 +568,9 @@ contract('Collection : ERC721', function([deployer, others]) {
     });
 
     it('rarity of the NFT at token Id', async function() {
-      await this.token.addBatch(10, 'testBaseURI', rarity1, {
-        from: this.batchManagerAddress.address,
-      });
-      await this.token.addBatch(20, 'testBaseURI', rarity2, {
-        from: this.batchManagerAddress.address,
-      });
-      await this.token.addBatch(30, 'testBaseURI', rarity3, {
-        from: this.batchManagerAddress.address,
-      });
+      await this.token.addBatch(10, 'ipfs://QmSQENpQaQ9JLJRTXxDGR9zwKzyXxkYsk5KSB3YsGQu78a', rarity1, { from: this.batchManagerAddress.address });
+      await this.token.addBatch(20, 'ipfs://QmXkzp3EvcqnTPsHstwc89C91S64YAbBQotrgq8atLzHT3', rarity2, { from: this.batchManagerAddress.address });
+      await this.token.addBatch(30, 'ipfs://QmeCWYEJjg962DhAJGGqerL25dtZ98GwhfwMequ4jmixX2', rarity3, { from: this.batchManagerAddress.address });
       expect(await this.token.getRarity(1)).is.be.bignumber.equal(rarity1);
       expect(await this.token.getRarity(11)).is.be.bignumber.equal(rarity2);
       expect(await this.token.getRarity(21)).is.be.bignumber.equal(rarity3);
