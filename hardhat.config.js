@@ -5,8 +5,17 @@ require('solidity-coverage');
 require('hardhat-deploy');
 require('hardhat-deploy-ethers');
 
+require('./tasks/1-set-sale-stage.js');
+require('./tasks/2-mint-zero-batch-tokens.js');
+require('./tasks/3-mint-first-batch-tokens.js');
+require('./tasks/4-reveal-zero-batch.js');
+require('./tasks/5-start-sale.js');
+require('./tasks/6-buy-random-tokens.js');
+require('./tasks/7-stop-sale.js');
+require('./tasks/8-mint-remaining.js');
+
 const accounts = {
-  mnemonic: 'truck elbow mushroom wrong wall gossip odor ceiling plastic pole cost undo',
+  mnemonic: `${process.env.MNEMONIC}`,
 };
 
 module.exports = {
@@ -28,10 +37,10 @@ module.exports = {
     hardhat: {
       forking: {
         enabled: process.env.FORKING === 'true',
-        url: `https://eth-mainnet.alchemyapi.io/v2/${process.env.ALCHEMY_API_KEY}`,
+        url: 'https://eth-mainnet.alchemyapi.io/v2/' + `${process.env.ALCHEMY_API_KEY}`,
       },
       live: false,
-      saveDeployments: false,
+      saveDeployments: true,
       tags: ['test'],
     },
     localhost: {
@@ -40,12 +49,14 @@ module.exports = {
       tags: ['local'],
     },
     rinkeby: {
-      url: 'https://rinkeby.infura.io/v3/ddd04662161d4ff8925007116003eec2',
+      url: `https://rinkeby.infura.io/v3/${process.env.INFURA_RINKEBY_API_KEY}`,
       accounts,
       chainId: 4,
       live: true,
       saveDeployments: true,
       tags: ['staging'],
+      gas: 4000000,
+      gasPrice: 8000000000,
     },
     mainnet: {
       url: `wss://mainnet.infura.io/ws/v3/${process.env.INFURA_API_KEY}`,

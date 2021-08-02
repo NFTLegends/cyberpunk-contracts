@@ -51,7 +51,7 @@
     "prefer-const": "error",
     "quotes": ["error", "single"],
     "semi": ["error", "always"],
-    "space-before-function-paren": ["error", "always"],
+    "space-before-function-paren": ["error", "never"],
 
     "mocha-no-only/mocha-no-only": ["error"],
 

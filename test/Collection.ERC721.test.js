@@ -6,11 +6,11 @@ const {
 
 const CollectionMock = artifacts.require('CollectionMock');
 
-contract('Collection : ERC721', function (accounts) {
+contract('Collection : ERC721', function(accounts) {
   const name = 'CyberPunk';
   const symbol = 'CPN';
 
-  beforeEach(async function () {
+  beforeEach(async function() {
     this.token = await CollectionMock.new();
     await this.token.addBatch(10, 'https://ipfs.io/ipfs/QmSQENpQaQ9JLJRTXxDGR9zwKzyXxkYsk5KSB3YsGQu78a', 10);
   });
