@@ -10,6 +10,7 @@ import "@openzeppelin/contracts/utils/math/SafeMath.sol";
 contract Collection is ERC721Enumerable, AccessControl {
     event NameChange (uint256 indexed index, string newName);
     event SkillChange (uint256 indexed index, uint256 newSkill);
+    event Buy (address indexed _from, uint256 nfts, address referral);
     mapping(uint256 => string) private _tokenName;
     mapping(uint256 => uint256) private _tokenSkill;
 
@@ -309,11 +310,12 @@ contract Collection is ERC721Enumerable, AccessControl {
     /**
      * @notice Method to purchase and get random available NFTs.
      */
-    function buy(uint256 nfts) public payable {
+    function buy(uint256 nfts, address referral) public payable {
         require(vault != address(0), "buy: Vault is undefined");
         require(nfts <= maxPurchaseSize, "buy: You can not buy more than maxPurchaseSize NFTs at once");
         require(getTotalPriceFor(nfts) == msg.value, "buy: Ether value sent is not correct");
         require(saleActive, "buy: Sale is not active");
+        emit Buy(msg.sender, nfts, referral);
         vault.transfer(msg.value);
         _mintMultiple(msg.sender, nfts);
     }

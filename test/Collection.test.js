@@ -21,6 +21,8 @@ contract('Collection : ERC721', function([deployer, others]) {
     this.mintMultipleSetter = accounts[7];
     this.setterDefaultRarityAddress = accounts[8];
     this.vault = accounts[9];
+    this.referral = accounts[10];
+    this.buyer = accounts[11];
     this.token = await CollectionMock.new();
   });
   context('Calculator test', function() {
@@ -170,57 +172,97 @@ contract('Collection : ERC721', function([deployer, others]) {
 
       it('token purchase', async function() {
         price = await this.token.getTotalPriceFor(1);
-        await this.token.buy(1, { value: price });
+        expectEvent(
+          await this.token.buy(1, this.referral.address, {
+            value: price,
+            from: this.buyer.address,
+          }),
+          'Buy',
+          {
+            _from: this.buyer.address,
+            nfts: '1',
+            referral: this.referral.address,
+          },
+        );
         expect(await this.token.totalSupply()).to.be.bignumber.equal('1');
 
         price = await this.token.getTotalPriceFor(2);
-        await this.token.buy(2, { value: price });
+        expectEvent(
+          await this.token.buy(2, this.referral.address, {
+            value: price,
+            from: this.buyer.address,
+          }),
+          'Buy',
+          {
+            _from: this.buyer.address,
+            nfts: '2',
+            referral: this.referral.address,
+          },
+        );
         expect(await this.token.totalSupply()).to.be.bignumber.equal('3');
+      });
+
+      it('token purchase with zero address', async function() {
+        const ZERO_ADDRESS = ethers.constants.AddressZero;
+        price = await this.token.getTotalPriceFor(1);
+        expectEvent(
+          await this.token.buy(1, ZERO_ADDRESS, {
+            value: price,
+            from: this.buyer.address,
+          }),
+          'Buy',
+          {
+            _from: this.buyer.address,
+            nfts: '1',
+            referral: ZERO_ADDRESS,
+          },
+        );
+        expect(await this.token.totalSupply()).to.be.bignumber.equal('1');
       });
 
       it('eth goes to vault', async function() {
         const vaultBalanceBefore = await this.vault.getBalance();
         price = await this.token.getTotalPriceFor(2);
-        await this.token.buy(2, { value: price });
+        await this.token.buy(2, this.referral.address, { value: price });
         const vaultBalanceAfter = await this.vault.getBalance();
         expect(vaultBalanceAfter.sub(vaultBalanceBefore).toString()).to.be.bignumber.equal(price.toString());
       });
 
       it('reverts when trying to buy after sale end', async function() {
         price = await this.token.getTotalPriceFor(10);
-        await this.token.buy(10, { value: price });
+        await this.token.buy(10, this.referral.address, { value: price });
         expect(await this.token.totalSupply()).to.be.bignumber.equal('10');
 
         price = await this.token.getTotalPriceFor(10);
-        await expectRevert(this.token.buy(10, { value: price }), 'buy: Sale has already ended');
+        await expectRevert(this.token.buy(10, this.referral.address, { value: price }), 'buy: Sale has already ended');
       });
 
       it('reverts when trying to buy 0 nft', async function() {
-        await expectRevert(this.token.buy(0, { value: 0 }), 'buy: nfts cannot be 0');
+        await expectRevert(this.token.buy(0, this.referral.address, { value: 0 }), 'buy: nfts cannot be 0');
       });
 
       it('reverts when trying to buy more than maxPurchaseSize nft', async function() {
         price = await this.token.getTotalPriceFor(1);
         await expectRevert(
-          this.token.buy(21, { value: 0 }),
+          this.token.buy(21, this.referral.address, { value: 0 }),
           'buy: You can not buy more than maxPurchaseSize NFTs at once',
         );
       });
 
       it('reverts when trying to buy nfts that exceeds totalSupply', async function() {
         price = await this.token.getTotalPriceFor(20);
-        await expectRevert(this.token.buy(20, { value: price }), 'buy: Exceeds _maxTotalSupply');
+        await expectRevert(this.token.buy(20, this.referral.address, { value: price }), 'buy: Exceeds _maxTotalSupply');
       });
 
       it('reverts when send incorrect ETH value', async function() {
         price = await this.token.getTotalPriceFor(5);
-        await expectRevert(this.token.buy(5, { value: 0 }), 'buy: Ether value sent is not correct');
+        await expectRevert(this.token.buy(5, this.referral.address, { value: 0 }), 'buy: Ether value sent is not correct');
       });
 
       it('reverts when trying to buy when sale is not active', async function() {
         price = await this.token.getTotalPriceFor(1);
         await this.token.stop({ from: this.saleAdminAddress.address });
-        await expectRevert(this.token.buy(1, { value: price }), 'buy: Sale is not active');
+        await expectRevert(this.token.buy(1, this.referral.address, { value: price }), 'buy: Sale is not active');
       });
     });
 
@@ -816,7 +858,7 @@ contract('Collection : ERC721', function([deployer, others]) {
         from: this.owner.address,
       });
       price = await this.token.getTotalPriceFor(30);
-      await this.token.buy(30, { value: price });
+      await this.token.buy(30, this.referral.address, { value: price });
       expect(await this.token.totalSupply()).to.be.bignumber.equal('30');
     });
     it('MAX_PURCHASE_SIZE_SETTER_ROLE can change the purchase size', async function() {
@@ -824,7 +866,7 @@ contract('Collection : ERC721', function([deployer, others]) {
         from: this.maxPurchaseSizeSetter.address,
       });
       price = await this.token.getTotalPriceFor(30);
-      await this.token.buy(30, { value: price });
+      await this.token.buy(30, this.referral.address, { value: price });
       expect(await this.token.totalSupply()).to.be.bignumber.equal('30');
     });
     it('reverts when trying to buy more than maxPurchaseSize nft', async function() {
@@ -833,7 +875,7 @@ contract('Collection : ERC721', function([deployer, others]) {
       });
       price = await this.token.getTotalPriceFor(31);
       await expectRevert(
-        this.token.buy(31, { value: price }),
+        this.token.buy(31, this.referral.address, { value: price }),
         'buy: You can not buy more than maxPurchaseSize NFTs at once',
       );
     });
