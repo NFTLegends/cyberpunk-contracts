@@ -127,6 +127,13 @@ contract Collection is ERC721Enumerable, AccessControl {
     }
 
     /**
+     * @notice Returns current `_batches` array length.
+     */
+    function batchesLength() public view returns (uint256) {
+        return _batches.length;
+    }
+
+    /**
      * @notice Return token batch URI
      */
     function getBatch(uint256 tokenId) public view returns (Batch memory) {

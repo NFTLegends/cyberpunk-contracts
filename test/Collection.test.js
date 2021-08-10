@@ -452,6 +452,27 @@ contract('Collection : ERC721', function([deployer, others]) {
       });
     });
 
+    context('batchesLength()', function() {
+      beforeEach(async function() {
+        this.batchManagerRole = await this.token.BATCH_MANAGER_ROLE();
+        await this.token.grantRole(this.batchManagerRole, this.batchManagerAddress.address);
+      });
+
+      it('batchesLength return correct value', async function() {
+        await this.token.addBatch(10, 'ipfs://QmSQENpQaQ9JLJRTXxDGR9zwKzyXxkYsk5KSB3YsGQu78a', 78, {
+          from: this.batchManagerAddress.address,
+        });
+        let batchesLength = await this.token.batchesLength();
+        expect(batchesLength).to.be.bignumber.equal(new BN(1));
+
+        await this.token.addBatch(20, 'ipfs://QmSQENpQaQ9JLJRTXxDGR9zwKzyXxkYsk5KSB3YsGQu78a', 78, {
+          from: this.batchManagerAddress.address,
+        });
+        batchesLength = await this.token.batchesLength();
+        expect(batchesLength).to.be.bignumber.equal(new BN(2));
+      });
+    });
+
     context('deleteBatch()', function() {
       beforeEach(async function() {
         this.batchManagerRole = await this.token.BATCH_MANAGER_ROLE();
