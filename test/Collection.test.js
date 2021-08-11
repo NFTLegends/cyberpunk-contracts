@@ -452,6 +452,29 @@ contract('Collection : ERC721', function([deployer, others]) {
       });
     });
 
+    context('getBatches()', function() {
+      it('return batches', async function() {
+        this.batchManagerRole = await this.token.BATCH_MANAGER_ROLE();
+        await this.token.grantRole(this.batchManagerRole, this.batchManagerAddress.address);
+        await this.token.addBatch(10, 'ipfs://QmSQENpQaQ9JLJRTXxDGR9zwKzyXxkYsk5KSB3YsGQu78a', 78, {
+          from: this.batchManagerAddress.address,
+        });
+
+        await this.token.addBatch(20, 'ipfs://QmXXAFxQMNy8emeGtodbnyWVXAWExpP7oxhgUe9sg5xDLZ', 112, {
+          from: this.batchManagerAddress.address,
+        });
+        const batches = await this.token.getBatches();
+
+        expect(batches[0].baseURI).to.be.equal('ipfs://QmSQENpQaQ9JLJRTXxDGR9zwKzyXxkYsk5KSB3YsGQu78a');
+        expect(batches[0].endId).to.be.equal('10');
+        expect(batches[0].rarity).to.be.equal('78');
+
+        expect(batches[1].baseURI).to.be.equal('ipfs://QmXXAFxQMNy8emeGtodbnyWVXAWExpP7oxhgUe9sg5xDLZ');
+        expect(batches[1].endId).to.be.equal('20');
+        expect(batches[1].rarity).to.be.equal('112');
+      });
+    });
+
     context('batchesLength()', function() {
       beforeEach(async function() {
         this.batchManagerRole = await this.token.BATCH_MANAGER_ROLE();
