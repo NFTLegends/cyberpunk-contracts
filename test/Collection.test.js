@@ -334,7 +334,7 @@ contract('Collection : ERC721', function([deployer, others]) {
       });
     });
 
-    context('getBatch()', function() {
+    context('getBatchByToken()', function() {
       let ans;
 
       beforeEach(async function() {
@@ -343,7 +343,7 @@ contract('Collection : ERC721', function([deployer, others]) {
       });
 
       it('reverts when there is no batches', async function() {
-        await expectRevert(this.token.getBatch(0), 'getBatch: no batches');
+        await expectRevert(this.token.getBatchByToken(0), 'getBatchByToken: no batches');
       });
 
       it('revertsd when tokenId greater then last token id in batches array', async function() {
@@ -354,15 +354,15 @@ contract('Collection : ERC721', function([deployer, others]) {
           from: this.batchManagerAddress.address,
         });
         await expectRevert(
-          this.token.getBatch(31),
-          'getBatch: tokenId must be less then last token id in batches array',
+          this.token.getBatchByToken(31),
+          'getBatchByToken: tokenId must be less then last token id in batches array',
         );
       });
       it('works when return right baseURI', async function() {
         await this.token.addBatch(10, 'ipfs://QmSQENpQaQ9JLJRTXxDGR9zwKzyXxkYsk5KSB3YsGQu78a', 99, {
           from: this.batchManagerAddress.address,
         });
-        ans = await this.token.getBatch(0);
+        ans = await this.token.getBatchByToken(0);
         expect(ans.baseURI).equal('ipfs://QmSQENpQaQ9JLJRTXxDGR9zwKzyXxkYsk5KSB3YsGQu78a');
       });
 
@@ -373,7 +373,7 @@ contract('Collection : ERC721', function([deployer, others]) {
         await this.token.addBatch(30, 'ipfs://QmXkzp3EvcqnTPsHstwc89C91S64YAbBQotrgq8atLzHT3', 1, {
           from: this.batchManagerAddress.address,
         });
-        ans = await this.token.getBatch(20);
+        ans = await this.token.getBatchByToken(20);
         expect(ans.baseURI).equal('ipfs://QmXkzp3EvcqnTPsHstwc89C91S64YAbBQotrgq8atLzHT3');
       });
     });
@@ -390,7 +390,7 @@ contract('Collection : ERC721', function([deployer, others]) {
         await this.token.addBatch(9, 'ipfs://QmSQENpQaQ9JLJRTXxDGR9zwKzyXxkYsk5KSB3YsGQu78a', 56, {
           from: this.owner.address,
         });
-        ans1 = await this.token.getBatch(8);
+        ans1 = await this.token.getBatchByToken(8);
         expect(ans1.baseURI).equal('ipfs://QmSQENpQaQ9JLJRTXxDGR9zwKzyXxkYsk5KSB3YsGQu78a');
       });
 
@@ -398,7 +398,7 @@ contract('Collection : ERC721', function([deployer, others]) {
         await this.token.addBatch(9, 'ipfs://QmSQENpQaQ9JLJRTXxDGR9zwKzyXxkYsk5KSB3YsGQu78a', 78, {
           from: this.batchManagerAddress.address,
         });
-        ans = await this.token.getBatch(0);
+        ans = await this.token.getBatchByToken(0);
         expect(ans.baseURI).equal('ipfs://QmSQENpQaQ9JLJRTXxDGR9zwKzyXxkYsk5KSB3YsGQu78a');
       });
 
@@ -433,7 +433,7 @@ contract('Collection : ERC721', function([deployer, others]) {
         await this.token.addBatch(10, 'ipfs://QmSQENpQaQ9JLJRTXxDGR9zwKzyXxkYsk5KSB3YsGQu78a', 97, {
           from: this.batchManagerAddress.address,
         });
-        ans = await this.token.getBatch(0);
+        ans = await this.token.getBatchByToken(0);
         expect(ans.baseURI).equal('ipfs://QmSQENpQaQ9JLJRTXxDGR9zwKzyXxkYsk5KSB3YsGQu78a');
       });
 
@@ -441,13 +441,13 @@ contract('Collection : ERC721', function([deployer, others]) {
         await this.token.addBatch(10, 'ipfs://QmSQENpQaQ9JLJRTXxDGR9zwKzyXxkYsk5KSB3YsGQu78a', 34, {
           from: this.batchManagerAddress.address,
         });
-        ans1 = await this.token.getBatch(0);
+        ans1 = await this.token.getBatchByToken(0);
         expect(ans1.baseURI).equal('ipfs://QmSQENpQaQ9JLJRTXxDGR9zwKzyXxkYsk5KSB3YsGQu78a');
 
         await this.token.addBatch(20, 'ipfs://QmSQENpQaQ9JLJRTXxDGR9zwKzyXxkYsk5KSB3YsGQu78a', 38, {
           from: this.batchManagerAddress.address,
         });
-        ans2 = await this.token.getBatch(11);
+        ans2 = await this.token.getBatchByToken(11);
         expect(ans2.baseURI).equal('ipfs://QmSQENpQaQ9JLJRTXxDGR9zwKzyXxkYsk5KSB3YsGQu78a');
       });
     });
@@ -485,8 +485,8 @@ contract('Collection : ERC721', function([deployer, others]) {
       it('deployer can delete this batch', async function() {
         await this.token.deleteBatch(0, { from: this.owner.address });
         await expectRevert(
-          this.token.getBatch(5),
-          'getBatch: tokenId must be less then last token id in batches array',
+          this.token.getBatchByToken(5),
+          'getBatchByToken: tokenId must be less then last token id in batches array',
         );
       });
 
@@ -495,8 +495,8 @@ contract('Collection : ERC721', function([deployer, others]) {
           from: this.batchManagerAddress.address,
         });
         await expectRevert(
-          this.token.getBatch(5),
-          'getBatch: tokenId must be less then last token id in batches array',
+          this.token.getBatchByToken(5),
+          'getBatchByToken: tokenId must be less then last token id in batches array',
         );
       });
       it('reverts then delete batch without BATCH_MANAGER_ROLE', async function() {
