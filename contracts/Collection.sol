@@ -55,7 +55,7 @@ contract Collection is ERC721Enumerable, AccessControl {
     bytes32 public constant VAULT_SETTER_ROLE = keccak256("VAULT_SETTER_ROLE");
     address payable public vault;
 
-    constructor() ERC721("CyberPunk", "CPN") {
+    constructor() ERC721("CyberPunk", "A-12") {
         _setupRole(DEFAULT_ADMIN_ROLE, _msgSender());
         _setupRole(SALE_STAGES_MANAGER_ROLE, _msgSender());
         _setupRole(BATCH_MANAGER_ROLE, _msgSender());

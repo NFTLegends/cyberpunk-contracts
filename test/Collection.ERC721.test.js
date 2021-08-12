@@ -8,7 +8,7 @@ const CollectionMock = artifacts.require('CollectionMock');
 
 contract('Collection : ERC721', function(accounts) {
   const name = 'CyberPunk';
-  const symbol = 'CPN';
+  const symbol = 'A-12';
 
   beforeEach(async function() {
     this.token = await CollectionMock.new();
