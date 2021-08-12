@@ -134,13 +134,20 @@ contract Collection is ERC721Enumerable, AccessControl {
     }
 
     /**
+     * @notice Returns `_batches`.
+     */
+    function getBatches() public view returns (Batch[] memory) {
+        return _batches;
+    }
+
+    /**
      * @notice Return token batch URI
      */
-    function getBatch(uint256 tokenId) public view returns (Batch memory) {
-        require(_batches.length > 0, "getBatch: no batches");
+    function getBatchByToken(uint256 tokenId) public view returns (Batch memory) {
+        require(_batches.length > 0, "getBatchByToken: no batches");
         require(
             tokenId < _batches[_batches.length - 1].endId,
-            "getBatch: tokenId must be less then last token id in batches array"
+            "getBatchByToken: tokenId must be less then last token id in batches array"
         );
 
         for (uint256 i; i < _batches.length; i++) {
@@ -166,7 +173,7 @@ contract Collection is ERC721Enumerable, AccessControl {
             return _defaultUri;
         }
 
-        string memory baseURI = getBatch(tokenId).baseURI;
+        string memory baseURI = getBatchByToken(tokenId).baseURI;
 
         return
             bytes(baseURI).length > 0
@@ -358,7 +365,7 @@ contract Collection is ERC721Enumerable, AccessControl {
         if (tokenId > _batches[_batches.length - 1].endId) {
             return _defaultRarity;
         }
-        return getBatch(tokenId).rarity;
+        return getBatchByToken(tokenId).rarity;
     }
 
     /**
