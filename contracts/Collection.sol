@@ -10,10 +10,12 @@ import "@openzeppelin/contracts/utils/math/SafeMath.sol";
 contract Collection is ERC721Enumerable, AccessControl {
     event NameChange (uint256 indexed index, string newName);
     event SkillChange (uint256 indexed index, uint256 newSkill);
+    event DnaChange (uint256 indexed index, uint256 newDna);
     event Buy (address indexed _from, uint256 nfts, address referral);
 
     mapping(uint256 => string) private _tokenName;
     mapping(uint256 => uint256) private _tokenSkill;
+    mapping(uint256 => uint256) private _tokenDna;
 
     bool public saleActive = false;
 
@@ -54,6 +56,7 @@ contract Collection is ERC721Enumerable, AccessControl {
     bytes32 public constant SALE_ADMIN_ROLE = keccak256("SALE_ADMIN_ROLE");
     bytes32 public constant NAME_SETTER_ROLE = keccak256("NAME_SETTER_ROLE");
     bytes32 public constant SKILL_SETTER_ROLE = keccak256("SKILL_SETTER_ROLE");
+    bytes32 public constant DNA_SETTER_ROLE = keccak256("DNA_SETTER_ROLE");
     bytes32 public constant MAX_PURCHASE_SIZE_SETTER_ROLE = keccak256("MAX_PURCHASE_SIZE_SETTER_ROLE");
     bytes32 public constant MINTER_ROLE = keccak256("MINTER_ROLE");
     bytes32 public constant DEFAULT_URI_SETTER_ROLE = keccak256("DEFAULT_URI_SETTER_ROLE");
@@ -70,6 +73,7 @@ contract Collection is ERC721Enumerable, AccessControl {
         _setupRole(SALE_ADMIN_ROLE, _msgSender());
         _setupRole(NAME_SETTER_ROLE, _msgSender());
         _setupRole(SKILL_SETTER_ROLE, _msgSender());
+        _setupRole(DNA_SETTER_ROLE, _msgSender());
         _setupRole(MAX_PURCHASE_SIZE_SETTER_ROLE, _msgSender());
         _setupRole(MINTER_ROLE, _msgSender());
         _setupRole(DEFAULT_URI_SETTER_ROLE, _msgSender());
@@ -471,6 +475,13 @@ contract Collection is ERC721Enumerable, AccessControl {
     }
 
     /**
+     * @dev Returns DNA of the NFT at index
+     */
+    function getDna(uint256 index) public view returns (uint256) {
+                return _tokenDna[index];
+    }
+
+    /**
      * @dev Starts sale
      */
     function start() public onlyRole(SALE_ADMIN_ROLE) {
@@ -503,8 +514,16 @@ contract Collection is ERC721Enumerable, AccessControl {
     }
 
     /**
-    * @dev Change max purchase size.
-    */
+     * @dev Change token DNA attribute
+     */
+    function setDna(uint256 id, uint256 newDna) public onlyRole(DNA_SETTER_ROLE) {
+        _tokenDna[id] = newDna;
+        emit DnaChange(id, newDna);
+    }
+
+     /**
+     * @dev Change max purchase size.
+     */
     function setMaxPurchaseSize(uint256 newPurchaseSize) public onlyRole(MAX_PURCHASE_SIZE_SETTER_ROLE) {
         maxPurchaseSize = newPurchaseSize;
     }
