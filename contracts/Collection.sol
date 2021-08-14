@@ -25,7 +25,8 @@ contract Collection is ERC721Enumerable, AccessControl {
         uint256 weiPerToken;
     }
     struct Batch {
-        uint256 endId;
+        uint256 startTokenId;
+        uint256 endTokenId;
         string baseURI;
         uint256 rarity;
     }
@@ -141,23 +142,33 @@ contract Collection is ERC721Enumerable, AccessControl {
     }
 
     /**
+     * @notice Return batch by its sequential Id
+     Note: batch ids can change over time and reorder as the result of batch removal
+     */
+    function getBatch(uint256 batchId) public view returns (Batch memory) {
+        require(_batches.length > 0, "getBatch: no batches");
+        require(
+            batchId < _batches.length,
+            "getBatch: batchId must be less than batch length"
+        );
+
+        return _batches[batchId];
+    }
+
+    /**
      * @notice Return token batch URI
      */
     function getBatchByToken(uint256 tokenId) public view returns (Batch memory) {
         require(_batches.length > 0, "getBatchByToken: no batches");
-        require(
-            tokenId < _batches[_batches.length - 1].endId,
-            "getBatchByToken: tokenId must be less then last token id in batches array"
-        );
 
         for (uint256 i; i < _batches.length; i++) {
-            if (tokenId > _batches[i].endId) {
+            if (tokenId > _batches[i].endTokenId || tokenId < _batches[i].startTokenId) {
                 continue;
             } else {
                 return _batches[i];
             }
         }
-        revert("description");
+        revert("getBatchByToken: batch doesn't exist");
     }
 
     /**
@@ -168,39 +179,78 @@ contract Collection is ERC721Enumerable, AccessControl {
         view
         override
         returns (string memory)
-    {
-        if (_batches.length == 0 || tokenId > _batches[_batches.length - 1].endId) {
-            return _defaultUri;
+    {   
+        require(_batches.length > 0, "tokenURI: no batches");
+
+        for (uint256 i; i < _batches.length; i++) {
+            if (tokenId > _batches[i].endTokenId || tokenId < _batches[i].startTokenId) {
+                continue;
+            } else {
+                return string(abi.encodePacked(_batches[i].baseURI, "/", tokenId.toString(), ".json"));
+            }
         }
-
-        string memory baseURI = getBatchByToken(tokenId).baseURI;
-
-        return
-            bytes(baseURI).length > 0
-                ? string(
-                    abi.encodePacked(baseURI, "/", tokenId.toString(), ".json")
-                )
-                : "";
+        return _defaultUri;
+        
     }
 
     /**
      * @notice Add tokens batch to batches array
      */
-    function addBatch(uint256 batchEndId, string memory baseURI, uint256 rarity)
+    function addBatch(uint256 startTokenId, uint256 endTokenId, string memory baseURI, uint256 rarity)
     external
     onlyRole(BATCH_MANAGER_ROLE)
         {
         uint256 batchesLength = _batches.length;
 
-        require(batchEndId > 0, "addBatch: batch endTokens must be non-zero");
+        require(startTokenId <= endTokenId, "addBatch: batchStartID must be equal or less than batchEndId");
         if (batchesLength > 0) {
-            require(
-                batchEndId > _batches[batchesLength - 1].endId,
-                "addBatch: batchEndId must be greater than the endId of the last batch"
-            );
+            for (uint256 _batchId; _batchId < batchesLength; _batchId++) {
+                // if both bounds are lower or higher than iter batch
+                if (startTokenId < _batches[_batchId].startTokenId
+                    && endTokenId < _batches[_batchId].startTokenId
+                    || startTokenId > _batches[_batchId].endTokenId
+                    && endTokenId > _batches[_batchId].endTokenId) {
+                    continue;
+                } else {
+                    revert("addBatch: batches intersect");
+                }
+            }
         }
 
-        _batches.push(Batch(batchEndId, baseURI, rarity));
+        _batches.push(Batch(startTokenId, endTokenId, baseURI, rarity));
+    }
+
+    /**
+     * @notice Update batch by its index (index can change over time)
+     */
+    function setBatch(uint256 batchId, uint256 batchStartId,uint256 batchEndId, string memory baseURI, uint256 rarity)
+    external
+    onlyRole(BATCH_MANAGER_ROLE)
+        {
+        uint256 batchesLength = _batches.length;
+        require(batchesLength > 0, "setBatch: batches is empty");
+        require(batchStartId <= batchEndId, "setBatch: batchStartID must be equal or less than batchEndId");
+        
+        for (uint256 _batchId; _batchId < batchesLength; _batchId++) {
+            if (_batchId == batchId) {
+                continue;
+            } else {
+            // if both bounds are lower or higher than iter batch
+                if (batchStartId < _batches[_batchId].startTokenId
+                    && batchEndId < _batches[_batchId].startTokenId
+                    || batchStartId > _batches[_batchId].endTokenId
+                    && batchEndId > _batches[_batchId].endTokenId) {
+                    continue;
+                } else {
+                    revert("setBatch: batches intersect");
+                }
+            }
+        }
+
+        _batches[batchId].startTokenId = batchStartId;
+        _batches[batchId].endTokenId = batchEndId;
+        _batches[batchId].baseURI = baseURI;
+        _batches[batchId].rarity = rarity;
     }
 
     /**
@@ -363,7 +413,7 @@ contract Collection is ERC721Enumerable, AccessControl {
      * @dev Returns rarity of the NFT at token Id
      */
     function getRarity(uint256 tokenId) public view returns (uint256) {
-        if (tokenId > _batches[_batches.length - 1].endId) {
+        if (tokenId > _batches[_batches.length - 1].endTokenId) {
             return _defaultRarity;
         }
         return getBatchByToken(tokenId).rarity;

@@ -256,7 +256,10 @@ contract('Collection : ERC721', function([deployer, others]) {
 
       it('reverts when send incorrect ETH value', async function() {
         price = await this.token.getTotalPriceFor(5);
-        await expectRevert(this.token.buy(5, this.referral.address, { value: 0 }), 'buy: Ether value sent is not correct');
+        await expectRevert(
+          this.token.buy(5, this.referral.address, { value: 0 }),
+          'buy: Ether value sent is not correct',
+        );
       });
 
       it('reverts when trying to buy when sale is not active', async function() {
@@ -654,9 +657,15 @@ contract('Collection : ERC721', function([deployer, others]) {
     });
 
     it('rarity of the NFT at token Id', async function() {
-      await this.token.addBatch(10, 'ipfs://QmSQENpQaQ9JLJRTXxDGR9zwKzyXxkYsk5KSB3YsGQu78a', rarity1, { from: this.batchManagerAddress.address });
-      await this.token.addBatch(20, 'ipfs://QmXkzp3EvcqnTPsHstwc89C91S64YAbBQotrgq8atLzHT3', rarity2, { from: this.batchManagerAddress.address });
-      await this.token.addBatch(30, 'ipfs://QmeCWYEJjg962DhAJGGqerL25dtZ98GwhfwMequ4jmixX2', rarity3, { from: this.batchManagerAddress.address });
+      await this.token.addBatch(10, 'ipfs://QmSQENpQaQ9JLJRTXxDGR9zwKzyXxkYsk5KSB3YsGQu78a', rarity1, {
+        from: this.batchManagerAddress.address,
+      });
+      await this.token.addBatch(20, 'ipfs://QmXkzp3EvcqnTPsHstwc89C91S64YAbBQotrgq8atLzHT3', rarity2, {
+        from: this.batchManagerAddress.address,
+      });
+      await this.token.addBatch(30, 'ipfs://QmeCWYEJjg962DhAJGGqerL25dtZ98GwhfwMequ4jmixX2', rarity3, {
+        from: this.batchManagerAddress.address,
+      });
       expect(await this.token.getRarity(1)).is.be.bignumber.equal(rarity1);
       expect(await this.token.getRarity(11)).is.be.bignumber.equal(rarity2);
       expect(await this.token.getRarity(21)).is.be.bignumber.equal(rarity3);
