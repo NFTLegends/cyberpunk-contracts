@@ -641,6 +641,119 @@ contract('Collection Full test', function() {
               });
             });
           });
+          context('add batches #1, #2, #3', function() {
+            beforeEach(async function() {
+              await this.collection.addBatch(20, 'ipfs://ipfs/second_batch', 23);
+              await this.collection.addBatch(30, 'ipfs://ipfs/third_batch', 33);
+              await this.collection.addBatch(40, 'ipfs://ipfs/fourth_batch', 43);
+            });
+
+            it('all batches are visible', async function() {
+              expect(await this.collection.batchesLength()).to.equal(4);
+              const batches = await this.collection.getBatches();
+              expect(batches.length).to.equal(4);
+              expect(batches[0].endId).to.equal(10);
+              expect(batches[0].baseURI).to.equal('ipfs://ipfs/batchX');
+              expect(batches[0].rarity).to.equal(12);
+              expect(batches[1].endId).to.equal(20);
+              expect(batches[1].baseURI).to.equal('ipfs://ipfs/second_batch');
+              expect(batches[1].rarity).to.equal(23);
+              expect(batches[2].endId).to.equal(30);
+              expect(batches[2].baseURI).to.equal('ipfs://ipfs/third_batch');
+              expect(batches[2].rarity).to.equal(33);
+              expect(batches[3].endId).to.equal(40);
+              expect(batches[3].baseURI).to.equal('ipfs://ipfs/fourth_batch');
+              expect(batches[3].rarity).to.equal(43);
+            });
+
+            it('tokenURIs are correct', async function() {
+              expect(await this.collection.tokenURI(0)).to.equal('ipfs://ipfs/batchX/0.json');
+              expect(await this.collection.tokenURI(10)).to.equal('ipfs://ipfs/batchX/10.json');
+              expect(await this.collection.tokenURI(11)).to.equal('ipfs://ipfs/second_batch/11.json');
+              expect(await this.collection.tokenURI(21)).to.equal('ipfs://ipfs/third_batch/21.json');
+              expect(await this.collection.tokenURI(31)).to.equal('ipfs://ipfs/fourth_batch/31.json');
+              // fixme: endId is not available
+              // Error: VM Exception while processing transaction: revert getBatchByToken:
+              // tokenId must be less then last token id in batches array
+              // expect(await this.collection.tokenURI(20)).to.equal('ipfs://ipfs/batchY/19.json');
+            });
+
+            context('delete batch #1', function() {
+              beforeEach(async function() {
+                await this.collection.deleteBatch(1);
+              });
+
+              it('batch #1 should disappear and batches array should shorten', async function() {
+                expect(await this.collection.batchesLength()).to.equal(3);
+                const batches = await this.collection.getBatches();
+                expect(batches.length).to.equal(3);
+                expect(batches[1].endId).to.equal(40);
+                expect(batches[1].baseURI).to.equal('ipfs://ipfs/fourth_batch');
+                expect(batches[1].rarity).to.equal(43);
+              });
+
+              it('tokenURIs prevously served from removed batch now have batchY URI', async function() {
+                expect(await this.collection.tokenURI(11)).to.equal('ipfs://ipfs/fourth_batch/11.json');
+                expect(await this.collection.tokenURI(21)).to.equal('ipfs://ipfs/fourth_batch/21.json');
+                // fixme: endId is not available
+                // expect(await this.collection.tokenURI(20)).to.equal('ipfs://ipfs/batchY/19.json');
+              });
+
+              context('delete all batches (to load them in the correct order later)', function() {
+                beforeEach(async function() {
+                  await this.collection.deleteBatch(2);
+                  await this.collection.deleteBatch(1);
+                  await this.collection.deleteBatch(0);
+                });
+
+                it('batch lenght eq 0 if all batches deleted', async function() {
+                  expect(await this.collection.batchesLength()).to.equal(0);
+                });
+
+                context('add batches #0, #1, #2, #3', function() {
+                  beforeEach(async function() {
+                    await this.collection.addBatch(10, 'ipfs://ipfs/first_batch', 13);
+                    await this.collection.addBatch(20, 'ipfs://ipfs/second_batch', 23);
+                    await this.collection.addBatch(30, 'ipfs://ipfs/third_batch', 33);
+                    await this.collection.addBatch(40, 'ipfs://ipfs/fourth_batch', 43);
+                  });
+
+                  it('all batches are visible', async function() {
+                    expect(await this.collection.batchesLength()).to.equal(4);
+                    const batches = await this.collection.getBatches();
+                    expect(batches.length).to.equal(4);
+                    expect(batches[0].endId).to.equal(10);
+                    expect(batches[0].baseURI).to.equal('ipfs://ipfs/first_batch');
+                    expect(batches[0].rarity).to.equal(13);
+                    expect(batches[1].endId).to.equal(20);
+                    expect(batches[1].baseURI).to.equal('ipfs://ipfs/second_batch');
+                    expect(batches[1].rarity).to.equal(23);
+                    expect(batches[2].endId).to.equal(30);
+                    expect(batches[2].baseURI).to.equal('ipfs://ipfs/third_batch');
+                    expect(batches[2].rarity).to.equal(33);
+                    expect(batches[3].endId).to.equal(40);
+                    expect(batches[3].baseURI).to.equal('ipfs://ipfs/fourth_batch');
+                    expect(batches[3].rarity).to.equal(43);
+                  });
+
+                  it('tokenURIs are correct', async function() {
+                    expect(await this.collection.tokenURI(0)).to.equal('ipfs://ipfs/first_batch/0.json');
+                    expect(await this.collection.tokenURI(10)).to.equal('ipfs://ipfs/first_batch/10.json');
+                    expect(await this.collection.tokenURI(11)).to.equal('ipfs://ipfs/second_batch/11.json');
+                    expect(await this.collection.tokenURI(20)).to.equal('ipfs://ipfs/second_batch/20.json');
+                    expect(await this.collection.tokenURI(21)).to.equal('ipfs://ipfs/third_batch/21.json');
+                    expect(await this.collection.tokenURI(30)).to.equal('ipfs://ipfs/third_batch/30.json');
+                    expect(await this.collection.tokenURI(31)).to.equal('ipfs://ipfs/fourth_batch/31.json');
+                    expect(await this.collection.tokenURI(40)).to.equal('ipfs://ipfs/fourth_batch/40.json');
+                    // fixme: endId is not available
+                    // Error: VM Exception while processing transaction: revert getBatchByToken:
+                    // tokenId must be less then last token id in batches array
+                    // expect(await this.collection.tokenURI(20)).to.equal('ipfs://ipfs/batchY/19.json');
+                  });
+                });
+              });
+            });
+          });
         });
       });
     });

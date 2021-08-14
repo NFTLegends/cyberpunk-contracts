@@ -214,7 +214,8 @@ contract Collection is ERC721Enumerable, AccessControl {
             _batches.length > batchIndex,
             "deleteBatch: index out of batches length"
         );
-        delete _batches[batchIndex];
+        _batches[batchIndex] = _batches[_batches.length - 1];
+        _batches.pop();
     }
 
     /**
