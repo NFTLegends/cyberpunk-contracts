@@ -618,9 +618,7 @@ contract('Collection Full test', function() {
               });
               it('deployer unable to set dna after role was revoked', async function() {
                 await this.collection.revokeRole(this.dnaSetRole, this.deployer.address);
-                await expect(this.collection.connect(this.deployer).setDna(0, newDna)).to.be.revertedWith(
-                  'revert AccessControl',
-                );
+                await expect(this.collection.connect(this.deployer).setDna(0, newDna)).to.be.reverted;
               });
             });
 
@@ -1074,70 +1072,52 @@ contract('Collection Full test', function() {
     });
 
     it('setDefaultUri reverts if called by wrong role', async function() {
-      await expect(this.collection.connect(this.other).setDefaultUri('ipfs://ipfs/defaultUri')).to.be.revertedWith(
-        'revert AccessControl',
-      );
+      await expect(this.collection.connect(this.other).setDefaultUri('ipfs://ipfs/defaultUri')).to.be.reverted;
     });
 
     it('setDefaultRarity reverts if called by wrong role', async function() {
-      await expect(this.collection.connect(this.other).setDefaultRarity(1)).to.be.revertedWith('revert AccessControl');
+      await expect(this.collection.connect(this.other).setDefaultRarity(1)).to.be.reverted;
     });
 
     it('setVault reverts if called by wrong role', async function() {
-      await expect(this.collection.connect(this.other).setVault(this.other.address)).to.be.revertedWith(
-        'revert AccessControl',
-      );
+      await expect(this.collection.connect(this.other).setVault(this.other.address)).to.be.reverted;
     });
 
     it('setDefaultUri reverts if called by wrong role', async function() {
-      await expect(this.collection.connect(this.other).setDefaultUri('ipfs://ipfs/defaultUri')).to.be.revertedWith(
-        'revert AccessControl',
-      );
+      await expect(this.collection.connect(this.other).setDefaultUri('ipfs://ipfs/defaultUri')).to.be.reverted;
     });
 
     it('addSaleStage reverts if called by wrong role', async function() {
-      await expect(this.collection.connect(this.other).addSaleStage(0, 1, 200)).to.be.revertedWith(
-        'revert AccessControl',
-      );
+      await expect(this.collection.connect(this.other).addSaleStage(0, 1, 200)).to.be.reverted;
     });
 
     it('mint reverts if called by wrong role', async function() {
-      await expect(this.collection.connect(this.other).mint(this.other.address, 1)).to.be.revertedWith(
-        'revert AccessControl',
-      );
+      await expect(this.collection.connect(this.other).mint(this.other.address, 1)).to.be.reverted;
     });
 
     it('addBatch reverts if called by wrong role', async function() {
-      await expect(this.collection.connect(this.other).addBatch(0, 10, 'ipfs://ipfs/batchX', 12)).to.be.revertedWith(
-        'revert AccessControl',
-      );
+      await expect(this.collection.connect(this.other).addBatch(0, 10, 'ipfs://ipfs/batchX', 12)).to.be.reverted;
     });
 
     it('sale start reverts if called by wrong role', async function() {
-      await expect(this.collection.connect(this.other).start()).to.be.revertedWith('revert AccessControl');
+      await expect(this.collection.connect(this.other).start()).to.be.reverted;
     });
 
     it('setMaxPurchaseSize reverts if called by wrong role', async function() {
       const newPurchaseSize = 30;
-      await expect(this.collection.connect(this.other).setMaxPurchaseSize(newPurchaseSize)).to.be.revertedWith(
-        'revert AccessControl',
-      );
+      await expect(this.collection.connect(this.other).setMaxPurchaseSize(newPurchaseSize)).to.be.reverted;
     });
 
     it('setName reverts if called by wrong role', async function() {
-      await expect(this.collection.connect(this.other).setName(18, 'new name')).to.be.revertedWith(
-        'revert AccessControl',
-      );
+      await expect(this.collection.connect(this.other).setName(18, 'new name')).to.be.reverted;
     });
 
     it('setSkill reverts if called by wrong role', async function() {
-      await expect(this.collection.connect(this.other).setSkill(18, 1)).to.be.revertedWith('revert AccessControl');
+      await expect(this.collection.connect(this.other).setSkill(18, 1)).to.be.reverted;
     });
 
     it('mintMultiple reverts if called by wrong role', async function() {
-      await expect(this.collection.connect(this.buyer).mintMultiple(this.referral.address, 20)).to.be.revertedWith(
-        'revert AccessControl',
-      );
+      await expect(this.collection.connect(this.buyer).mintMultiple(this.referral.address, 20)).to.be.reverted;
     });
   });
 
