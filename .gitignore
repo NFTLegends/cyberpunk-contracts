@@ -108,3 +108,7 @@ node_modules
 #Hardhat files
 cache
 artifacts
+
+# Coverage
+coverage/
+coverage.json
