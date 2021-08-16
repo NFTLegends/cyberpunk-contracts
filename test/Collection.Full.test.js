@@ -1,6 +1,5 @@
 const { ethers } = require('hardhat');
 const { expect } = require('chai');
-const { BigNumber } = require('ethers');
 
 contract('Collection Full test', function() {
   before(async function() {
@@ -81,8 +80,8 @@ contract('Collection Full test', function() {
   });
 
   it('totalSupply and maxTotalSupply are 0', async function() {
-    expect(await this.collection.totalSupply()).to.equal(BigNumber.from(0));
-    expect(await this.collection.maxTotalSupply()).to.equal(BigNumber.from(0));
+    expect(await this.collection.totalSupply()).to.equal(0);
+    expect(await this.collection.maxTotalSupply()).to.equal(0);
   });
 
   it('getBatchByToken reverts when there is no batches', async function() {
@@ -147,9 +146,9 @@ contract('Collection Full test', function() {
 
       context('add batch without saleStage', function() {
         it('no batches before they added', async function() {
-          expect(await this.collection.batchesLength()).to.equal(BigNumber.from(0));
+          expect(await this.collection.batchesLength()).to.equal(0);
           const batches = await this.collection.getBatches();
-          expect(batches.length).to.equal(BigNumber.from(0));
+          expect(batches.length).to.equal(0);
         });
         context('add batch #0', function() {
           beforeEach(async function() {
@@ -157,20 +156,20 @@ contract('Collection Full test', function() {
           });
 
           it('batch is visible', async function() {
-            expect(await this.collection.batchesLength()).to.equal(BigNumber.from(1));
+            expect(await this.collection.batchesLength()).to.equal(1);
             const batches = await this.collection.getBatches();
-            expect(batches.length).to.equal(BigNumber.from(1));
-            expect(batches[0].endId).to.equal(BigNumber.from(10));
+            expect(batches.length).to.equal(1);
+            expect(batches[0].endId).to.equal(10);
             expect(batches[0].baseURI).to.equal('ipfs://ipfs/batchX');
-            expect(batches[0].rarity).to.equal(BigNumber.from(12));
+            expect(batches[0].rarity).to.equal(12);
           });
 
           it('return default rarity', async function() {
-            expect(await this.collection.getRarity(999)).to.equal(BigNumber.from(1));
+            expect(await this.collection.getRarity(999)).to.equal(1);
           });
 
           it('return token batch rarity', async function() {
-            expect(await this.collection.getRarity(9)).to.equal(BigNumber.from(12));
+            expect(await this.collection.getRarity(9)).to.equal(12);
           });
 
           it('tokenURIs are correct', async function() {
@@ -191,15 +190,15 @@ contract('Collection Full test', function() {
             });
 
             it('both batches are visible', async function() {
-              expect(await this.collection.batchesLength()).to.equal(BigNumber.from(2));
+              expect(await this.collection.batchesLength()).to.equal(2);
               const batches = await this.collection.getBatches();
-              expect(batches.length).to.equal(BigNumber.from(2));
-              expect(batches[0].endId).to.equal(BigNumber.from(10));
+              expect(batches.length).to.equal(2);
+              expect(batches[0].endId).to.equal(10);
               expect(batches[0].baseURI).to.equal('ipfs://ipfs/batchX');
-              expect(batches[0].rarity).to.equal(BigNumber.from(12));
-              expect(batches[1].endId).to.equal(BigNumber.from(20));
+              expect(batches[0].rarity).to.equal(12);
+              expect(batches[1].endId).to.equal(20);
               expect(batches[1].baseURI).to.equal('ipfs://ipfs/batchY');
-              expect(batches[1].rarity).to.equal(BigNumber.from(23));
+              expect(batches[1].rarity).to.equal(23);
             });
 
             it('tokenURIs are correct', async function() {
@@ -220,12 +219,12 @@ contract('Collection Full test', function() {
               });
 
               it('batch 0 should disappear and batches array should shorten', async function() {
-                expect(await this.collection.batchesLength()).to.equal(BigNumber.from(1));
+                expect(await this.collection.batchesLength()).to.equal(1);
                 const batches = await this.collection.getBatches();
-                expect(batches.length).to.equal(BigNumber.from(1));
-                expect(batches[0].endId).to.equal(BigNumber.from(20));
+                expect(batches.length).to.equal(1);
+                expect(batches[0].endId).to.equal(20);
                 expect(batches[0].baseURI).to.equal('ipfs://ipfs/batchY');
-                expect(batches[0].rarity).to.equal(BigNumber.from(23));
+                expect(batches[0].rarity).to.equal(23);
               });
 
               it('tokenURIs prevously served from removed batch now have batchY URI', async function() {
@@ -284,11 +283,11 @@ contract('Collection Full test', function() {
           await this.collection.addSaleStage(9, 100);
         });
         it('check saleStage #0 available', async function() {
-          expect(await this.collection.saleStagesLength()).to.equal(BigNumber.from(1));
+          expect(await this.collection.saleStagesLength()).to.equal(1);
           const saleStage = await this.collection.getSaleStage(0);
-          expect(saleStage.startTokens).to.equal(BigNumber.from(0));
-          expect(saleStage.endTokens).to.equal(BigNumber.from(9));
-          expect(saleStage.weiPerToken).to.equal(BigNumber.from(100));
+          expect(saleStage.startTokens).to.equal(0);
+          expect(saleStage.endTokens).to.equal(9);
+          expect(saleStage.weiPerToken).to.equal(100);
           await expect(this.collection.getSaleStage(1)).to.be.reverted;
         });
         context('then saleStage #1 added', function() {
@@ -297,18 +296,18 @@ contract('Collection Full test', function() {
           });
 
           it('both saleStages are visible', async function() {
-            expect(await this.collection.saleStagesLength()).to.equal(BigNumber.from(2));
+            expect(await this.collection.saleStagesLength()).to.equal(2);
             // previously created stage is visible
             let saleStage = await this.collection.getSaleStage(0);
-            expect(saleStage.startTokens).to.equal(BigNumber.from(0));
-            expect(saleStage.endTokens).to.equal(BigNumber.from(9));
-            expect(saleStage.weiPerToken).to.equal(BigNumber.from(100));
+            expect(saleStage.startTokens).to.equal(0);
+            expect(saleStage.endTokens).to.equal(9);
+            expect(saleStage.weiPerToken).to.equal(100);
             // new stage is visible
             saleStage = await this.collection.getSaleStage(1);
             // fixme: token numbering in batches should be inclusive
-            expect(saleStage.startTokens).to.equal(BigNumber.from(10));
-            expect(saleStage.endTokens).to.equal(BigNumber.from(19));
-            expect(saleStage.weiPerToken).to.equal(BigNumber.from(200));
+            expect(saleStage.startTokens).to.equal(10);
+            expect(saleStage.endTokens).to.equal(19);
+            expect(saleStage.weiPerToken).to.equal(200);
             await expect(this.collection.getSaleStage(2)).to.be.reverted;
           });
           context('then remove saleStage #0', function() {
@@ -322,21 +321,21 @@ contract('Collection Full test', function() {
 
             it('mint with manager role', async function() {
               await this.collection.mint(this.other.address, 1);
-              expect(await this.collection.totalSupply()).to.equal(BigNumber.from(1));
+              expect(await this.collection.totalSupply()).to.equal(1);
             });
 
             it('no batches before they added', async function() {
-              expect(await this.collection.batchesLength()).to.equal(BigNumber.from(0));
+              expect(await this.collection.batchesLength()).to.equal(0);
               const batches = await this.collection.getBatches();
-              expect(batches.length).to.equal(BigNumber.from(0));
+              expect(batches.length).to.equal(0);
             });
 
             it('mintMultiple token purchase', async function() {
               await this.collection.mintMultiple(this.deployer.address, 1);
-              expect(await this.collection.totalSupply()).to.equal(BigNumber.from(1));
+              expect(await this.collection.totalSupply()).to.equal(1);
 
               await this.collection.mintMultiple(this.deployer.address, 2);
-              expect(await this.collection.totalSupply()).to.equal(BigNumber.from(3));
+              expect(await this.collection.totalSupply()).to.equal(3);
             });
 
             it('mintMultiple reverts when trying to buy 0 nft', async function() {
@@ -374,13 +373,13 @@ contract('Collection Full test', function() {
                     { value: price }))
                     .to.emit(this.collection, 'Buy')
                     .withArgs(this.buyer.address, 1, this.referral.address);
-                  expect(await this.collection.totalSupply()).to.equal(BigNumber.from(1));
+                  expect(await this.collection.totalSupply()).to.equal(1);
                   price = await this.collection.getTotalPriceFor(2);
                   await expect(this.collection.connect(this.buyer).buy(2, this.referral.address,
                     { value: price }))
                     .to.emit(this.collection, 'Buy')
                     .withArgs(this.buyer.address, 2, this.referral.address);
-                  expect(await this.collection.totalSupply()).to.equal(BigNumber.from(3));
+                  expect(await this.collection.totalSupply()).to.equal(3);
                 });
 
                 it('token purchase with zero address', async function() {
@@ -397,15 +396,13 @@ contract('Collection Full test', function() {
                   price = await this.collection.getTotalPriceFor(2);
                   await this.collection.buy(2, this.referral.address, { value: price });
                   const vaultBalanceAfter = await this.vault.getBalance();
-                  expect(vaultBalanceAfter.sub(vaultBalanceBefore).toString()).to.equal(
-                    BigNumber.from(price.toString()),
-                  );
+                  expect(vaultBalanceAfter.sub(vaultBalanceBefore)).to.equal(price);
                 });
 
                 it('reverts when trying to buy after sale end', async function() {
                   price = await this.collection.getTotalPriceFor(19);
                   await this.collection.connect(this.buyer).buy(19, this.referral.address, { value: price });
-                  expect(await this.collection.totalSupply()).to.equal(BigNumber.from(19));
+                  expect(await this.collection.totalSupply()).to.equal(19);
 
                   price = await this.collection.getTotalPriceFor(11);
                   await expect(this.collection.connect(this.buyer).buy(11, this.referral.address, {
@@ -457,11 +454,11 @@ contract('Collection Full test', function() {
         });
 
         it('check saleStage #0 available', async function() {
-          expect(await this.collection.saleStagesLength()).to.equal(BigNumber.from(1));
+          expect(await this.collection.saleStagesLength()).to.equal(1);
           const saleStage = await this.collection.getSaleStage(0);
-          expect(saleStage.startTokens).to.equal(BigNumber.from(0));
-          expect(saleStage.endTokens).to.equal(BigNumber.from(9));
-          expect(saleStage.weiPerToken).to.equal(BigNumber.from(100));
+          expect(saleStage.startTokens).to.equal(0);
+          expect(saleStage.endTokens).to.equal(9);
+          expect(saleStage.weiPerToken).to.equal(100);
           await expect(this.collection.getSaleStage(1)).to.be.reverted;
         });
 
@@ -471,18 +468,18 @@ contract('Collection Full test', function() {
           });
 
           it('both saleStages are visible', async function() {
-            expect(await this.collection.saleStagesLength()).to.equal(BigNumber.from(2));
+            expect(await this.collection.saleStagesLength()).to.equal(2);
             // previously created stage is visible
             let saleStage = await this.collection.getSaleStage(0);
-            expect(saleStage.startTokens).to.equal(BigNumber.from(0));
-            expect(saleStage.endTokens).to.equal(BigNumber.from(9));
-            expect(saleStage.weiPerToken).to.equal(BigNumber.from(100));
+            expect(saleStage.startTokens).to.equal(0);
+            expect(saleStage.endTokens).to.equal(9);
+            expect(saleStage.weiPerToken).to.equal(100);
             // new stage is visible
             saleStage = await this.collection.getSaleStage(1);
             // fixme: token numbering in batches should be inclusive
-            expect(saleStage.startTokens).to.equal(BigNumber.from(10));
-            expect(saleStage.endTokens).to.equal(BigNumber.from(19));
-            expect(saleStage.weiPerToken).to.equal(BigNumber.from(200));
+            expect(saleStage.startTokens).to.equal(10);
+            expect(saleStage.endTokens).to.equal(19);
+            expect(saleStage.weiPerToken).to.equal(200);
             await expect(this.collection.getSaleStage(2)).to.be.reverted;
           });
 
@@ -499,21 +496,21 @@ contract('Collection Full test', function() {
 
               it('mint with manager role', async function() {
                 await this.collection.mint(this.other.address, 1);
-                expect(await this.collection.totalSupply()).to.equal(BigNumber.from(1));
+                expect(await this.collection.totalSupply()).to.equal(1);
               });
 
               it('no batches before they added', async function() {
-                expect(await this.collection.batchesLength()).to.equal(BigNumber.from(0));
+                expect(await this.collection.batchesLength()).to.equal(0);
                 const batches = await this.collection.getBatches();
-                expect(batches.length).to.equal(BigNumber.from(0));
+                expect(batches.length).to.equal(0);
               });
 
               it('mintMultiple token purchase', async function() {
                 await this.collection.mintMultiple(this.deployer.address, 1);
-                expect(await this.collection.totalSupply()).to.equal(BigNumber.from(1));
+                expect(await this.collection.totalSupply()).to.equal(1);
 
                 await this.collection.mintMultiple(this.deployer.address, 2);
-                expect(await this.collection.totalSupply()).to.equal(BigNumber.from(3));
+                expect(await this.collection.totalSupply()).to.equal(3);
               });
 
               it('mintMultiple reverts when trying to buy 0 nft', async function() {
@@ -541,20 +538,20 @@ contract('Collection Full test', function() {
                 });
 
                 it('batch is visible', async function() {
-                  expect(await this.collection.batchesLength()).to.equal(BigNumber.from(1));
+                  expect(await this.collection.batchesLength()).to.equal(1);
                   const batches = await this.collection.getBatches();
-                  expect(batches.length).to.equal(BigNumber.from(1));
-                  expect(batches[0].endId).to.equal(BigNumber.from(10));
+                  expect(batches.length).to.equal(1);
+                  expect(batches[0].endId).to.equal(10);
                   expect(batches[0].baseURI).to.equal('ipfs://ipfs/batchX');
-                  expect(batches[0].rarity).to.equal(BigNumber.from(12));
+                  expect(batches[0].rarity).to.equal(12);
                 });
 
                 it('return default rarity', async function() {
-                  expect(await this.collection.getRarity(999)).to.equal(BigNumber.from(1));
+                  expect(await this.collection.getRarity(999)).to.equal(1);
                 });
 
                 it('return token batch rarity', async function() {
-                  expect(await this.collection.getRarity(9)).to.equal(BigNumber.from(12));
+                  expect(await this.collection.getRarity(9)).to.equal(12);
                 });
 
                 it('tokenURIs are correct', async function() {
@@ -575,15 +572,15 @@ contract('Collection Full test', function() {
                   });
 
                   it('both batches are visible', async function() {
-                    expect(await this.collection.batchesLength()).to.equal(BigNumber.from(2));
+                    expect(await this.collection.batchesLength()).to.equal(2);
                     const batches = await this.collection.getBatches();
-                    expect(batches.length).to.equal(BigNumber.from(2));
-                    expect(batches[0].endId).to.equal(BigNumber.from(10));
+                    expect(batches.length).to.equal(2);
+                    expect(batches[0].endId).to.equal(10);
                     expect(batches[0].baseURI).to.equal('ipfs://ipfs/batchX');
-                    expect(batches[0].rarity).to.equal(BigNumber.from(12));
-                    expect(batches[1].endId).to.equal(BigNumber.from(20));
+                    expect(batches[0].rarity).to.equal(12);
+                    expect(batches[1].endId).to.equal(20);
                     expect(batches[1].baseURI).to.equal('ipfs://ipfs/batchY');
-                    expect(batches[1].rarity).to.equal(BigNumber.from(23));
+                    expect(batches[1].rarity).to.equal(23);
                   });
 
                   it('tokenURIs are correct', async function() {
@@ -604,12 +601,12 @@ contract('Collection Full test', function() {
                     });
 
                     it('batch 0 should disappear and batches array should shorten', async function() {
-                      expect(await this.collection.batchesLength()).to.equal(BigNumber.from(1));
+                      expect(await this.collection.batchesLength()).to.equal(1);
                       const batches = await this.collection.getBatches();
-                      expect(batches.length).to.equal(BigNumber.from(1));
-                      expect(batches[0].endId).to.equal(BigNumber.from(20));
+                      expect(batches.length).to.equal(1);
+                      expect(batches[0].endId).to.equal(20);
                       expect(batches[0].baseURI).to.equal('ipfs://ipfs/batchY');
-                      expect(batches[0].rarity).to.equal(BigNumber.from(23));
+                      expect(batches[0].rarity).to.equal(23);
                     });
 
                     it('tokenURIs prevously served from removed batch now have batchY URI', async function() {
@@ -635,13 +632,13 @@ contract('Collection Full test', function() {
                             { value: price }))
                             .to.emit(this.collection, 'Buy')
                             .withArgs(this.buyer.address, 1, this.referral.address);
-                          expect(await this.collection.totalSupply()).to.equal(BigNumber.from(1));
+                          expect(await this.collection.totalSupply()).to.equal(1);
                           price = await this.collection.getTotalPriceFor(2);
                           await expect(this.collection.connect(this.buyer).buy(2, this.referral.address,
                             { value: price }))
                             .to.emit(this.collection, 'Buy')
                             .withArgs(this.buyer.address, 2, this.referral.address);
-                          expect(await this.collection.totalSupply()).to.equal(BigNumber.from(3));
+                          expect(await this.collection.totalSupply()).to.equal(3);
                         });
 
                         it('token purchase with zero address', async function() {
@@ -658,15 +655,13 @@ contract('Collection Full test', function() {
                           price = await this.collection.getTotalPriceFor(2);
                           await this.collection.buy(2, this.referral.address, { value: price });
                           const vaultBalanceAfter = await this.vault.getBalance();
-                          expect(vaultBalanceAfter.sub(vaultBalanceBefore).toString()).to.equal(
-                            BigNumber.from(price.toString()),
-                          );
+                          expect(vaultBalanceAfter.sub(vaultBalanceBefore)).to.equal(price);
                         });
 
                         it('reverts when trying to buy after sale end', async function() {
                           price = await this.collection.getTotalPriceFor(19);
                           await this.collection.connect(this.buyer).buy(19, this.referral.address, { value: price });
-                          expect(await this.collection.totalSupply()).to.equal(BigNumber.from(19));
+                          expect(await this.collection.totalSupply()).to.equal(19);
 
                           price = await this.collection.getTotalPriceFor(11);
                           await expect(this.collection.connect(this.buyer).buy(11, this.referral.address, {
