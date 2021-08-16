@@ -16,101 +16,9 @@ contract('Collection Full test', function() {
     this.collection = await this.CollectionArtifact.deploy();
   });
 
-  context('check role-based access-control', function() {
-    it('setDefaultUri reverts if called by wrong role', async function() {
-      await expect(this.collection.connect(this.other).setDefaultUri('ipfs://ipfs/defaultUri'))
-        .to.be.revertedWith('VM Exception while processing transaction: revert AccessControl');
-    });
-
-    it('setDefaultRarity reverts if called by wrong role', async function() {
-      await expect(this.collection.connect(this.other).setDefaultRarity(1))
-        .to.be.revertedWith('VM Exception while processing transaction: revert AccessControl');
-    });
-
-    it('setVault reverts if called by wrong role', async function() {
-      await expect(this.collection.connect(this.other).setVault(this.other.address))
-        .to.be.revertedWith('VM Exception while processing transaction: revert AccessControl');
-    });
-
-    it('setDefaultUri reverts if called by wrong role', async function() {
-      await expect(this.collection.connect(this.other).setDefaultUri('ipfs://ipfs/defaultUri'))
-        .to.be.revertedWith('VM Exception while processing transaction: revert AccessControl');
-    });
-
-    it('addSaleStage reverts if called by wrong role', async function() {
-      await expect(this.collection.connect(this.other).addSaleStage(1, 200))
-        .to.be.revertedWith('VM Exception while processing transaction: revert AccessControl');
-    });
-
-    it('mint reverts if called by wrong role', async function() {
-      await expect(this.collection.connect(this.other).mint(this.other.address, 1))
-        .to.be.revertedWith('VM Exception while processing transaction: revert AccessControl');
-    });
-
-    it('addBatch reverts if called by wrong role', async function() {
-      await expect(this.collection.connect(this.other).addBatch(10, 'ipfs://ipfs/batchX', 12))
-        .to.be.revertedWith('VM Exception while processing transaction: revert AccessControl');
-    });
-
-    it('sale start reverts if called by wrong role', async function() {
-      await expect(this.collection.connect(this.other).start())
-        .to.be.revertedWith('VM Exception while processing transaction: revert AccessControl');
-    });
-
-    it('setMaxPurchaseSize reverts if called by wrong role', async function() {
-      const newPurchaseSize = 30;
-      await expect(this.collection.connect(this.other).setMaxPurchaseSize(newPurchaseSize))
-        .to.be.revertedWith('VM Exception while processing transaction: revert AccessControl');
-    });
-
-    it('setName reverts if called by wrong role', async function() {
-      await expect(this.collection.connect(this.other).setName(18, 'new name'))
-        .to.be.revertedWith('VM Exception while processing transaction: revert AccessControl');
-    });
-
-    it('setSkill reverts if called by wrong role', async function() {
-      await expect(this.collection.connect(this.other).setSkill(18, 1))
-        .to.be.revertedWith('VM Exception while processing transaction: revert AccessControl');
-    });
-
-    it('mintMultiple reverts if called by wrong role', async function() {
-      await expect(this.collection.connect(this.buyer).mintMultiple(this.referral.address, 20))
-        .to.be.revertedWith('VM Exception while processing transaction: revert AccessControl');
-    });
-  });
-
-  it('totalSupply and maxTotalSupply are 0', async function() {
-    expect(await this.collection.totalSupply()).to.equal(0);
-    expect(await this.collection.maxTotalSupply()).to.equal(0);
-  });
-
-  it('getBatchByToken reverts when there is no batches', async function() {
-    await expect(this.collection.getBatchByToken(999))
-      .to.be.revertedWith('getBatchByToken: no batches');
-  });
-
-  context('add all manager role, set rarity and set default uri', function() {
+  context('set defaultRarity and defaultUri', function() {
     let price;
     beforeEach(async function() {
-      this.saleAdminRole = await this.collection.SALE_ADMIN_ROLE();
-      await this.collection.grantRole(this.saleAdminRole, this.deployer.address);
-      this.mintMultipleRole = await this.collection.MINTER_ROLE();
-      await this.collection.grantRole(this.mintMultipleRole, this.deployer.address);
-      this.batchManagerRole = await this.collection.BATCH_MANAGER_ROLE();
-      await this.collection.grantRole(this.batchManagerRole, this.deployer.address);
-      this.nameSetterRole = await this.collection.NAME_SETTER_ROLE();
-      await this.collection.grantRole(this.nameSetterRole, this.deployer.address);
-      this.skillSetterRole = await this.collection.SKILL_SETTER_ROLE();
-      await this.collection.grantRole(this.skillSetterRole, this.deployer.address);
-      this.maxPurchaseSizeRole = await this.collection.MAX_PURCHASE_SIZE_SETTER_ROLE();
-      await this.collection.grantRole(this.maxPurchaseSizeRole, this.deployer.address);
-      this.uriSetterRole = await this.collection.DEFAULT_URI_SETTER_ROLE();
-      await this.collection.grantRole(this.uriSetterRole, this.deployer.address);
-      this.raritySetterRole = await this.collection.DEFAULT_RARITY_SETTER_ROLE();
-      await this.collection.grantRole(this.raritySetterRole, this.deployer.address);
-      this.vaultSetterRole = await this.collection.VAULT_SETTER_ROLE();
-      await this.collection.grantRole(this.vaultSetterRole, this.deployer.address);
-
       await this.collection.setDefaultRarity(1);
       await this.collection.setDefaultUri('ipfs://ipfs/defaultUri');
     });
@@ -140,123 +48,119 @@ contract('Collection Full test', function() {
           .to.be.revertedWith('addSaleStage: weiPerToken must be non-zero');
       });
 
-      context('add batch without saleStage', function() {
-        it('no batches initially', async function() {
+      context('add batch #0', function() {
+        beforeEach(async function() {
           expect(await this.collection.batchesLength()).to.equal(0);
           const batches = await this.collection.getBatches();
           expect(batches.length).to.equal(0);
+          await this.collection.addBatch(10, 'ipfs://ipfs/batchX', 12);
         });
-        context('after batch #0 added', function() {
+
+        it('batch #0 is visible', async function() {
+          expect(await this.collection.batchesLength()).to.equal(1);
+          const batches = await this.collection.getBatches();
+          expect(batches.length).to.equal(1);
+          expect(batches[0].endId).to.equal(10);
+          expect(batches[0].baseURI).to.equal('ipfs://ipfs/batchX');
+          expect(batches[0].rarity).to.equal(12);
+        });
+
+        it('tokens from batch have batch-based rarity and URIs', async function() {
+          expect(await this.collection.getRarity(0)).to.equal(12);
+          expect(await this.collection.getRarity(9)).to.equal(12);
+          expect(await this.collection.tokenURI(0)).to.equal('ipfs://ipfs/batchX/0.json');
+          expect(await this.collection.tokenURI(9)).to.equal('ipfs://ipfs/batchX/9.json');
+        });
+
+        it('tokens that don\'t match the batch have default rarity', async function() {
+          expect(await this.collection.getRarity(999)).to.equal(1);
+        });
+
+        context('then add batch #1', function() {
           beforeEach(async function() {
-            await this.collection.addBatch(10, 'ipfs://ipfs/batchX', 12);
+            await this.collection.addBatch(20, 'ipfs://ipfs/batchY', 23);
           });
 
-          it('batch is visible', async function() {
-            expect(await this.collection.batchesLength()).to.equal(1);
+          it('both batches are visible', async function() {
+            expect(await this.collection.batchesLength()).to.equal(2);
             const batches = await this.collection.getBatches();
-            expect(batches.length).to.equal(1);
+            expect(batches.length).to.equal(2);
             expect(batches[0].endId).to.equal(10);
             expect(batches[0].baseURI).to.equal('ipfs://ipfs/batchX');
             expect(batches[0].rarity).to.equal(12);
+            expect(batches[1].endId).to.equal(20);
+            expect(batches[1].baseURI).to.equal('ipfs://ipfs/batchY');
+            expect(batches[1].rarity).to.equal(23);
           });
 
-          it('tokens from batch have batch-based rarity and URIs', async function() {
-            expect(await this.collection.getRarity(0)).to.equal(12);
-            expect(await this.collection.getRarity(9)).to.equal(12);
+          it('tokenURIs are correct', async function() {
             expect(await this.collection.tokenURI(0)).to.equal('ipfs://ipfs/batchX/0.json');
-            expect(await this.collection.tokenURI(9)).to.equal('ipfs://ipfs/batchX/9.json');
+            expect(await this.collection.tokenURI(10)).to.equal('ipfs://ipfs/batchX/10.json');
+            expect(await this.collection.tokenURI(11)).to.equal('ipfs://ipfs/batchY/11.json');
+            await expect(this.collection.getBatchByToken(20))
+              .to.be.revertedWith('getBatchByToken: tokenId must be less then last token id in batches array');
+            // fixme: endId is not available
+            // Error: VM Exception while processing transaction: revert getBatchByToken:
+            // tokenId must be less then last token id in batches array
+            // expect(await this.collection.tokenURI(20)).to.equal('ipfs://ipfs/batchY/19.json');
           });
 
-          it('tokens that don\'t match the batch have default rarity', async function() {
-            expect(await this.collection.getRarity(999)).to.equal(1);
-          });
-
-          context('add batch #1', function() {
+          context('delete batch #0', function() {
             beforeEach(async function() {
-              await this.collection.addBatch(20, 'ipfs://ipfs/batchY', 23);
+              await this.collection.deleteBatch(0);
             });
 
-            it('both batches are visible', async function() {
-              expect(await this.collection.batchesLength()).to.equal(2);
+            it('batch 0 should disappear and batches array should shorten', async function() {
+              expect(await this.collection.batchesLength()).to.equal(1);
               const batches = await this.collection.getBatches();
-              expect(batches.length).to.equal(2);
-              expect(batches[0].endId).to.equal(10);
-              expect(batches[0].baseURI).to.equal('ipfs://ipfs/batchX');
-              expect(batches[0].rarity).to.equal(12);
-              expect(batches[1].endId).to.equal(20);
-              expect(batches[1].baseURI).to.equal('ipfs://ipfs/batchY');
-              expect(batches[1].rarity).to.equal(23);
+              expect(batches.length).to.equal(1);
+              expect(batches[0].endId).to.equal(20);
+              expect(batches[0].baseURI).to.equal('ipfs://ipfs/batchY');
+              expect(batches[0].rarity).to.equal(23);
             });
 
-            it('tokenURIs are correct', async function() {
-              expect(await this.collection.tokenURI(0)).to.equal('ipfs://ipfs/batchX/0.json');
-              expect(await this.collection.tokenURI(10)).to.equal('ipfs://ipfs/batchX/10.json');
+            it('tokenURIs prevously served from removed batch now have batchY URI', async function() {
+              expect(await this.collection.tokenURI(10)).to.equal('ipfs://ipfs/batchY/10.json');
               expect(await this.collection.tokenURI(11)).to.equal('ipfs://ipfs/batchY/11.json');
-              await expect(this.collection.getBatchByToken(20))
-                .to.be.revertedWith('getBatchByToken: tokenId must be less then last token id in batches array');
               // fixme: endId is not available
-              // Error: VM Exception while processing transaction: revert getBatchByToken:
-              // tokenId must be less then last token id in batches array
               // expect(await this.collection.tokenURI(20)).to.equal('ipfs://ipfs/batchY/19.json');
             });
 
-            context('delete batch #0', function() {
+            context('turn on Sale', function() {
               beforeEach(async function() {
-                await this.collection.deleteBatch(0);
+                await this.collection.start();
               });
 
-              it('batch 0 should disappear and batches array should shorten', async function() {
-                expect(await this.collection.batchesLength()).to.equal(1);
-                const batches = await this.collection.getBatches();
-                expect(batches.length).to.equal(1);
-                expect(batches[0].endId).to.equal(20);
-                expect(batches[0].baseURI).to.equal('ipfs://ipfs/batchY');
-                expect(batches[0].rarity).to.equal(23);
+              it('sale is active', async function() {
+                const active = await this.collection.saleActive();
+                expect(active).equal(true);
+              });
+              context('mint token', function() {
+                it('reverts when trying to mint after sale end', async function() {
+                  await expect(this.collection.mint(this.referral.address, 11))
+                    .to.be.revertedWith('revert Collection: maxSupply achieved');
+                });
+
+                it('reverts when trying to mintMultiple after sale end', async function() {
+                  await expect(this.collection.mintMultiple(this.referral.address, 11))
+                    .to.be.revertedWith('buy: Sale has already ended');
+                });
               });
 
-              it('tokenURIs prevously served from removed batch now have batchY URI', async function() {
-                expect(await this.collection.tokenURI(10)).to.equal('ipfs://ipfs/batchY/10.json');
-                expect(await this.collection.tokenURI(11)).to.equal('ipfs://ipfs/batchY/11.json');
-                // fixme: endId is not available
-                // expect(await this.collection.tokenURI(20)).to.equal('ipfs://ipfs/batchY/19.json');
-              });
-
-              context('turn on Sale', function() {
-                beforeEach(async function() {
-                  await this.collection.start();
+              context('buy token', function() {
+                it('reverts when trying to buy after sale end', async function() {
+                  price = await this.collection.getTotalPriceFor(1);
+                  await expect(this.collection.connect(this.buyer).buy(1, this.referral.address, { value: price }))
+                    .to.be.revertedWith('buy: Sale has already ended');
                 });
 
-                it('sale is active', async function() {
-                  const active = await this.collection.saleActive();
-                  expect(active).equal(true);
-                });
-                context('mint token', function() {
-                  it('reverts when trying to mint after sale end', async function() {
-                    await expect(this.collection.mint(this.referral.address, 11))
-                      .to.be.revertedWith('revert Collection: maxSupply achieved');
+                context('token attributes', function() {
+                  it('get token name by id', async function() {
+                    expect(await this.collection.getName(18)).equal('');
                   });
 
-                  it('reverts when trying to mintMultiple after sale end', async function() {
-                    await expect(this.collection.mintMultiple(this.referral.address, 11))
-                      .to.be.revertedWith('buy: Sale has already ended');
-                  });
-                });
-
-                context('buy token', function() {
-                  it('reverts when trying to buy after sale end', async function() {
-                    price = await this.collection.getTotalPriceFor(1);
-                    await expect(this.collection.connect(this.buyer).buy(1, this.referral.address, { value: price }))
-                      .to.be.revertedWith('buy: Sale has already ended');
-                  });
-
-                  context('token attributes', function() {
-                    it('get token name by id', async function() {
-                      expect(await this.collection.getName(18)).equal('');
-                    });
-
-                    it('get token skill by id', async function() {
-                      expect(await this.collection.getSkill(18)).equal(0);
-                    });
+                  it('get token skill by id', async function() {
+                    expect(await this.collection.getSkill(18)).equal(0);
                   });
                 });
               });
@@ -265,8 +169,9 @@ contract('Collection Full test', function() {
         });
       });
 
-      context('add saleStage without batch', function() {
+      context('add saleStage #0', function() {
         beforeEach(async function() {
+          expect(await this.collection.saleStagesLength()).to.equal(0);
           await this.collection.addSaleStage(9, 100);
         });
         it('check saleStage #0 available', async function() {
@@ -739,5 +644,84 @@ contract('Collection Full test', function() {
         });
       });
     });
+  });
+
+  context('check role-based access-control', function() {
+    beforeEach(async function() {
+      // todo: assign different roles for separate accounts and test them separately
+      // this.saleAdminRole = await this.collection.SALE_ADMIN_ROLE();
+      // await this.collection.grantRole(this.saleAdminRole, this.deployer.address);
+    });
+
+    it('setDefaultUri reverts if called by wrong role', async function() {
+      await expect(this.collection.connect(this.other).setDefaultUri('ipfs://ipfs/defaultUri'))
+        .to.be.revertedWith('VM Exception while processing transaction: revert AccessControl');
+    });
+
+    it('setDefaultRarity reverts if called by wrong role', async function() {
+      await expect(this.collection.connect(this.other).setDefaultRarity(1))
+        .to.be.revertedWith('VM Exception while processing transaction: revert AccessControl');
+    });
+
+    it('setVault reverts if called by wrong role', async function() {
+      await expect(this.collection.connect(this.other).setVault(this.other.address))
+        .to.be.revertedWith('VM Exception while processing transaction: revert AccessControl');
+    });
+
+    it('setDefaultUri reverts if called by wrong role', async function() {
+      await expect(this.collection.connect(this.other).setDefaultUri('ipfs://ipfs/defaultUri'))
+        .to.be.revertedWith('VM Exception while processing transaction: revert AccessControl');
+    });
+
+    it('addSaleStage reverts if called by wrong role', async function() {
+      await expect(this.collection.connect(this.other).addSaleStage(1, 200))
+        .to.be.revertedWith('VM Exception while processing transaction: revert AccessControl');
+    });
+
+    it('mint reverts if called by wrong role', async function() {
+      await expect(this.collection.connect(this.other).mint(this.other.address, 1))
+        .to.be.revertedWith('VM Exception while processing transaction: revert AccessControl');
+    });
+
+    it('addBatch reverts if called by wrong role', async function() {
+      await expect(this.collection.connect(this.other).addBatch(10, 'ipfs://ipfs/batchX', 12))
+        .to.be.revertedWith('VM Exception while processing transaction: revert AccessControl');
+    });
+
+    it('sale start reverts if called by wrong role', async function() {
+      await expect(this.collection.connect(this.other).start())
+        .to.be.revertedWith('VM Exception while processing transaction: revert AccessControl');
+    });
+
+    it('setMaxPurchaseSize reverts if called by wrong role', async function() {
+      const newPurchaseSize = 30;
+      await expect(this.collection.connect(this.other).setMaxPurchaseSize(newPurchaseSize))
+        .to.be.revertedWith('VM Exception while processing transaction: revert AccessControl');
+    });
+
+    it('setName reverts if called by wrong role', async function() {
+      await expect(this.collection.connect(this.other).setName(18, 'new name'))
+        .to.be.revertedWith('VM Exception while processing transaction: revert AccessControl');
+    });
+
+    it('setSkill reverts if called by wrong role', async function() {
+      await expect(this.collection.connect(this.other).setSkill(18, 1))
+        .to.be.revertedWith('VM Exception while processing transaction: revert AccessControl');
+    });
+
+    it('mintMultiple reverts if called by wrong role', async function() {
+      await expect(this.collection.connect(this.buyer).mintMultiple(this.referral.address, 20))
+        .to.be.revertedWith('VM Exception while processing transaction: revert AccessControl');
+    });
+  });
+
+  it('totalSupply and maxTotalSupply are 0', async function() {
+    expect(await this.collection.totalSupply()).to.equal(0);
+    expect(await this.collection.maxTotalSupply()).to.equal(0);
+  });
+
+  it('getBatchByToken reverts when there is no batches', async function() {
+    await expect(this.collection.getBatchByToken(999))
+      .to.be.revertedWith('getBatchByToken: no batches');
   });
 });
