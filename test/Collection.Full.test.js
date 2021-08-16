@@ -112,12 +112,12 @@ contract('Collection Full test', function() {
       this.vaultSetterRole = await this.collection.VAULT_SETTER_ROLE();
       await this.collection.grantRole(this.vaultSetterRole, this.deployer.address);
 
-      await this.collection.connect(this.deployer).setDefaultRarity(1);
-      await this.collection.connect(this.deployer).setDefaultUri('ipfs://ipfs/defaultUri');
+      await this.collection.setDefaultRarity(1);
+      await this.collection.setDefaultUri('ipfs://ipfs/defaultUri');
     });
 
     it('without vault address, start should revert', async function() {
-      await expect(this.collection.connect(this.deployer).start())
+      await expect(this.collection.start())
         .to.be.revertedWith('VM Exception while processing transaction: revert start: Vault is undefined');
     });
 
@@ -130,11 +130,11 @@ contract('Collection Full test', function() {
 
     context('set vault address', function() {
       beforeEach(async function() {
-        await this.collection.connect(this.deployer).setVault(this.vault.address);
+        await this.collection.setVault(this.vault.address);
       });
 
       it('return defaultUri on try get token with more than max id', async function() {
-        await this.collection.connect(this.deployer).addBatch(19,
+        await this.collection.addBatch(19,
           'ipfs://ipfs/QmSQENpQaQ9JLJRTXxDGR9zwKzyXxkYsk5KSB3YsGQu78a', 88);
         const batch = await this.collection.tokenURI(20);
         expect(batch).equal('ipfs://ipfs/defaultUri');
@@ -237,7 +237,7 @@ contract('Collection Full test', function() {
 
               context('turn on Sale', function() {
                 beforeEach(async function() {
-                  await this.collection.connect(this.deployer).start();
+                  await this.collection.start();
                 });
 
                 it('sale is active', async function() {
@@ -246,12 +246,12 @@ contract('Collection Full test', function() {
                 });
                 context('mint token', function() {
                   it('reverts when trying to mint after sale end', async function() {
-                    await expect(this.collection.connect(this.deployer).mint(this.referral.address, 11))
+                    await expect(this.collection.mint(this.referral.address, 11))
                       .to.be.revertedWith('revert Collection: maxSupply achieved');
                   });
 
                   it('reverts when trying to mintMultiple after sale end', async function() {
-                    await expect(this.collection.connect(this.deployer).mintMultiple(this.referral.address, 11))
+                    await expect(this.collection.mintMultiple(this.referral.address, 11))
                       .to.be.revertedWith('buy: Sale has already ended');
                   });
                 });
@@ -265,11 +265,11 @@ contract('Collection Full test', function() {
 
                   context('token attributes', function() {
                     it('get token name by id', async function() {
-                      expect(await this.collection.connect(this.deployer).getName(18)).equal('');
+                      expect(await this.collection.getName(18)).equal('');
                     });
 
                     it('get token skill by id', async function() {
-                      expect(await this.collection.connect(this.deployer).getSkill(18)).equal(0);
+                      expect(await this.collection.getSkill(18)).equal(0);
                     });
                   });
                 });
@@ -321,7 +321,7 @@ contract('Collection Full test', function() {
             it('mint token when batch 0 is delete');
 
             it('mint with manager role', async function() {
-              await this.collection.connect(this.deployer).mint(this.other.address, 1);
+              await this.collection.mint(this.other.address, 1);
               expect(await this.collection.totalSupply()).to.equal(BigNumber.from(1));
             });
 
@@ -332,35 +332,35 @@ contract('Collection Full test', function() {
             });
 
             it('mintMultiple token purchase', async function() {
-              await this.collection.connect(this.deployer).mintMultiple(this.deployer.address, 1);
+              await this.collection.mintMultiple(this.deployer.address, 1);
               expect(await this.collection.totalSupply()).to.equal(BigNumber.from(1));
 
-              await this.collection.connect(this.deployer).mintMultiple(this.deployer.address, 2);
+              await this.collection.mintMultiple(this.deployer.address, 2);
               expect(await this.collection.totalSupply()).to.equal(BigNumber.from(3));
             });
 
             it('mintMultiple reverts when trying to buy 0 nft', async function() {
-              await expect(this.collection.connect(this.deployer).mintMultiple(this.referral.address, 0))
+              await expect(this.collection.mintMultiple(this.referral.address, 0))
                 .to.be.revertedWith('buy: nfts cannot be 0');
             });
 
             it('mintMultiple reverts when trying to buy nfts that exceeds totalSupply', async function() {
               price = await this.collection.getTotalPriceFor(20);
-              await expect(this.collection.connect(this.deployer).mintMultiple(this.referral.address, 20))
+              await expect(this.collection.mintMultiple(this.referral.address, 20))
                 .to.be.revertedWith('buy: Exceeds _maxTotalSupply');
             });
 
             it('mintMultiple reverts when trying to buy after sale end', async function() {
-              await this.collection.connect(this.deployer).mintMultiple(
+              await this.collection.mintMultiple(
                 this.referral.address, 19);
-              await expect(this.collection.connect(this.deployer).mintMultiple(
+              await expect(this.collection.mintMultiple(
                 this.referral.address, 19))
                 .to.be.revertedWith('buy: Sale has already ended');
             });
 
             context('turn on Sale', function() {
               beforeEach(async function() {
-                await this.collection.connect(this.deployer).start();
+                await this.collection.start();
               });
 
               it('sale is active', async function() {
@@ -428,7 +428,7 @@ contract('Collection Full test', function() {
 
                 it('reverts when trying to buy more than maxPurchaseSize nft', async function() {
                   const newPurchaseSize = 30;
-                  await this.collection.connect(this.deployer).setMaxPurchaseSize(newPurchaseSize);
+                  await this.collection.setMaxPurchaseSize(newPurchaseSize);
                   price = await this.collection.getTotalPriceFor(31);
                   await expect(this.collection.buy(31, this.referral.address, { value: price }))
                     .to.be.revertedWith('buy: You can not buy more than maxPurchaseSize NFTs at once');
@@ -498,7 +498,7 @@ contract('Collection Full test', function() {
               it('mint token when batch 0 is delete');
 
               it('mint with manager role', async function() {
-                await this.collection.connect(this.deployer).mint(this.other.address, 1);
+                await this.collection.mint(this.other.address, 1);
                 expect(await this.collection.totalSupply()).to.equal(BigNumber.from(1));
               });
 
@@ -509,28 +509,28 @@ contract('Collection Full test', function() {
               });
 
               it('mintMultiple token purchase', async function() {
-                await this.collection.connect(this.deployer).mintMultiple(this.deployer.address, 1);
+                await this.collection.mintMultiple(this.deployer.address, 1);
                 expect(await this.collection.totalSupply()).to.equal(BigNumber.from(1));
 
-                await this.collection.connect(this.deployer).mintMultiple(this.deployer.address, 2);
+                await this.collection.mintMultiple(this.deployer.address, 2);
                 expect(await this.collection.totalSupply()).to.equal(BigNumber.from(3));
               });
 
               it('mintMultiple reverts when trying to buy 0 nft', async function() {
-                await expect(this.collection.connect(this.deployer).mintMultiple(this.referral.address, 0))
+                await expect(this.collection.mintMultiple(this.referral.address, 0))
                   .to.be.revertedWith('buy: nfts cannot be 0');
               });
 
               it('mintMultiple reverts when trying to buy nfts that exceeds totalSupply', async function() {
                 price = await this.collection.getTotalPriceFor(20);
-                await expect(this.collection.connect(this.deployer).mintMultiple(this.referral.address, 20))
+                await expect(this.collection.mintMultiple(this.referral.address, 20))
                   .to.be.revertedWith('buy: Exceeds _maxTotalSupply');
               });
 
               it('mintMultiple reverts when trying to buy after sale end', async function() {
-                await this.collection.connect(this.deployer).mintMultiple(
+                await this.collection.mintMultiple(
                   this.referral.address, 19);
-                await expect(this.collection.connect(this.deployer).mintMultiple(
+                await expect(this.collection.mintMultiple(
                   this.referral.address, 19))
                   .to.be.revertedWith('buy: Sale has already ended');
               });
@@ -621,7 +621,7 @@ contract('Collection Full test', function() {
 
                     context('turn on Sale', function() {
                       beforeEach(async function() {
-                        await this.collection.connect(this.deployer).start();
+                        await this.collection.start();
                       });
 
                       it('sale is active', async function() {
@@ -689,7 +689,7 @@ contract('Collection Full test', function() {
 
                         it('reverts when trying to buy more than maxPurchaseSize nft', async function() {
                           const newPurchaseSize = 30;
-                          await this.collection.connect(this.deployer).setMaxPurchaseSize(newPurchaseSize);
+                          await this.collection.setMaxPurchaseSize(newPurchaseSize);
                           price = await this.collection.getTotalPriceFor(31);
                           await expect(this.collection.buy(31, this.referral.address, { value: price }))
                             .to.be.revertedWith('buy: You can not buy more than maxPurchaseSize NFTs at once');
@@ -707,30 +707,30 @@ contract('Collection Full test', function() {
                           const newName = 'Abraham Lincoln';
                           const newSkill = 20;
                           it('get token name by id', async function() {
-                            expect(await this.collection.connect(this.deployer).getName(18)).equal('');
+                            expect(await this.collection.getName(18)).equal('');
                           });
 
                           it('change token name', async function() {
-                            await expect(this.collection.connect(this.deployer).setName(18, newName))
+                            await expect(this.collection.setName(18, newName))
                               .to.emit(this.collection, 'NameChange')
                               .withArgs(18, newName);
-                            expect(await this.collection.connect(this.deployer).getName(18)).equal(newName);
+                            expect(await this.collection.getName(18)).equal(newName);
                           });
 
                           it('get token skill by id', async function() {
-                            expect(await this.collection.connect(this.deployer).getSkill(18)).equal(0);
+                            expect(await this.collection.getSkill(18)).equal(0);
                           });
 
                           it('change token skill', async function() {
-                            await expect(this.collection.connect(this.deployer).setSkill(18, newSkill))
+                            await expect(this.collection.setSkill(18, newSkill))
                               .to.emit(this.collection, 'SkillChange')
                               .withArgs(18, newSkill);
-                            expect(await this.collection.connect(this.deployer).getSkill(18)).equal(newSkill);
+                            expect(await this.collection.getSkill(18)).equal(newSkill);
                           });
 
                           context('sale end', function() {
                             beforeEach(async function() {
-                              await this.collection.connect(this.deployer).stop();
+                              await this.collection.stop();
                             });
 
                             it('sale is deactivate', async function() {
@@ -740,7 +740,7 @@ contract('Collection Full test', function() {
 
                             it('reverts when trying to buy when sale is not active', async function() {
                               price = await this.collection.getTotalPriceFor(1);
-                              await expect(this.collection.connect(this.deployer).buy(1, this.referral.address, {
+                              await expect(this.collection.buy(1, this.referral.address, {
                                 value: price,
                               }))
                                 .to.be.revertedWith('buy: Sale is not active');
