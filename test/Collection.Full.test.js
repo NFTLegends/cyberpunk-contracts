@@ -21,6 +21,8 @@ contract('Collection Full test', function() {
     beforeEach(async function() {
       await this.collection.setDefaultRarity(1);
       await this.collection.setDefaultUri('ipfs://ipfs/defaultUri');
+      await this.collection.connect(this.deployer).setDefaultName('CyberName');
+      await this.collection.connect(this.deployer).setDefaultSkill(1490);
     });
 
     it('start and buy should revert if vault not set', async function() {
@@ -92,6 +94,14 @@ contract('Collection Full test', function() {
         await expect(this.collection.tokenURI(0)).to.be.revertedWith('tokenURI: no batches');
       });
 
+      it('get default token name by id', async function() {
+        expect(await this.collection.getName(999)).equal('CyberName');
+      });
+
+      it('get default token skill by id', async function() {
+        expect(await this.collection.getSkill(999)).equal(1490);
+      });
+
       context('add batch #0', function() {
         beforeEach(async function() {
           await this.collection.addBatch(0, 10, 'ipfs://ipfs/batchX', 12);
@@ -123,6 +133,14 @@ contract('Collection Full test', function() {
 
         it('tokens that don\'t match the batch have default rarity', async function() {
           expect(await this.collection.getRarity(999)).to.equal(1);
+        });
+
+        it('get default token name by id', async function() {
+          expect(await this.collection.getName(999)).equal('CyberName');
+        });
+
+        it('get default token skill by id', async function() {
+          expect(await this.collection.getSkill(999)).equal(1490);
         });
 
         context('set batch #0', function() {
@@ -171,16 +189,6 @@ contract('Collection Full test', function() {
               price = await this.collection.getTotalPriceFor(1);
               await expect(this.collection.connect(this.buyer).buy(1, this.referral.address, { value: price }))
                 .to.be.revertedWith('buy: Sale has already ended');
-            });
-
-            context('token attributes', function() {
-              it('get token name by id', async function() {
-                expect(await this.collection.getName(18)).equal('');
-              });
-
-              it('get token skill by id', async function() {
-                expect(await this.collection.getSkill(18)).equal(0);
-              });
             });
           });
         });
@@ -348,13 +356,13 @@ contract('Collection Full test', function() {
                     .to.be.revertedWith('buy: Ether value sent is not correct');
                 });
                 context('token attributes with default values', function() {
-                  it('get token name by id', async function() {
-                    expect(await this.collection.getName(18)).equal('');
-                  });
-
-                  it('get token skill by id', async function() {
-                    expect(await this.collection.getSkill(18)).equal(0);
-                  });
+                  // it('get token name by id', async function() {
+                  //   expect(await this.collection.getName(18)).equal('');
+                  // });
+                  //
+                  // it('get token skill by id', async function() {
+                  //   expect(await this.collection.getSkill(18)).equal(0);
+                  // });
                 });
                 it('after add batch we haw correct token attributes');
               });
@@ -831,25 +839,25 @@ contract('Collection Full test', function() {
                               const newName = 'Abraham Lincoln';
                               const newSkill = 20;
                               it('get token name by id', async function() {
-                                expect(await this.collection.getName(18)).equal('');
+                                expect(await this.collection.getName(1448)).equal('CyberName');
                               });
 
                               it('change token name', async function() {
-                                await expect(this.collection.setName(18, newName))
+                                await expect(this.collection.setName(1, newName))
                                   .to.emit(this.collection, 'NameChange')
-                                  .withArgs(18, newName);
-                                expect(await this.collection.getName(18)).equal(newName);
+                                  .withArgs(1, newName);
+                                expect(await this.collection.getName(1)).equal(newName);
                               });
 
                               it('get token skill by id', async function() {
-                                expect(await this.collection.getSkill(18)).equal(0);
+                                expect(await this.collection.getSkill(1)).equal(1490);
                               });
 
                               it('change token skill', async function() {
-                                await expect(this.collection.setSkill(18, newSkill))
+                                await expect(this.collection.setSkill(1, newSkill))
                                   .to.emit(this.collection, 'SkillChange')
-                                  .withArgs(18, newSkill);
-                                expect(await this.collection.getSkill(18)).equal(newSkill);
+                                  .withArgs(1, newSkill);
+                                expect(await this.collection.getSkill(1)).equal(newSkill);
                               });
 
                               context('sale end', function() {

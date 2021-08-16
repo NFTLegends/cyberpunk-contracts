@@ -11,6 +11,7 @@ contract Collection is ERC721Enumerable, AccessControl {
     event NameChange (uint256 indexed index, string newName);
     event SkillChange (uint256 indexed index, uint256 newSkill);
     event Buy (address indexed _from, uint256 nfts, address referral);
+
     mapping(uint256 => string) private _tokenName;
     mapping(uint256 => uint256) private _tokenSkill;
 
@@ -24,6 +25,7 @@ contract Collection is ERC721Enumerable, AccessControl {
         uint256 endTokens;
         uint256 weiPerToken;
     }
+
     struct Batch {
         uint256 startTokenId;
         uint256 endTokenId;
@@ -42,6 +44,8 @@ contract Collection is ERC721Enumerable, AccessControl {
 
     string internal _defaultUri;
     uint256 internal _defaultRarity;
+    string internal _defaultName;
+    uint256 internal _defaultSkill;
     // Role with add & set sale stages permissions
     bytes32 public constant SALE_STAGES_MANAGER_ROLE = keccak256("SALE_STAGES_MANAGER_ROLE");
     // Role with add & delete permissions
@@ -54,6 +58,8 @@ contract Collection is ERC721Enumerable, AccessControl {
     bytes32 public constant DEFAULT_URI_SETTER_ROLE = keccak256("DEFAULT_URI_SETTER_ROLE");
     bytes32 public constant DEFAULT_RARITY_SETTER_ROLE = keccak256("DEFAULT_RARITY_SETTER_ROLE");
     bytes32 public constant VAULT_SETTER_ROLE = keccak256("VAULT_SETTER_ROLE");
+    bytes32 public constant DEFAULT_NAME_SETTER_ROLE = keccak256("DEFAULT_NAME_SETTER_ROLE");
+    bytes32 public constant DEFAULT_SKILL_SETTER_ROLE = keccak256("DEFAULT_SKILL_SETTER_ROLE");
     address payable public vault;
 
     constructor() ERC721("CyberPunk", "A-12") {
@@ -68,6 +74,8 @@ contract Collection is ERC721Enumerable, AccessControl {
         _setupRole(DEFAULT_URI_SETTER_ROLE, _msgSender());
         _setupRole(VAULT_SETTER_ROLE, _msgSender());
         _setupRole(DEFAULT_RARITY_SETTER_ROLE, _msgSender());
+        _setupRole(DEFAULT_NAME_SETTER_ROLE, _msgSender());
+        _setupRole(DEFAULT_SKILL_SETTER_ROLE, _msgSender());
     }
 
     /**
@@ -107,13 +115,13 @@ contract Collection is ERC721Enumerable, AccessControl {
      * @notice Returns info about sale stage with given index.
      */
     function getSaleStage(uint256 saleStageIndex)
-        public
-        view
-        returns (
-            uint256 startTokens,
-            uint256 endTokens,
-            uint256 weiPerToken
-        )
+    public
+    view
+    returns (
+        uint256 startTokens,
+        uint256 endTokens,
+        uint256 weiPerToken
+    )
     {
         require(_saleStages.length > 0, "getSaleStage: no stages");
 
@@ -179,7 +187,7 @@ contract Collection is ERC721Enumerable, AccessControl {
         view
         override
         returns (string memory)
-    {   
+    {
         require(_batches.length > 0, "tokenURI: no batches");
 
         for (uint256 i; i < _batches.length; i++) {
@@ -190,7 +198,6 @@ contract Collection is ERC721Enumerable, AccessControl {
             }
         }
         return _defaultUri;
-        
     }
 
     /**
@@ -230,7 +237,7 @@ contract Collection is ERC721Enumerable, AccessControl {
         uint256 batchesLength = _batches.length;
         require(batchesLength > 0, "setBatch: batches is empty");
         require(batchStartId <= batchEndId, "setBatch: batchStartID must be equal or less than batchEndId");
-        
+
         for (uint256 _batchId; _batchId < batchesLength; _batchId++) {
             if (_batchId == batchId) {
                 continue;
@@ -259,7 +266,7 @@ contract Collection is ERC721Enumerable, AccessControl {
     function deleteBatch(uint256 batchIndex)
     external
     onlyRole(BATCH_MANAGER_ROLE)
-        {
+    {
         require(
             _batches.length > batchIndex,
             "deleteBatch: index out of batches length"
@@ -272,8 +279,8 @@ contract Collection is ERC721Enumerable, AccessControl {
      * @notice Adds new sale stage with given params at the end of `saleStages array`.
      */
     function addSaleStage(uint256 endTokens, uint256 weiPerToken)
-        external
-        onlyRole(SALE_STAGES_MANAGER_ROLE)
+    external
+    onlyRole(SALE_STAGES_MANAGER_ROLE)
     {
         require(weiPerToken > 0, "addSaleStage: weiPerToken must be non-zero");
         uint256 _saleStagesLength = _saleStages.length;
@@ -293,8 +300,8 @@ contract Collection is ERC721Enumerable, AccessControl {
      * @notice Rewrites sale stage properties with given index.
      */
     function setSaleStage(uint256 saleStageIndex, uint256 endTokens, uint256 weiPerToken)
-        external
-        onlyRole(SALE_STAGES_MANAGER_ROLE)
+    external
+    onlyRole(SALE_STAGES_MANAGER_ROLE)
     {
         uint256 _saleStagesLength = _saleStages.length;
         require(saleStageIndex < _saleStagesLength, "setSaleStage: saleStage with this index does not exist");
@@ -368,7 +375,7 @@ contract Collection is ERC721Enumerable, AccessControl {
     /**
      * @notice Mint a set of random NFTs without purchase (for MINTER_ROLE only).
      */
-    function mintMultiple(address to, uint256 nfts) public onlyRole(MINTER_ROLE){
+    function mintMultiple(address to, uint256 nfts) public onlyRole(MINTER_ROLE) {
         _mintMultiple(to, nfts);
     }
 
@@ -390,15 +397,15 @@ contract Collection is ERC721Enumerable, AccessControl {
      */
     function _getRandomAvailableIndex() internal view returns (uint256) {
         uint256 index = (
-            uint256(
-                keccak256(
-                    abi.encodePacked(
-                        block.timestamp, /* solhint-disable not-rely-on-time */
-                        gasleft(),
-                        blockhash(block.number - 1)
-                    )
+        uint256(
+            keccak256(
+                abi.encodePacked(
+                    block.timestamp, /* solhint-disable not-rely-on-time */
+                    gasleft(),
+                    blockhash(block.number - 1)
                 )
-            ) % _maxTotalSupply
+            )
+        ) % _maxTotalSupply
         );
         while (_exists(index)) {
             index += 1;
@@ -423,6 +430,10 @@ contract Collection is ERC721Enumerable, AccessControl {
      * @dev Returns name of the NFT at index
      */
     function getName(uint256 index) public view returns (string memory) {
+        bytes memory _tokenWeight = bytes(_tokenName[index]);
+        if (_tokenWeight.length == 0) {
+            return _defaultName;
+        }
         return _tokenName[index];
     }
 
@@ -430,7 +441,10 @@ contract Collection is ERC721Enumerable, AccessControl {
      * @dev Returns skill of the NFT at index
      */
     function getSkill(uint256 index) public view returns (uint256) {
-                return _tokenSkill[index];
+        if (_tokenSkill[index] == 0) {
+            return _defaultSkill;
+        }
+        return _tokenSkill[index];
     }
 
     /**
@@ -465,16 +479,16 @@ contract Collection is ERC721Enumerable, AccessControl {
         emit SkillChange(id, newSkill);
     }
 
-     /**
-     * @dev Change max purchase size.
-     */
+    /**
+    * @dev Change max purchase size.
+    */
     function setMaxPurchaseSize(uint256 newPurchaseSize) public onlyRole(MAX_PURCHASE_SIZE_SETTER_ROLE) {
         maxPurchaseSize = newPurchaseSize;
     }
 
-     /**
-     * @dev Set defaultUri.
-     */
+    /**
+    * @dev Set defaultUri.
+    */
     function setDefaultUri(string memory uri) public onlyRole (DEFAULT_URI_SETTER_ROLE) {
         _defaultUri = uri;
     }
@@ -482,7 +496,7 @@ contract Collection is ERC721Enumerable, AccessControl {
     /**
      * @dev Change vault.
      */
-    function setVault(address payable newVault ) public onlyRole (VAULT_SETTER_ROLE) {
+    function setVault(address payable newVault) public onlyRole (VAULT_SETTER_ROLE) {
         vault = newVault;
     }
 
@@ -491,5 +505,19 @@ contract Collection is ERC721Enumerable, AccessControl {
      */
     function setDefaultRarity(uint256 rarity) public onlyRole(DEFAULT_RARITY_SETTER_ROLE) {
         _defaultRarity = rarity;
+    }
+
+    /**
+     * @dev Set default name.
+     */
+    function setDefaultName(string memory name) public onlyRole (DEFAULT_NAME_SETTER_ROLE) {
+        _defaultName = name;
+    }
+
+    /**
+     * @dev Set default skill.
+     */
+    function setDefaultSkill(uint256 skill) public onlyRole(DEFAULT_SKILL_SETTER_ROLE) {
+        _defaultSkill = skill;
     }
 }
