@@ -16,7 +16,7 @@ contract('Collection Full test', function() {
     this.collection = await this.CollectionArtifact.deploy();
   });
 
-  context('function reverts if called by wrong role', function() {
+  context('check role-based access-control', function() {
     it('setDefaultUri reverts if called by wrong role', async function() {
       await expect(this.collection.connect(this.other).setDefaultUri('ipfs://ipfs/defaultUri'))
         .to.be.revertedWith('VM Exception while processing transaction: revert AccessControl');
@@ -115,19 +115,15 @@ contract('Collection Full test', function() {
       await this.collection.setDefaultUri('ipfs://ipfs/defaultUri');
     });
 
-    it('without vault address, start should revert', async function() {
+    it('start and buy should revert if vault not set', async function() {
       await expect(this.collection.start())
         .to.be.revertedWith('VM Exception while processing transaction: revert start: Vault is undefined');
-    });
-
-    it('without vault address, buy should revert', async function() {
       price = await this.collection.getTotalPriceFor(1);
-      await expect(this.collection.connect(this.buyer).buy(1, this.referral.address,
-        { value: price }))
+      await expect(this.collection.connect(this.buyer).buy(1, this.referral.address, { value: price }))
         .to.be.revertedWith('VM Exception while processing transaction: revert buy: Vault is undefined');
     });
 
-    context('set vault address', function() {
+    context('after vault address set', function() {
       beforeEach(async function() {
         await this.collection.setVault(this.vault.address);
       });
@@ -139,18 +135,18 @@ contract('Collection Full test', function() {
         expect(batch).equal('ipfs://ipfs/defaultUri');
       });
 
-      it('works when trying to add stage with wrong weiPerToken', async function() {
+      it('reverts when adding stage with wrong price', async function() {
         await expect(this.collection.addSaleStage(1, 0))
           .to.be.revertedWith('addSaleStage: weiPerToken must be non-zero');
       });
 
       context('add batch without saleStage', function() {
-        it('no batches before they added', async function() {
+        it('no batches initially', async function() {
           expect(await this.collection.batchesLength()).to.equal(0);
           const batches = await this.collection.getBatches();
           expect(batches.length).to.equal(0);
         });
-        context('add batch #0', function() {
+        context('after batch #0 added', function() {
           beforeEach(async function() {
             await this.collection.addBatch(10, 'ipfs://ipfs/batchX', 12);
           });
@@ -164,24 +160,15 @@ contract('Collection Full test', function() {
             expect(batches[0].rarity).to.equal(12);
           });
 
-          it('return default rarity', async function() {
-            expect(await this.collection.getRarity(999)).to.equal(1);
-          });
-
-          it('return token batch rarity', async function() {
+          it('tokens from batch have batch-based rarity and URIs', async function() {
+            expect(await this.collection.getRarity(0)).to.equal(12);
             expect(await this.collection.getRarity(9)).to.equal(12);
-          });
-
-          it('tokenURIs are correct', async function() {
             expect(await this.collection.tokenURI(0)).to.equal('ipfs://ipfs/batchX/0.json');
             expect(await this.collection.tokenURI(9)).to.equal('ipfs://ipfs/batchX/9.json');
-            // await expectRevert(
-            //   this.token.getBatchByToken(11),
-            //   'getBatchByToken: tokenId must be less then last token id in batches array',
-            // );
-            // Error: VM Exception while processing transaction: revert getBatchByToken:
-            // tokenId must be less then last token id in batches array
-            // expect(await this.collection.tokenURI(10)).to.equal('ipfs://ipfs/batchX/10.json');
+          });
+
+          it('tokens that don\'t match the batch have default rarity', async function() {
+            expect(await this.collection.getRarity(999)).to.equal(1);
           });
 
           context('add batch #1', function() {
