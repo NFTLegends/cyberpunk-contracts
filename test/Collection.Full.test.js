@@ -16,6 +16,11 @@ contract('Collection Full test', function() {
     this.collection = await this.CollectionArtifact.deploy();
   });
 
+  it('start should revert if _defaultUri not set', async function() {
+    await expect(this.collection.start())
+      .to.be.revertedWith('revert start: _defaultUri is undefined');
+  });
+
   context('set defaultRarity and defaultUri', function() {
     let price;
     beforeEach(async function() {
