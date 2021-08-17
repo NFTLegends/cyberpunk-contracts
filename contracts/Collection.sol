@@ -152,14 +152,14 @@ contract Collection is ERC721Enumerable, AccessControl {
      * @notice Return batch by its sequential Id
      Note: batch ids can change over time and reorder as the result of batch removal
      */
-    function getBatch(uint256 batchId) public view returns (Batch memory) {
+    function getBatch(uint256 batchIndex) public view returns (Batch memory) {
         require(_batches.length > 0, "getBatch: no batches");
         require(
-            batchId < _batches.length,
+            batchIndex < _batches.length,
             "getBatch: batchId must be less than batch length"
         );
 
-        return _batches[batchId];
+        return _batches[batchIndex];
     }
 
     /**
@@ -229,7 +229,7 @@ contract Collection is ERC721Enumerable, AccessControl {
     /**
      * @notice Update batch by its index (index can change over time)
      */
-    function setBatch(uint256 batchId, uint256 batchStartId,uint256 batchEndId, string memory baseURI, uint256 rarity)
+    function setBatch(uint256 batchIndex, uint256 batchStartId,uint256 batchEndId, string memory baseURI, uint256 rarity)
     external
     onlyRole(BATCH_MANAGER_ROLE)
         {
@@ -238,7 +238,7 @@ contract Collection is ERC721Enumerable, AccessControl {
         require(batchStartId <= batchEndId, "setBatch: batchStartID must be equal or less than batchEndId");
 
         for (uint256 _batchId; _batchId < batchesLength; _batchId++) {
-            if (_batchId == batchId) {
+            if (_batchId == batchIndex) {
                 continue;
             } else {
             // if both bounds are lower or higher than iter batch
@@ -253,10 +253,10 @@ contract Collection is ERC721Enumerable, AccessControl {
             }
         }
 
-        _batches[batchId].startTokenId = batchStartId;
-        _batches[batchId].endTokenId = batchEndId;
-        _batches[batchId].baseURI = baseURI;
-        _batches[batchId].rarity = rarity;
+        _batches[batchIndex].startTokenId = batchStartId;
+        _batches[batchIndex].endTokenId = batchEndId;
+        _batches[batchIndex].baseURI = baseURI;
+        _batches[batchIndex].rarity = rarity;
     }
 
     /**
