@@ -11,6 +11,7 @@ contract Collection is ERC721Enumerable, AccessControl {
     event NameChange (uint256 indexed index, string newName);
     event SkillChange (uint256 indexed index, uint256 newSkill);
     event Buy (address indexed _from, uint256 nfts, address referral);
+
     mapping(uint256 => string) private _tokenName;
     mapping(uint256 => uint256) private _tokenSkill;
 
@@ -21,9 +22,11 @@ contract Collection is ERC721Enumerable, AccessControl {
 
     // Sale Stage Info struct
     struct SaleStage {
-        uint256 endTokens;
+        uint256 startTokenId;
+        uint256 endTokenId;
         uint256 weiPerToken;
     }
+
     struct Batch {
         uint256 startTokenId;
         uint256 endTokenId;
@@ -42,6 +45,8 @@ contract Collection is ERC721Enumerable, AccessControl {
 
     string internal _defaultUri;
     uint256 internal _defaultRarity;
+    string internal _defaultName;
+    uint256 internal _defaultSkill;
     // Role with add & set sale stages permissions
     bytes32 public constant SALE_STAGES_MANAGER_ROLE = keccak256("SALE_STAGES_MANAGER_ROLE");
     // Role with add & delete permissions
@@ -54,6 +59,8 @@ contract Collection is ERC721Enumerable, AccessControl {
     bytes32 public constant DEFAULT_URI_SETTER_ROLE = keccak256("DEFAULT_URI_SETTER_ROLE");
     bytes32 public constant DEFAULT_RARITY_SETTER_ROLE = keccak256("DEFAULT_RARITY_SETTER_ROLE");
     bytes32 public constant VAULT_SETTER_ROLE = keccak256("VAULT_SETTER_ROLE");
+    bytes32 public constant DEFAULT_NAME_SETTER_ROLE = keccak256("DEFAULT_NAME_SETTER_ROLE");
+    bytes32 public constant DEFAULT_SKILL_SETTER_ROLE = keccak256("DEFAULT_SKILL_SETTER_ROLE");
     address payable public vault;
 
     constructor() ERC721("CyberPunk", "A-12") {
@@ -68,6 +75,8 @@ contract Collection is ERC721Enumerable, AccessControl {
         _setupRole(DEFAULT_URI_SETTER_ROLE, _msgSender());
         _setupRole(VAULT_SETTER_ROLE, _msgSender());
         _setupRole(DEFAULT_RARITY_SETTER_ROLE, _msgSender());
+        _setupRole(DEFAULT_NAME_SETTER_ROLE, _msgSender());
+        _setupRole(DEFAULT_SKILL_SETTER_ROLE, _msgSender());
     }
 
     /**
@@ -106,25 +115,15 @@ contract Collection is ERC721Enumerable, AccessControl {
     /**
      * @notice Returns info about sale stage with given index.
      */
-    function getSaleStage(uint256 saleStageIndex)
-        public
-        view
-        returns (
-            uint256 startTokens,
-            uint256 endTokens,
-            uint256 weiPerToken
-        )
+    function getSaleStage(uint256 saleStageIndex) public view returns (SaleStage memory)
     {
         require(_saleStages.length > 0, "getSaleStage: no stages");
+        require(
+            saleStageIndex < _saleStages.length,
+            "getSaleStage: saleStageIndex must be less than sale stages length"
+        );
 
-        if (0 == saleStageIndex) {
-            SaleStage memory saleStage = _saleStages[saleStageIndex];
-            return (0, saleStage.endTokens, saleStage.weiPerToken);
-        } else {
-            SaleStage memory previousSaleStage = _saleStages[saleStageIndex.sub(1)];
-            SaleStage memory saleStage = _saleStages[saleStageIndex];
-            return (previousSaleStage.endTokens, saleStage.endTokens, saleStage.weiPerToken);
-        }
+        return _saleStages[saleStageIndex];
     }
 
     /**
@@ -139,6 +138,14 @@ contract Collection is ERC721Enumerable, AccessControl {
      */
     function getBatches() public view returns (Batch[] memory) {
         return _batches;
+    }
+
+
+    /**
+     * @notice Returns `_batches`.
+     */
+    function getSaleStages() public view returns (SaleStage[] memory) {
+        return _saleStages;
     }
 
     /**
@@ -179,7 +186,7 @@ contract Collection is ERC721Enumerable, AccessControl {
         view
         override
         returns (string memory)
-    {   
+    {
         require(_batches.length > 0, "tokenURI: no batches");
 
         for (uint256 i; i < _batches.length; i++) {
@@ -190,7 +197,6 @@ contract Collection is ERC721Enumerable, AccessControl {
             }
         }
         return _defaultUri;
-        
     }
 
     /**
@@ -230,7 +236,7 @@ contract Collection is ERC721Enumerable, AccessControl {
         uint256 batchesLength = _batches.length;
         require(batchesLength > 0, "setBatch: batches is empty");
         require(batchStartId <= batchEndId, "setBatch: batchStartID must be equal or less than batchEndId");
-        
+
         for (uint256 _batchId; _batchId < batchesLength; _batchId++) {
             if (_batchId == batchId) {
                 continue;
@@ -259,7 +265,7 @@ contract Collection is ERC721Enumerable, AccessControl {
     function deleteBatch(uint256 batchIndex)
     external
     onlyRole(BATCH_MANAGER_ROLE)
-        {
+    {
         require(
             _batches.length > batchIndex,
             "deleteBatch: index out of batches length"
@@ -271,78 +277,100 @@ contract Collection is ERC721Enumerable, AccessControl {
     /**
      * @notice Adds new sale stage with given params at the end of `saleStages array`.
      */
-    function addSaleStage(uint256 endTokens, uint256 weiPerToken)
+    function addSaleStage(uint256 startTokenId, uint256 endTokenId, uint256 weiPerToken)
         external
         onlyRole(SALE_STAGES_MANAGER_ROLE)
     {
+        require(startTokenId <= endTokenId, "addSaleStage: startTokenId must be equal or less than endTokenId");
         require(weiPerToken > 0, "addSaleStage: weiPerToken must be non-zero");
         uint256 _saleStagesLength = _saleStages.length;
-        if (0 == _saleStagesLength) {
-            require(endTokens > 0, "addSaleStage: first stage endTokens must be non-zero");
-        }
-        else {
-            (,uint256 currentSaleStageEndTokens,) = getSaleStage(_saleStagesLength.sub(1));
-            require(endTokens > currentSaleStageEndTokens, "addSaleStage: new endTokens must be more than current last");
+
+        if (_saleStagesLength > 0) {
+            for (uint256 _saleStageId; _saleStageId < _saleStagesLength; _saleStageId++) {
+                // if both bounds are lower or higher than iter sale stage
+                if (startTokenId < _saleStages[_saleStageId].startTokenId
+                    && endTokenId < _saleStages[_saleStageId].startTokenId
+                    || startTokenId > _saleStages[_saleStageId].endTokenId
+                    && endTokenId > _saleStages[_saleStageId].endTokenId) {
+                    continue;
+                } else {
+                    revert("addSaleStage: intersection _saleStages");
+                }
+            }
         }
 
-        _saleStages.push(SaleStage(endTokens, weiPerToken));
-        _maxTotalSupply = endTokens;
+        _saleStages.push(SaleStage(startTokenId, endTokenId, weiPerToken));
+        _maxTotalSupply += endTokenId - startTokenId;
     }
 
     /**
      * @notice Rewrites sale stage properties with given index.
      */
-    function setSaleStage(uint256 saleStageIndex, uint256 endTokens, uint256 weiPerToken)
+    function setSaleStage(uint256 saleStageId, uint256 startTokenId, uint256 saleStageEndtId, uint256 weiPerToken)
         external
         onlyRole(SALE_STAGES_MANAGER_ROLE)
     {
         uint256 _saleStagesLength = _saleStages.length;
-        require(saleStageIndex < _saleStagesLength, "setSaleStage: saleStage with this index does not exist");
-        require(weiPerToken > 0, "setSaleStage: weiPerToken must be non-zero");
+        require(_saleStagesLength > 0, "setSaleStage: batches is empty");
+        require(startTokenId <= saleStageEndtId, "setSaleStage: startTokenId must be equal or less than saleStageEndtId");
 
-        (uint256 previousSaleStageEndTokens,,) = getSaleStage(saleStageIndex);
-        require(endTokens > previousSaleStageEndTokens, "setSaleStage: new endTokens must be more than in previous stage");
+        for (uint256 _saleStageId; _saleStageId < _saleStagesLength; _saleStageId++) {
 
-        if (saleStageIndex.add(1) < _saleStagesLength) {
-            (,uint256 nextSaleStageEndTokens,) = getSaleStage(saleStageIndex.add(1));
-            require(endTokens > nextSaleStageEndTokens, "setSaleStage: new endTokens must be less than in next stage");
+            if (_saleStageId == saleStageId) {
+                continue;
+            } else {
+                // if both bounds are lower or higher than iter sale stage
+                if (startTokenId < _saleStages[_saleStageId].startTokenId
+                    && saleStageEndtId < _saleStages[_saleStageId].startTokenId
+                    || startTokenId > _saleStages[_saleStageId].endTokenId
+                    && saleStageEndtId > _saleStages[_saleStageId].endTokenId) {
+                    continue;
+                } else {
+                    revert("addSaleStage: intersection _saleStages");
+                }
+            }
         }
 
-        _saleStages[saleStageIndex] = SaleStage(endTokens, weiPerToken);
+        _saleStages[saleStageId].startTokenId = startTokenId;
+        _saleStages[saleStageId].endTokenId = saleStageEndtId;
+        _saleStages[saleStageId].weiPerToken = weiPerToken;
+    }
+
+    function deleteSaleStage(uint256 saleStageIndex) external onlyRole(BATCH_MANAGER_ROLE) {
+        require(
+            _saleStages.length > saleStageIndex,
+            "deleteSaleStage: index out of sale stage length"
+        );
+        delete _saleStages[saleStageIndex];
+        _saleStages[saleStageIndex] = _saleStages[_saleStages.length - 1];
+        _saleStages.pop();
     }
 
     /**
      * @notice Returns summary price for given number of tokens.
      */
     function getTotalPriceFor(uint256 tokens) public view returns (uint256) {
+        require(tokens > 0, "tokens must be more then 0");
+
         uint256 _saleStagesLength = _saleStages.length;
         uint256 totalSupply = totalSupply();
-        uint256 tokensLeft = tokens;
-
+        uint256 iterPrice = 0;
         uint256 totalPrice = 0;
-        uint256 tokensDiff;
 
         SaleStage memory saleStage;
-        for (uint256 i = 0; i < _saleStagesLength; i++) {
-            saleStage = _saleStages[i];
-            if (totalSupply > saleStage.endTokens)
-                continue;
-            tokensDiff = (saleStage.endTokens).sub(totalSupply);
-            if (tokensLeft > 0) {
-                if (tokensLeft > tokensDiff) {
-                    totalPrice = totalPrice.add(tokensDiff.mul(saleStage.weiPerToken));
-                    tokensLeft = tokensLeft.sub(tokensDiff);
-                    totalSupply = totalSupply.add(tokensDiff);
-                }
-                else {
-                    totalPrice = totalPrice.add(tokensLeft.mul(saleStage.weiPerToken));
-                    tokensLeft = 0;
-                    totalSupply = totalSupply.add(tokensLeft);
-                }
+        for (uint256 tokenIndex = 0; tokenIndex < tokens; tokenIndex++) {
+            iterPrice = 0;
+            for (uint256 i = 0; i < _saleStagesLength; i++) {
+                saleStage = _saleStages[i];
+                if (totalSupply > saleStage.endTokenId || totalSupply < saleStage.startTokenId)
+                    continue;
+                iterPrice += saleStage.weiPerToken;
             }
-            else {
-                break;
+            if (iterPrice == 0) {
+                revert("getTotalPriceFor: saleStage doesn't exist");
             }
+            totalPrice += iterPrice;
+            totalSupply += 1;
         }
         return totalPrice;
     }
@@ -368,7 +396,7 @@ contract Collection is ERC721Enumerable, AccessControl {
     /**
      * @notice Mint a set of random NFTs without purchase (for MINTER_ROLE only).
      */
-    function mintMultiple(address to, uint256 nfts) public onlyRole(MINTER_ROLE){
+    function mintMultiple(address to, uint256 nfts) public onlyRole(MINTER_ROLE) {
         _mintMultiple(to, nfts);
     }
 
@@ -376,10 +404,9 @@ contract Collection is ERC721Enumerable, AccessControl {
      * @notice Method to purchase and get random available NFTs.
      */
     function buy(uint256 nfts, address referral) public payable {
-        require(vault != address(0), "buy: Vault is undefined");
+        require(saleActive, "buy: Sale is not active");
         require(nfts <= maxPurchaseSize, "buy: You can not buy more than maxPurchaseSize NFTs at once");
         require(getTotalPriceFor(nfts) == msg.value, "buy: Ether value sent is not correct");
-        require(saleActive, "buy: Sale is not active");
         emit Buy(msg.sender, nfts, referral);
         vault.transfer(msg.value);
         _mintMultiple(msg.sender, nfts);
@@ -390,15 +417,15 @@ contract Collection is ERC721Enumerable, AccessControl {
      */
     function _getRandomAvailableIndex() internal view returns (uint256) {
         uint256 index = (
-            uint256(
-                keccak256(
-                    abi.encodePacked(
-                        block.timestamp, /* solhint-disable not-rely-on-time */
-                        gasleft(),
-                        blockhash(block.number - 1)
-                    )
+        uint256(
+            keccak256(
+                abi.encodePacked(
+                    block.timestamp, /* solhint-disable not-rely-on-time */
+                    gasleft(),
+                    blockhash(block.number - 1)
                 )
-            ) % _maxTotalSupply
+            )
+        ) % _maxTotalSupply
         );
         while (_exists(index)) {
             index += 1;
@@ -423,6 +450,10 @@ contract Collection is ERC721Enumerable, AccessControl {
      * @dev Returns name of the NFT at index
      */
     function getName(uint256 index) public view returns (string memory) {
+        bytes memory _tokenWeight = bytes(_tokenName[index]);
+        if (_tokenWeight.length == 0) {
+            return _defaultName;
+        }
         return _tokenName[index];
     }
 
@@ -430,7 +461,10 @@ contract Collection is ERC721Enumerable, AccessControl {
      * @dev Returns skill of the NFT at index
      */
     function getSkill(uint256 index) public view returns (uint256) {
-                return _tokenSkill[index];
+        if (_tokenSkill[index] == 0) {
+            return _defaultSkill;
+        }
+        return _tokenSkill[index];
     }
 
     /**
@@ -465,16 +499,16 @@ contract Collection is ERC721Enumerable, AccessControl {
         emit SkillChange(id, newSkill);
     }
 
-     /**
-     * @dev Change max purchase size.
-     */
+    /**
+    * @dev Change max purchase size.
+    */
     function setMaxPurchaseSize(uint256 newPurchaseSize) public onlyRole(MAX_PURCHASE_SIZE_SETTER_ROLE) {
         maxPurchaseSize = newPurchaseSize;
     }
 
-     /**
-     * @dev Set defaultUri.
-     */
+    /**
+    * @dev Set defaultUri.
+    */
     function setDefaultUri(string memory uri) public onlyRole (DEFAULT_URI_SETTER_ROLE) {
         _defaultUri = uri;
     }
@@ -482,7 +516,7 @@ contract Collection is ERC721Enumerable, AccessControl {
     /**
      * @dev Change vault.
      */
-    function setVault(address payable newVault ) public onlyRole (VAULT_SETTER_ROLE) {
+    function setVault(address payable newVault) public onlyRole (VAULT_SETTER_ROLE) {
         vault = newVault;
     }
 
@@ -491,5 +525,19 @@ contract Collection is ERC721Enumerable, AccessControl {
      */
     function setDefaultRarity(uint256 rarity) public onlyRole(DEFAULT_RARITY_SETTER_ROLE) {
         _defaultRarity = rarity;
+    }
+
+    /**
+     * @dev Set default name.
+     */
+    function setDefaultName(string memory name) public onlyRole (DEFAULT_NAME_SETTER_ROLE) {
+        _defaultName = name;
+    }
+
+    /**
+     * @dev Set default skill.
+     */
+    function setDefaultSkill(uint256 skill) public onlyRole(DEFAULT_SKILL_SETTER_ROLE) {
+        _defaultSkill = skill;
     }
 }
