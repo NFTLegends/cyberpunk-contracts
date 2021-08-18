@@ -603,6 +603,27 @@ contract('Collection Full test', function() {
               );
             });
 
+            describe('setDna', function() {
+              const newDna = 2234;
+              beforeEach(async function() {
+                this.dnaSetRole = await this.collection.DNA_SETTER_ROLE();
+                await this.collection.mint(this.referral.address, 11);
+              });
+              it('deployer has DNA_SETTER_ROLE and able to set DNA', async function() {
+                expect(await this.collection.getDna(0)).to.equal(0);
+                await expect(this.collection.setDna(0, newDna))
+                  .to.emit(this.collection, 'DnaChange')
+                  .withArgs(0, newDna);
+                expect(await this.collection.getDna(0)).to.equal(newDna);
+              });
+              it('deployer unable to set dna after role was revoked', async function() {
+                await this.collection.revokeRole(this.dnaSetRole, this.deployer.address);
+                await expect(this.collection.connect(this.deployer).setDna(0, newDna)).to.be.revertedWith(
+                  'revert AccessControl',
+                );
+              });
+            });
+
             context('add batch #0', function() {
               beforeEach(async function() {
                 await this.collection.addBatch(0, 10, 'ipfs://ipfs/batchX', 12);
