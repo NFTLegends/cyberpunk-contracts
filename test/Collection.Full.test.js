@@ -227,6 +227,8 @@ contract('Collection Full test', function() {
           expect(saleStage.endTokenId).to.equal('9');
           expect(saleStage.weiPerToken).to.equal('100');
           await expect(this.collection.getSaleStage(1)).to.be.reverted;
+
+          expect(await this.collection.maxTotalSupply()).to.equal('10');
         });
 
         it('getSaleStage work for sale stage tokens', async function() {
@@ -327,6 +329,8 @@ contract('Collection Full test', function() {
             expect(saleStages[1].endTokenId).to.equal('19');
             expect(saleStages[1].weiPerToken).to.equal('200');
             await expect(this.collection.getSaleStage(2)).to.be.reverted;
+
+            expect(await this.collection.maxTotalSupply()).to.equal('20');
           });
 
           it('revert when a batch intersection occurs when add sale stage', async function() {
@@ -373,6 +377,8 @@ contract('Collection Full test', function() {
               expect(saleStage.endTokenId).to.equal('29');
               expect(saleStage.weiPerToken).to.equal('200');
               await expect(this.collection.getSaleStage(2)).to.be.reverted;
+
+              expect(await this.collection.maxTotalSupply()).to.equal('30');
             });
           });
 
@@ -409,6 +415,8 @@ contract('Collection Full test', function() {
               expect(saleStage.startTokenId).to.equal('10');
               expect(saleStage.endTokenId).to.equal('19');
               expect(saleStage.weiPerToken).to.equal('200');
+
+              expect(await this.collection.maxTotalSupply()).to.equal('10');
             });
 
             it('addBatch reverts if called by wrong role');
@@ -422,6 +430,10 @@ contract('Collection Full test', function() {
             context('then again add saleStage #0', function() {
               beforeEach(async function() {
                 await this.collection.addSaleStage(0, 9, 100);
+              });
+
+              it('maxTotalSupply are correct', async function() {
+                expect(await this.collection.maxTotalSupply()).to.equal('20');
               });
 
               it('revert when getSaleStage get sale stage #0', async function() {
@@ -456,6 +468,8 @@ contract('Collection Full test', function() {
               expect(saleStage.endTokenId).to.equal('29');
               expect(saleStage.weiPerToken).to.equal('300');
               await expect(this.collection.getSaleStage(3)).to.be.reverted;
+
+              expect(await this.collection.maxTotalSupply()).to.equal('30');
             });
 
             it('revert when a batch intersection occurs when add sale stage', async function() {
@@ -583,8 +597,8 @@ contract('Collection Full test', function() {
             });
 
             it('mintMultiple reverts when trying to buy nfts that exceeds totalSupply', async function() {
-              price = await this.collection.getTotalPriceFor(20);
-              await expect(this.collection.mintMultiple(this.referral.address, 20)).to.be.revertedWith(
+              await this.collection.mintMultiple(this.referral.address, 15);
+              await expect(this.collection.mintMultiple(this.referral.address, 10)).to.be.revertedWith(
                 'Exceeds _maxTotalSupply',
               );
             });
@@ -946,11 +960,14 @@ contract('Collection Full test', function() {
 
                           it('reverts when trying to buy nfts that exceeds totalSupply', async function() {
                             price = await this.collection.getTotalPriceFor(20);
+                            await this.collection.connect(this.buyer).buy(20, this.referral.address, {
+                              value: price,
+                            });
                             await expect(
-                              this.collection.connect(this.buyer).buy(20, this.referral.address, {
-                                value: price,
+                              this.collection.connect(this.buyer).buy(1, this.referral.address, {
+                                value: 300,
                               }),
-                            ).to.be.revertedWith('Exceeds _maxTotalSupply');
+                            ).to.be.revertedWith('saleStage doesn\'t exist');
                           });
 
                           it('reverts when trying to buy more than maxPurchaseSize nft', async function() {

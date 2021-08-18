@@ -300,7 +300,7 @@ contract Collection is ERC721Enumerable, AccessControl {
         }
 
         _saleStages.push(SaleStage(startTokenId, endTokenId, weiPerToken));
-        _maxTotalSupply += endTokenId - startTokenId;
+        _maxTotalSupply += endTokenId - startTokenId + 1;
     }
 
     /**
@@ -329,6 +329,8 @@ contract Collection is ERC721Enumerable, AccessControl {
                 }
             }
         }
+        SaleStage memory _saleStage = _saleStages[saleStageId];
+        _maxTotalSupply = _maxTotalSupply - (_saleStage.endTokenId - _saleStage.startTokenId + 1) + (saleStageEndId - startTokenId + 1);
 
         _saleStages[saleStageId].startTokenId = startTokenId;
         _saleStages[saleStageId].endTokenId = saleStageEndId;
@@ -340,7 +342,9 @@ contract Collection is ERC721Enumerable, AccessControl {
             _saleStages.length > saleStageIndex,
             "index out of sale stage length"
         );
-        delete _saleStages[saleStageIndex];
+        SaleStage memory _saleStage = _saleStages[saleStageIndex];
+        _maxTotalSupply -= _saleStage.endTokenId - _saleStage.startTokenId + 1;
+
         _saleStages[saleStageIndex] = _saleStages[_saleStages.length - 1];
         _saleStages.pop();
     }
