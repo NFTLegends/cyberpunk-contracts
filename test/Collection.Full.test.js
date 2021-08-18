@@ -560,467 +560,458 @@ contract('Collection Full test', function() {
             await expect(this.collection.getSaleStage(2)).to.be.reverted;
           });
 
-          context('then remove saleStage #0', function() {
-            beforeEach(async function() {
-              // todo: need to impleent deleteSaleStage(...)
-              // await this.collection.deleteSaleStage(0);
+          context('mint token', function() {
+            it('mint token when batch 0 is delete');
+
+            it('mint with manager role', async function() {
+              await this.collection.mint(this.other.address, 1);
+              expect(await this.collection.totalSupply()).to.equal(1);
             });
 
-            it('saleStages #0 got removed and #1 still there');
+            it('mintMultiple token purchase', async function() {
+              await this.collection.mintMultiple(this.deployer.address, 1);
+              expect(await this.collection.totalSupply()).to.equal(1);
 
-            context('mint token', function() {
-              it('mint token when batch 0 is delete');
+              await this.collection.mintMultiple(this.deployer.address, 2);
+              expect(await this.collection.totalSupply()).to.equal(3);
+            });
 
-              it('mint with manager role', async function() {
-                await this.collection.mint(this.other.address, 1);
-                expect(await this.collection.totalSupply()).to.equal(1);
+            it('mintMultiple reverts when trying to buy 0 nft', async function() {
+              await expect(this.collection.mintMultiple(this.referral.address, 0)).to.be.revertedWith(
+                'buy: nfts cannot be 0',
+              );
+            });
+
+            it('mintMultiple reverts when trying to buy nfts that exceeds totalSupply', async function() {
+              price = await this.collection.getTotalPriceFor(20);
+              await expect(this.collection.mintMultiple(this.referral.address, 20)).to.be.revertedWith(
+                'buy: Exceeds _maxTotalSupply',
+              );
+            });
+
+            context('add batch #0', function() {
+              beforeEach(async function() {
+                await this.collection.addBatch(0, 10, 'ipfs://ipfs/batchX', 12);
               });
 
-              it('mintMultiple token purchase', async function() {
-                await this.collection.mintMultiple(this.deployer.address, 1);
-                expect(await this.collection.totalSupply()).to.equal(1);
+              it('batch is visible', async function() {
+                expect(await this.collection.batchesLength()).to.equal(1);
+                const batches = await this.collection.getBatches();
+                const zeroBatch = await this.collection.getBatch(0);
+                expect(batches.length).to.equal(1);
 
-                await this.collection.mintMultiple(this.deployer.address, 2);
-                expect(await this.collection.totalSupply()).to.equal(3);
+                expect(zeroBatch.startTokenId).to.equal(0);
+                expect(zeroBatch.endTokenId).to.equal(10);
+                expect(zeroBatch.baseURI).to.equal('ipfs://ipfs/batchX');
+                expect(zeroBatch.rarity).to.equal(12);
+
+                expect(batches[0].startTokenId).to.equal(0);
+                expect(batches[0].endTokenId).to.equal(10);
+                expect(batches[0].baseURI).to.equal('ipfs://ipfs/batchX');
+                expect(batches[0].rarity).to.equal(12);
               });
 
-              it('mintMultiple reverts when trying to buy 0 nft', async function() {
-                await expect(this.collection.mintMultiple(this.referral.address, 0)).to.be.revertedWith(
-                  'buy: nfts cannot be 0',
+              it('get batch by token are correct', async function() {
+                const zeroTokenBatch = expect(await this.collection.getBatchByToken(0));
+                const zeroBatch = await this.collection.getBatch(0);
+                expect(zeroTokenBatch === zeroBatch);
+              });
+
+              it('tokenURIs are correct', async function() {
+                expect(await this.collection.tokenURI(0)).to.equal('ipfs://ipfs/batchX/0.json');
+                expect(await this.collection.tokenURI(9)).to.equal('ipfs://ipfs/batchX/9.json');
+              });
+
+              it('revert when index out of batches length', async function() {
+                await expect(this.collection.deleteBatch(1)).to.be.revertedWith(
+                  'deleteBatch: index out of batches length',
                 );
               });
 
-              it('mintMultiple reverts when trying to buy nfts that exceeds totalSupply', async function() {
-                price = await this.collection.getTotalPriceFor(20);
-                await expect(this.collection.mintMultiple(this.referral.address, 20)).to.be.revertedWith(
-                  'buy: Exceeds _maxTotalSupply',
+              it('revert when batchStartID more than batchEndId', async function() {
+                await expect(this.collection.setBatch(0, 15, 5, 'ipfs://ipfs/first_batch', 13)).to.be.revertedWith(
+                  'setBatch: batchStartID must be equal or less than batchEndId',
                 );
               });
 
-              context('add batch #0', function() {
+              it('revert getBatch with batchId more than batch length', async function() {
+                await expect(this.collection.getBatch(1)).to.be.revertedWith(
+                  'getBatch: batchId must be less than batch length',
+                );
+              });
+
+              context('set batch #0', function() {
                 beforeEach(async function() {
-                  await this.collection.addBatch(0, 10, 'ipfs://ipfs/batchX', 12);
+                  await this.collection.setBatch(0, 0, 20, 'ipfs://ipfs/first_batch', 13);
                 });
 
-                it('batch is visible', async function() {
+                it('batch #0 is visible', async function() {
                   expect(await this.collection.batchesLength()).to.equal(1);
                   const batches = await this.collection.getBatches();
-                  const zeroBatch = await this.collection.getBatch(0);
                   expect(batches.length).to.equal(1);
+                  expect(batches[0].startTokenId).to.equal(0);
+                  expect(batches[0].endTokenId).to.equal(20);
+                  expect(batches[0].baseURI).to.equal('ipfs://ipfs/first_batch');
+                  expect(batches[0].rarity).to.equal(13);
+                });
 
-                  expect(zeroBatch.startTokenId).to.equal(0);
-                  expect(zeroBatch.endTokenId).to.equal(10);
-                  expect(zeroBatch.baseURI).to.equal('ipfs://ipfs/batchX');
-                  expect(zeroBatch.rarity).to.equal(12);
+                it('there are empty indices between two batches');
 
+                it('getTokenUri works on indices from 0 to 20');
+              });
+
+              context('add batch #1', function() {
+                beforeEach(async function() {
+                  await this.collection.addBatch(11, 20, 'ipfs://ipfs/batchY', 23);
+                });
+
+                it('both batches are visible', async function() {
+                  expect(await this.collection.batchesLength()).to.equal(2);
+                  const batches = await this.collection.getBatches();
+                  expect(batches.length).to.equal(2);
                   expect(batches[0].startTokenId).to.equal(0);
                   expect(batches[0].endTokenId).to.equal(10);
                   expect(batches[0].baseURI).to.equal('ipfs://ipfs/batchX');
                   expect(batches[0].rarity).to.equal(12);
-                });
-
-                it('get batch by token are correct', async function() {
-                  const zeroTokenBatch = expect(await this.collection.getBatchByToken(0));
-                  const zeroBatch = await this.collection.getBatch(0);
-                  expect(zeroTokenBatch === zeroBatch);
+                  expect(batches[1].startTokenId).to.equal(11);
+                  expect(batches[1].endTokenId).to.equal(20);
+                  expect(batches[1].baseURI).to.equal('ipfs://ipfs/batchY');
+                  expect(batches[1].rarity).to.equal(23);
                 });
 
                 it('tokenURIs are correct', async function() {
                   expect(await this.collection.tokenURI(0)).to.equal('ipfs://ipfs/batchX/0.json');
-                  expect(await this.collection.tokenURI(9)).to.equal('ipfs://ipfs/batchX/9.json');
+                  expect(await this.collection.tokenURI(10)).to.equal('ipfs://ipfs/batchX/10.json');
+                  expect(await this.collection.tokenURI(11)).to.equal('ipfs://ipfs/batchY/11.json');
                 });
 
-                it('revert when index out of batches length', async function() {
-                  await expect(this.collection.deleteBatch(1)).to.be.revertedWith(
-                    'deleteBatch: index out of batches length',
+                it('revert when a batch intersection occurs when set batch', async function() {
+                  await expect(this.collection.setBatch(1, 5, 15, 'ipfs://ipfs/second_batch', 13)).to.be.revertedWith(
+                    'setBatch: batches intersect',
                   );
                 });
 
-                it('revert when batchStartID more than batchEndId', async function() {
-                  await expect(this.collection.setBatch(0, 15, 5, 'ipfs://ipfs/first_batch', 13)).to.be.revertedWith(
-                    'setBatch: batchStartID must be equal or less than batchEndId',
-                  );
-                });
-
-                it('revert getBatch with batchId more than batch length', async function() {
-                  await expect(this.collection.getBatch(1)).to.be.revertedWith(
-                    'getBatch: batchId must be less than batch length',
-                  );
-                });
-
-                context('set batch #0', function() {
+                context('set batch #1', function() {
                   beforeEach(async function() {
-                    await this.collection.setBatch(0, 0, 20, 'ipfs://ipfs/first_batch', 13);
+                    await this.collection.setBatch(1, 21, 30, 'ipfs://ipfs/second_batch', 13);
                   });
 
-                  it('batch #0 is visible', async function() {
-                    expect(await this.collection.batchesLength()).to.equal(1);
+                  it('batch #1 is visible', async function() {
+                    expect(await this.collection.batchesLength()).to.equal(2);
                     const batches = await this.collection.getBatches();
-                    expect(batches.length).to.equal(1);
-                    expect(batches[0].startTokenId).to.equal(0);
-                    expect(batches[0].endTokenId).to.equal(20);
-                    expect(batches[0].baseURI).to.equal('ipfs://ipfs/first_batch');
-                    expect(batches[0].rarity).to.equal(13);
+                    expect(batches.length).to.equal(2);
+                    expect(batches[1].startTokenId).to.equal(21);
+                    expect(batches[1].endTokenId).to.equal(30);
+                    expect(batches[1].baseURI).to.equal('ipfs://ipfs/second_batch');
+                    expect(batches[1].rarity).to.equal(13);
                   });
 
                   it('there are empty indices between two batches');
 
-                  it('getTokenUri works on indices from 0 to 20');
+                  it('getTokenUri works on indices from 21 to 30');
                 });
 
-                context('add batch #1', function() {
+                context('delete batch #0', function() {
                   beforeEach(async function() {
-                    await this.collection.addBatch(11, 20, 'ipfs://ipfs/batchY', 23);
+                    await this.collection.deleteBatch(0);
                   });
 
-                  it('both batches are visible', async function() {
-                    expect(await this.collection.batchesLength()).to.equal(2);
+                  it('batch 0 should disappear and batches array should shorten', async function() {
+                    expect(await this.collection.batchesLength()).to.equal(1);
                     const batches = await this.collection.getBatches();
-                    expect(batches.length).to.equal(2);
-                    expect(batches[0].startTokenId).to.equal(0);
-                    expect(batches[0].endTokenId).to.equal(10);
-                    expect(batches[0].baseURI).to.equal('ipfs://ipfs/batchX');
-                    expect(batches[0].rarity).to.equal(12);
-                    expect(batches[1].startTokenId).to.equal(11);
-                    expect(batches[1].endTokenId).to.equal(20);
-                    expect(batches[1].baseURI).to.equal('ipfs://ipfs/batchY');
-                    expect(batches[1].rarity).to.equal(23);
+                    expect(batches.length).to.equal(1);
+                    expect(batches[0].startTokenId).to.equal(11);
+                    expect(batches[0].endTokenId).to.equal(20);
+                    expect(batches[0].baseURI).to.equal('ipfs://ipfs/batchY');
+                    expect(batches[0].rarity).to.equal(23);
                   });
 
-                  it('tokenURIs are correct', async function() {
-                    expect(await this.collection.tokenURI(0)).to.equal('ipfs://ipfs/batchX/0.json');
-                    expect(await this.collection.tokenURI(10)).to.equal('ipfs://ipfs/batchX/10.json');
+                  it('tokenURIs prevously served from removed batch now have batchY URI', async function() {
+                    expect(await this.collection.tokenURI(10)).to.equal('ipfs://ipfs/defaultUri');
                     expect(await this.collection.tokenURI(11)).to.equal('ipfs://ipfs/batchY/11.json');
                   });
-
-                  it('revert when a batch intersection occurs when set batch', async function() {
-                    await expect(this.collection.setBatch(1, 5, 15, 'ipfs://ipfs/second_batch', 13)).to.be.revertedWith(
-                      'setBatch: batches intersect',
-                    );
-                  });
-
-                  context('set batch #1', function() {
-                    beforeEach(async function() {
-                      await this.collection.setBatch(1, 21, 30, 'ipfs://ipfs/second_batch', 13);
-                    });
-
-                    it('batch #1 is visible', async function() {
-                      expect(await this.collection.batchesLength()).to.equal(2);
-                      const batches = await this.collection.getBatches();
-                      expect(batches.length).to.equal(2);
-                      expect(batches[1].startTokenId).to.equal(21);
-                      expect(batches[1].endTokenId).to.equal(30);
-                      expect(batches[1].baseURI).to.equal('ipfs://ipfs/second_batch');
-                      expect(batches[1].rarity).to.equal(13);
-                    });
-
-                    it('there are empty indices between two batches');
-
-                    it('getTokenUri works on indices from 21 to 30');
-                  });
-
-                  context('delete batch #0', function() {
-                    beforeEach(async function() {
-                      await this.collection.deleteBatch(0);
-                    });
-
-                    it('batch 0 should disappear and batches array should shorten', async function() {
-                      expect(await this.collection.batchesLength()).to.equal(1);
-                      const batches = await this.collection.getBatches();
-                      expect(batches.length).to.equal(1);
-                      expect(batches[0].startTokenId).to.equal(11);
-                      expect(batches[0].endTokenId).to.equal(20);
-                      expect(batches[0].baseURI).to.equal('ipfs://ipfs/batchY');
-                      expect(batches[0].rarity).to.equal(23);
-                    });
-
-                    it('tokenURIs prevously served from removed batch now have batchY URI', async function() {
-                      expect(await this.collection.tokenURI(10)).to.equal('ipfs://ipfs/defaultUri');
-                      expect(await this.collection.tokenURI(11)).to.equal('ipfs://ipfs/batchY/11.json');
-                    });
-                  });
                 });
-                context('add batches #1, #2, #3', function() {
+              });
+              context('add batches #1, #2, #3', function() {
+                beforeEach(async function() {
+                  await this.collection.addBatch(11, 20, 'ipfs://ipfs/second_batch', 23);
+                  await this.collection.addBatch(21, 30, 'ipfs://ipfs/third_batch', 33);
+                  await this.collection.addBatch(31, 40, 'ipfs://ipfs/fourth_batch', 43);
+                });
+
+                it('all batches are visible', async function() {
+                  let batchByToken;
+                  let batch;
+                  const batches = await this.collection.getBatches();
+
+                  expect(await this.collection.batchesLength()).to.equal(4);
+                  expect(batches.length).to.equal(4);
+                  expect(batches[0].startTokenId).to.equal(0);
+                  expect(batches[0].endTokenId).to.equal(10);
+                  expect(batches[0].baseURI).to.equal('ipfs://ipfs/batchX');
+                  expect(batches[0].rarity).to.equal(12);
+                  expect(batches[1].startTokenId).to.equal(11);
+                  expect(batches[1].endTokenId).to.equal(20);
+                  expect(batches[1].baseURI).to.equal('ipfs://ipfs/second_batch');
+                  expect(batches[1].rarity).to.equal(23);
+                  expect(batches[2].startTokenId).to.equal(21);
+                  expect(batches[2].endTokenId).to.equal(30);
+                  expect(batches[2].baseURI).to.equal('ipfs://ipfs/third_batch');
+                  expect(batches[2].rarity).to.equal(33);
+                  expect(batches[3].startTokenId).to.equal(31);
+                  expect(batches[3].endTokenId).to.equal(40);
+                  expect(batches[3].baseURI).to.equal('ipfs://ipfs/fourth_batch');
+                  expect(batches[3].rarity).to.equal(43);
+
+                  batchByToken = expect(await this.collection.getBatchByToken(0));
+                  batch = await this.collection.getBatch(0);
+                  expect(batchByToken === batch);
+                  batchByToken = expect(await this.collection.getBatchByToken(11));
+                  batch = await this.collection.getBatch(1);
+                  expect(batchByToken === batch);
+                  batchByToken = expect(await this.collection.getBatchByToken(21));
+                  batch = await this.collection.getBatch(2);
+                  expect(batchByToken === batch);
+                  batchByToken = expect(await this.collection.getBatchByToken(31));
+                  batch = await this.collection.getBatch(3);
+                  expect(batchByToken === batch);
+                });
+
+                it('tokenURIs are correct', async function() {
+                  expect(await this.collection.tokenURI(0)).to.equal('ipfs://ipfs/batchX/0.json');
+                  expect(await this.collection.tokenURI(10)).to.equal('ipfs://ipfs/batchX/10.json');
+                  expect(await this.collection.tokenURI(11)).to.equal('ipfs://ipfs/second_batch/11.json');
+                  expect(await this.collection.tokenURI(21)).to.equal('ipfs://ipfs/third_batch/21.json');
+                  expect(await this.collection.tokenURI(31)).to.equal('ipfs://ipfs/fourth_batch/31.json');
+                });
+
+                context('delete batch #1', function() {
                   beforeEach(async function() {
-                    await this.collection.addBatch(11, 20, 'ipfs://ipfs/second_batch', 23);
-                    await this.collection.addBatch(21, 30, 'ipfs://ipfs/third_batch', 33);
-                    await this.collection.addBatch(31, 40, 'ipfs://ipfs/fourth_batch', 43);
+                    await this.collection.deleteBatch(1);
                   });
 
                   it('all batches are visible', async function() {
-                    let batchByToken;
-                    let batch;
                     const batches = await this.collection.getBatches();
 
-                    expect(await this.collection.batchesLength()).to.equal(4);
-                    expect(batches.length).to.equal(4);
+                    expect(await this.collection.batchesLength()).to.equal(3);
+                    expect(batches.length).to.equal(3);
                     expect(batches[0].startTokenId).to.equal(0);
                     expect(batches[0].endTokenId).to.equal(10);
                     expect(batches[0].baseURI).to.equal('ipfs://ipfs/batchX');
                     expect(batches[0].rarity).to.equal(12);
-                    expect(batches[1].startTokenId).to.equal(11);
-                    expect(batches[1].endTokenId).to.equal(20);
-                    expect(batches[1].baseURI).to.equal('ipfs://ipfs/second_batch');
-                    expect(batches[1].rarity).to.equal(23);
+                    expect(batches[1].startTokenId).to.equal(31);
+                    expect(batches[1].endTokenId).to.equal(40);
+                    expect(batches[1].baseURI).to.equal('ipfs://ipfs/fourth_batch');
+                    expect(batches[1].rarity).to.equal(43);
                     expect(batches[2].startTokenId).to.equal(21);
                     expect(batches[2].endTokenId).to.equal(30);
                     expect(batches[2].baseURI).to.equal('ipfs://ipfs/third_batch');
                     expect(batches[2].rarity).to.equal(33);
-                    expect(batches[3].startTokenId).to.equal(31);
-                    expect(batches[3].endTokenId).to.equal(40);
-                    expect(batches[3].baseURI).to.equal('ipfs://ipfs/fourth_batch');
-                    expect(batches[3].rarity).to.equal(43);
-
-                    batchByToken = expect(await this.collection.getBatchByToken(0));
-                    batch = await this.collection.getBatch(0);
-                    expect(batchByToken === batch);
-                    batchByToken = expect(await this.collection.getBatchByToken(11));
-                    batch = await this.collection.getBatch(1);
-                    expect(batchByToken === batch);
-                    batchByToken = expect(await this.collection.getBatchByToken(21));
-                    batch = await this.collection.getBatch(2);
-                    expect(batchByToken === batch);
-                    batchByToken = expect(await this.collection.getBatchByToken(31));
-                    batch = await this.collection.getBatch(3);
-                    expect(batchByToken === batch);
                   });
 
-                  it('tokenURIs are correct', async function() {
+                  it('batch #1 should disappear and batches array should shorten', async function() {
+                    let batchByToken;
+                    const batches = await this.collection.getBatches();
+                    expect(await this.collection.batchesLength()).to.equal(3);
+                    expect(batches.length).to.equal(3);
+                    expect(batches[1].startTokenId).to.equal(31);
+                    expect(batches[1].endTokenId).to.equal(40);
+                    expect(batches[1].baseURI).to.equal('ipfs://ipfs/fourth_batch');
+                    expect(batches[1].rarity).to.equal(43);
+
+                    batchByToken = await this.collection.getBatchByToken(0);
+                    expect(await batchByToken.startTokenId).to.equal(0);
+                    expect(await batchByToken.endTokenId).to.equal(10);
+
+                    await expect(this.collection.getBatchByToken(11)).to.be.revertedWith(
+                      'getBatchByToken: batch doesn\'t exist',
+                    );
+
+                    batchByToken = await this.collection.getBatchByToken(35);
+                    expect(await batchByToken.startTokenId).to.equal(31);
+                    expect(await batchByToken.endTokenId).to.equal(40);
+
+                    batchByToken = await this.collection.getBatchByToken(25);
+                    expect(await batchByToken.startTokenId).to.equal(21);
+                    expect(await batchByToken.endTokenId).to.equal(30);
+                  });
+
+                  it('tokenURI return default uri if not found batch', async function() {
                     expect(await this.collection.tokenURI(0)).to.equal('ipfs://ipfs/batchX/0.json');
-                    expect(await this.collection.tokenURI(10)).to.equal('ipfs://ipfs/batchX/10.json');
-                    expect(await this.collection.tokenURI(11)).to.equal('ipfs://ipfs/second_batch/11.json');
+                    expect(await this.collection.tokenURI(11)).to.equal('ipfs://ipfs/defaultUri');
                     expect(await this.collection.tokenURI(21)).to.equal('ipfs://ipfs/third_batch/21.json');
-                    expect(await this.collection.tokenURI(31)).to.equal('ipfs://ipfs/fourth_batch/31.json');
                   });
-
-                  context('delete batch #1', function() {
+                  context('delete all batches (to load them in the correct order later)', function() {
                     beforeEach(async function() {
+                      await this.collection.deleteBatch(2);
                       await this.collection.deleteBatch(1);
+                      await this.collection.deleteBatch(0);
                     });
 
-                    it('all batches are visible', async function() {
-                      const batches = await this.collection.getBatches();
-
-                      expect(await this.collection.batchesLength()).to.equal(3);
-                      expect(batches.length).to.equal(3);
-                      expect(batches[0].startTokenId).to.equal(0);
-                      expect(batches[0].endTokenId).to.equal(10);
-                      expect(batches[0].baseURI).to.equal('ipfs://ipfs/batchX');
-                      expect(batches[0].rarity).to.equal(12);
-                      expect(batches[1].startTokenId).to.equal(31);
-                      expect(batches[1].endTokenId).to.equal(40);
-                      expect(batches[1].baseURI).to.equal('ipfs://ipfs/fourth_batch');
-                      expect(batches[1].rarity).to.equal(43);
-                      expect(batches[2].startTokenId).to.equal(21);
-                      expect(batches[2].endTokenId).to.equal(30);
-                      expect(batches[2].baseURI).to.equal('ipfs://ipfs/third_batch');
-                      expect(batches[2].rarity).to.equal(33);
+                    it('batch lenght eq 0 if all batches deleted', async function() {
+                      expect(await this.collection.batchesLength()).to.equal(0);
                     });
 
-                    it('batch #1 should disappear and batches array should shorten', async function() {
-                      let batchByToken;
-                      const batches = await this.collection.getBatches();
-                      expect(await this.collection.batchesLength()).to.equal(3);
-                      expect(batches.length).to.equal(3);
-                      expect(batches[1].startTokenId).to.equal(31);
-                      expect(batches[1].endTokenId).to.equal(40);
-                      expect(batches[1].baseURI).to.equal('ipfs://ipfs/fourth_batch');
-                      expect(batches[1].rarity).to.equal(43);
-
-                      batchByToken = await this.collection.getBatchByToken(0);
-                      expect(await batchByToken.startTokenId).to.equal(0);
-                      expect(await batchByToken.endTokenId).to.equal(10);
-
-                      await expect(this.collection.getBatchByToken(11)).to.be.revertedWith(
-                        'getBatchByToken: batch doesn\'t exist',
-                      );
-
-                      batchByToken = await this.collection.getBatchByToken(35);
-                      expect(await batchByToken.startTokenId).to.equal(31);
-                      expect(await batchByToken.endTokenId).to.equal(40);
-
-                      batchByToken = await this.collection.getBatchByToken(25);
-                      expect(await batchByToken.startTokenId).to.equal(21);
-                      expect(await batchByToken.endTokenId).to.equal(30);
-                    });
-
-                    it('tokenURI return default uri if not found batch', async function() {
-                      expect(await this.collection.tokenURI(0)).to.equal('ipfs://ipfs/batchX/0.json');
-                      expect(await this.collection.tokenURI(11)).to.equal('ipfs://ipfs/defaultUri');
-                      expect(await this.collection.tokenURI(21)).to.equal('ipfs://ipfs/third_batch/21.json');
-                    });
-                    context('delete all batches (to load them in the correct order later)', function() {
+                    context('add batches #0, #1, #2, #3', function() {
                       beforeEach(async function() {
-                        await this.collection.deleteBatch(2);
-                        await this.collection.deleteBatch(1);
-                        await this.collection.deleteBatch(0);
+                        await this.collection.addBatch(0, 10, 'ipfs://ipfs/first_batch', 13);
+                        await this.collection.addBatch(11, 20, 'ipfs://ipfs/second_batch', 23);
+                        await this.collection.addBatch(21, 30, 'ipfs://ipfs/third_batch', 33);
+                        await this.collection.addBatch(31, 40, 'ipfs://ipfs/fourth_batch', 43);
                       });
 
-                      it('batch lenght eq 0 if all batches deleted', async function() {
-                        expect(await this.collection.batchesLength()).to.equal(0);
+                      it('all batches are visible', async function() {
+                        expect(await this.collection.batchesLength()).to.equal(4);
+                        const batches = await this.collection.getBatches();
+                        expect(batches.length).to.equal(4);
+                        expect(batches[0].startTokenId).to.equal(0);
+                        expect(batches[0].endTokenId).to.equal(10);
+                        expect(batches[0].baseURI).to.equal('ipfs://ipfs/first_batch');
+                        expect(batches[0].rarity).to.equal(13);
+                        expect(batches[1].startTokenId).to.equal(11);
+                        expect(batches[1].endTokenId).to.equal(20);
+                        expect(batches[1].baseURI).to.equal('ipfs://ipfs/second_batch');
+                        expect(batches[1].rarity).to.equal(23);
+                        expect(batches[2].startTokenId).to.equal(21);
+                        expect(batches[2].endTokenId).to.equal(30);
+                        expect(batches[2].baseURI).to.equal('ipfs://ipfs/third_batch');
+                        expect(batches[2].rarity).to.equal(33);
+                        expect(batches[3].startTokenId).to.equal(31);
+                        expect(batches[3].endTokenId).to.equal(40);
+                        expect(batches[3].baseURI).to.equal('ipfs://ipfs/fourth_batch');
+                        expect(batches[3].rarity).to.equal(43);
                       });
 
-                      context('add batches #0, #1, #2, #3', function() {
+                      it('tokenURIs are correct', async function() {
+                        expect(await this.collection.tokenURI(0)).to.equal('ipfs://ipfs/first_batch/0.json');
+                        expect(await this.collection.tokenURI(10)).to.equal('ipfs://ipfs/first_batch/10.json');
+                        expect(await this.collection.tokenURI(11)).to.equal('ipfs://ipfs/second_batch/11.json');
+                        expect(await this.collection.tokenURI(20)).to.equal('ipfs://ipfs/second_batch/20.json');
+                        expect(await this.collection.tokenURI(21)).to.equal('ipfs://ipfs/third_batch/21.json');
+                        expect(await this.collection.tokenURI(30)).to.equal('ipfs://ipfs/third_batch/30.json');
+                        expect(await this.collection.tokenURI(31)).to.equal('ipfs://ipfs/fourth_batch/31.json');
+                        expect(await this.collection.tokenURI(40)).to.equal('ipfs://ipfs/fourth_batch/40.json');
+                      });
+
+                      context('turn on Sale', function() {
                         beforeEach(async function() {
-                          await this.collection.addBatch(0, 10, 'ipfs://ipfs/first_batch', 13);
-                          await this.collection.addBatch(11, 20, 'ipfs://ipfs/second_batch', 23);
-                          await this.collection.addBatch(21, 30, 'ipfs://ipfs/third_batch', 33);
-                          await this.collection.addBatch(31, 40, 'ipfs://ipfs/fourth_batch', 43);
+                          await this.collection.start();
                         });
 
-                        it('all batches are visible', async function() {
-                          expect(await this.collection.batchesLength()).to.equal(4);
-                          const batches = await this.collection.getBatches();
-                          expect(batches.length).to.equal(4);
-                          expect(batches[0].startTokenId).to.equal(0);
-                          expect(batches[0].endTokenId).to.equal(10);
-                          expect(batches[0].baseURI).to.equal('ipfs://ipfs/first_batch');
-                          expect(batches[0].rarity).to.equal(13);
-                          expect(batches[1].startTokenId).to.equal(11);
-                          expect(batches[1].endTokenId).to.equal(20);
-                          expect(batches[1].baseURI).to.equal('ipfs://ipfs/second_batch');
-                          expect(batches[1].rarity).to.equal(23);
-                          expect(batches[2].startTokenId).to.equal(21);
-                          expect(batches[2].endTokenId).to.equal(30);
-                          expect(batches[2].baseURI).to.equal('ipfs://ipfs/third_batch');
-                          expect(batches[2].rarity).to.equal(33);
-                          expect(batches[3].startTokenId).to.equal(31);
-                          expect(batches[3].endTokenId).to.equal(40);
-                          expect(batches[3].baseURI).to.equal('ipfs://ipfs/fourth_batch');
-                          expect(batches[3].rarity).to.equal(43);
+                        it('sale is active', async function() {
+                          const active = await this.collection.saleActive();
+                          expect(active).equal(true);
                         });
-
-                        it('tokenURIs are correct', async function() {
-                          expect(await this.collection.tokenURI(0)).to.equal('ipfs://ipfs/first_batch/0.json');
-                          expect(await this.collection.tokenURI(10)).to.equal('ipfs://ipfs/first_batch/10.json');
-                          expect(await this.collection.tokenURI(11)).to.equal('ipfs://ipfs/second_batch/11.json');
-                          expect(await this.collection.tokenURI(20)).to.equal('ipfs://ipfs/second_batch/20.json');
-                          expect(await this.collection.tokenURI(21)).to.equal('ipfs://ipfs/third_batch/21.json');
-                          expect(await this.collection.tokenURI(30)).to.equal('ipfs://ipfs/third_batch/30.json');
-                          expect(await this.collection.tokenURI(31)).to.equal('ipfs://ipfs/fourth_batch/31.json');
-                          expect(await this.collection.tokenURI(40)).to.equal('ipfs://ipfs/fourth_batch/40.json');
-                        });
-
-                        context('turn on Sale', function() {
-                          beforeEach(async function() {
-                            await this.collection.start();
+                        context('buy token', function() {
+                          it('token purchase', async function() {
+                            price = await this.collection.getTotalPriceFor(1);
+                            await expect(
+                              this.collection.connect(this.buyer).buy(1, this.referral.address, { value: price }),
+                            )
+                              .to.emit(this.collection, 'Buy')
+                              .withArgs(this.buyer.address, 1, this.referral.address);
+                            expect(await this.collection.totalSupply()).to.equal(1);
+                            price = await this.collection.getTotalPriceFor(2);
+                            await expect(
+                              this.collection.connect(this.buyer).buy(2, this.referral.address, { value: price }),
+                            )
+                              .to.emit(this.collection, 'Buy')
+                              .withArgs(this.buyer.address, 2, this.referral.address);
+                            expect(await this.collection.totalSupply()).to.equal(3);
                           });
 
-                          it('sale is active', async function() {
-                            const active = await this.collection.saleActive();
-                            expect(active).equal(true);
+                          it('token purchase with zero address', async function() {
+                            const ZERO_ADDRESS = ethers.constants.AddressZero;
+                            price = await this.collection.getTotalPriceFor(1);
+                            await expect(this.collection.connect(this.buyer).buy(1, ZERO_ADDRESS, { value: price }))
+                              .to.emit(this.collection, 'Buy')
+                              .withArgs(this.buyer.address, 1, ZERO_ADDRESS);
                           });
-                          context('buy token', function() {
-                            it('token purchase', async function() {
-                              price = await this.collection.getTotalPriceFor(1);
-                              await expect(
-                                this.collection.connect(this.buyer).buy(1, this.referral.address, { value: price }),
-                              )
-                                .to.emit(this.collection, 'Buy')
-                                .withArgs(this.buyer.address, 1, this.referral.address);
-                              expect(await this.collection.totalSupply()).to.equal(1);
-                              price = await this.collection.getTotalPriceFor(2);
-                              await expect(
-                                this.collection.connect(this.buyer).buy(2, this.referral.address, { value: price }),
-                              )
-                                .to.emit(this.collection, 'Buy')
-                                .withArgs(this.buyer.address, 2, this.referral.address);
-                              expect(await this.collection.totalSupply()).to.equal(3);
+
+                          it('eth goes to vault', async function() {
+                            const vaultBalanceBefore = await this.vault.getBalance();
+                            price = await this.collection.getTotalPriceFor(2);
+                            await this.collection.buy(2, this.referral.address, { value: price });
+                            const vaultBalanceAfter = await this.vault.getBalance();
+                            expect(vaultBalanceAfter.sub(vaultBalanceBefore)).to.equal(price);
+                          });
+
+                          it('reverts when trying to buy 0 nft', async function() {
+                            await expect(
+                              this.collection.connect(this.buyer).buy(0, this.referral.address, {
+                                value: 0,
+                              }),
+                            ).to.be.revertedWith('tokens must be more then 0');
+                          });
+
+                          it('reverts when trying to buy nfts that exceeds totalSupply', async function() {
+                            price = await this.collection.getTotalPriceFor(20);
+                            await expect(
+                              this.collection.connect(this.buyer).buy(20, this.referral.address, {
+                                value: price,
+                              }),
+                            ).to.be.revertedWith('buy: Exceeds _maxTotalSupply');
+                          });
+
+                          it('reverts when trying to buy more than maxPurchaseSize nft', async function() {
+                            const newPurchaseSize = 30;
+                            await this.collection.setMaxPurchaseSize(newPurchaseSize);
+                            await expect(
+                              this.collection.buy(31, this.referral.address, { value: 1000 }),
+                            ).to.be.revertedWith('buy: You can not buy more than maxPurchaseSize NFTs at once');
+                          });
+
+                          it('reverts when send incorrect ETH value', async function() {
+                            price = await this.collection.getTotalPriceFor(5);
+                            await expect(
+                              this.collection.connect(this.other).buy(5, this.referral.address, {
+                                value: 0,
+                              }),
+                            ).to.be.revertedWith('buy: Ether value sent is not correct');
+                          });
+
+                          context('token attributes', function() {
+                            const newName = 'Abraham Lincoln';
+                            const newSkill = 20;
+                            it('get token name by id', async function() {
+                              expect(await this.collection.getName(1448)).equal('CyberName');
                             });
 
-                            it('token purchase with zero address', async function() {
-                              const ZERO_ADDRESS = ethers.constants.AddressZero;
-                              price = await this.collection.getTotalPriceFor(1);
-                              await expect(this.collection.connect(this.buyer).buy(1, ZERO_ADDRESS, { value: price }))
-                                .to.emit(this.collection, 'Buy')
-                                .withArgs(this.buyer.address, 1, ZERO_ADDRESS);
+                            it('change token name', async function() {
+                              await expect(this.collection.setName(1, newName))
+                                .to.emit(this.collection, 'NameChange')
+                                .withArgs(1, newName);
+                              expect(await this.collection.getName(1)).equal(newName);
                             });
 
-                            it('eth goes to vault', async function() {
-                              const vaultBalanceBefore = await this.vault.getBalance();
-                              price = await this.collection.getTotalPriceFor(2);
-                              await this.collection.buy(2, this.referral.address, { value: price });
-                              const vaultBalanceAfter = await this.vault.getBalance();
-                              expect(vaultBalanceAfter.sub(vaultBalanceBefore)).to.equal(price);
+                            it('get token skill by id', async function() {
+                              expect(await this.collection.getSkill(1)).equal(1490);
                             });
 
-                            it('reverts when trying to buy 0 nft', async function() {
-                              await expect(
-                                this.collection.connect(this.buyer).buy(0, this.referral.address, {
-                                  value: 0,
-                                }),
-                              ).to.be.revertedWith('tokens must be more then 0');
+                            it('change token skill', async function() {
+                              await expect(this.collection.setSkill(1, newSkill))
+                                .to.emit(this.collection, 'SkillChange')
+                                .withArgs(1, newSkill);
+                              expect(await this.collection.getSkill(1)).equal(newSkill);
                             });
 
-                            it('reverts when trying to buy nfts that exceeds totalSupply', async function() {
-                              price = await this.collection.getTotalPriceFor(20);
-                              await expect(
-                                this.collection.connect(this.buyer).buy(20, this.referral.address, {
-                                  value: price,
-                                }),
-                              ).to.be.revertedWith('buy: Exceeds _maxTotalSupply');
-                            });
-
-                            it('reverts when trying to buy more than maxPurchaseSize nft', async function() {
-                              const newPurchaseSize = 30;
-                              await this.collection.setMaxPurchaseSize(newPurchaseSize);
-                              await expect(
-                                this.collection.buy(31, this.referral.address, { value: 1000 }),
-                              ).to.be.revertedWith('buy: You can not buy more than maxPurchaseSize NFTs at once');
-                            });
-
-                            it('reverts when send incorrect ETH value', async function() {
-                              price = await this.collection.getTotalPriceFor(5);
-                              await expect(
-                                this.collection.connect(this.other).buy(5, this.referral.address, {
-                                  value: 0,
-                                }),
-                              ).to.be.revertedWith('buy: Ether value sent is not correct');
-                            });
-
-                            context('token attributes', function() {
-                              const newName = 'Abraham Lincoln';
-                              const newSkill = 20;
-                              it('get token name by id', async function() {
-                                expect(await this.collection.getName(1448)).equal('CyberName');
+                            context('sale end', function() {
+                              beforeEach(async function() {
+                                await this.collection.stop();
                               });
 
-                              it('change token name', async function() {
-                                await expect(this.collection.setName(1, newName))
-                                  .to.emit(this.collection, 'NameChange')
-                                  .withArgs(1, newName);
-                                expect(await this.collection.getName(1)).equal(newName);
+                              it('sale is deactivate', async function() {
+                                const deactivate = await this.collection.saleActive();
+                                expect(deactivate).equal(false);
                               });
 
-                              it('get token skill by id', async function() {
-                                expect(await this.collection.getSkill(1)).equal(1490);
-                              });
-
-                              it('change token skill', async function() {
-                                await expect(this.collection.setSkill(1, newSkill))
-                                  .to.emit(this.collection, 'SkillChange')
-                                  .withArgs(1, newSkill);
-                                expect(await this.collection.getSkill(1)).equal(newSkill);
-                              });
-
-                              context('sale end', function() {
-                                beforeEach(async function() {
-                                  await this.collection.stop();
-                                });
-
-                                it('sale is deactivate', async function() {
-                                  const deactivate = await this.collection.saleActive();
-                                  expect(deactivate).equal(false);
-                                });
-
-                                it('reverts when trying to buy when sale is not active', async function() {
-                                  price = await this.collection.getTotalPriceFor(1);
-                                  await expect(
-                                    this.collection.buy(1, this.referral.address, {
-                                      value: price,
-                                    }),
-                                  ).to.be.revertedWith('buy: Sale is not active');
-                                });
+                              it('reverts when trying to buy when sale is not active', async function() {
+                                price = await this.collection.getTotalPriceFor(1);
+                                await expect(
+                                  this.collection.buy(1, this.referral.address, {
+                                    value: price,
+                                  }),
+                                ).to.be.revertedWith('buy: Sale is not active');
                               });
                             });
                           });
