@@ -8,10 +8,10 @@ import "@openzeppelin/contracts/utils/Strings.sol";
 import "@openzeppelin/contracts/utils/math/SafeMath.sol";
 
 contract Collection is ERC721Enumerable, AccessControl {
-    event NameChange (uint256 indexed index, string newName);
-    event SkillChange (uint256 indexed index, uint256 newSkill);
-    event DnaChange (uint256 indexed index, uint256 newDna);
-    event Buy (address indexed _from, uint256 nfts, address referral);
+    event NameChange(uint256 indexed index, string newName);
+    event SkillChange(uint256 indexed index, uint256 newSkill);
+    event DnaChange(uint256 indexed index, uint256 newDna);
+    event Buy(address indexed _from, uint256 nfts, address referral);
 
     mapping(uint256 => string) private _tokenName;
     mapping(uint256 => uint256) private _tokenSkill;
@@ -86,21 +86,31 @@ contract Collection is ERC721Enumerable, AccessControl {
     /**
      * @dev See {IERC165-supportsInterface}.
      */
-    function supportsInterface(bytes4 interfaceId) public view virtual override(ERC721Enumerable, AccessControl) returns (bool) {
+    function supportsInterface(bytes4 interfaceId)
+        public
+        view
+        virtual
+        override(ERC721Enumerable, AccessControl)
+        returns (bool)
+    {
         return super.supportsInterface(interfaceId);
     }
 
     /**
      * @notice Returns current `_maxTotalSupply` value.
      */
-    function maxTotalSupply() public virtual view returns (uint256) {
+    function maxTotalSupply() public view virtual returns (uint256) {
         return _maxTotalSupply;
     }
 
     /**
      * @dev Hook that is called before any token transfer incl. minting
      */
-    function _beforeTokenTransfer(address from, address to, uint256 tokenId) internal virtual override {
+    function _beforeTokenTransfer(
+        address from,
+        address to,
+        uint256 tokenId
+    ) internal virtual override {
         super._beforeTokenTransfer(from, to, tokenId);
 
         // check maxTotalSupply is not exceeded on mint
@@ -119,13 +129,9 @@ contract Collection is ERC721Enumerable, AccessControl {
     /**
      * @notice Returns info about sale stage with given index.
      */
-    function getSaleStage(uint256 saleStageIndex) public view returns (SaleStage memory)
-    {
+    function getSaleStage(uint256 saleStageIndex) public view returns (SaleStage memory) {
         require(_saleStages.length > 0, "getSaleStage: no stages");
-        require(
-            saleStageIndex < _saleStages.length,
-            "saleStageIndex must be less than sale stages length"
-        );
+        require(saleStageIndex < _saleStages.length, "saleStageIndex must be less than sale stages length");
 
         return _saleStages[saleStageIndex];
     }
@@ -144,7 +150,6 @@ contract Collection is ERC721Enumerable, AccessControl {
         return _batches;
     }
 
-
     /**
      * @notice Returns `_batches`.
      */
@@ -158,10 +163,7 @@ contract Collection is ERC721Enumerable, AccessControl {
      */
     function getBatch(uint256 batchIndex) public view returns (Batch memory) {
         require(_batches.length > 0, "getBatch: no batches");
-        require(
-            batchIndex < _batches.length,
-            "getBatch: batchId must be less than batch length"
-        );
+        require(batchIndex < _batches.length, "getBatch: batchId must be less than batch length");
 
         return _batches[batchIndex];
     }
@@ -185,12 +187,7 @@ contract Collection is ERC721Enumerable, AccessControl {
     /**
      * @notice Return tokenURI
      */
-    function tokenURI(uint256 tokenId)
-        public
-        view
-        override
-        returns (string memory)
-    {
+    function tokenURI(uint256 tokenId) public view override returns (string memory) {
         require(_batches.length > 0, "tokenURI: no batches");
 
         for (uint256 i; i < _batches.length; i++) {
@@ -206,20 +203,22 @@ contract Collection is ERC721Enumerable, AccessControl {
     /**
      * @notice Add tokens batch to batches array
      */
-    function addBatch(uint256 startTokenId, uint256 endTokenId, string memory baseURI, uint256 rarity)
-    external
-    onlyRole(BATCH_MANAGER_ROLE)
-        {
+    function addBatch(
+        uint256 startTokenId,
+        uint256 endTokenId,
+        string memory baseURI,
+        uint256 rarity
+    ) external onlyRole(BATCH_MANAGER_ROLE) {
         uint256 _batchesLength = _batches.length;
 
         require(startTokenId <= endTokenId, "addBatch: batchStartID must be equal or less than batchEndId");
         if (_batchesLength > 0) {
             for (uint256 _batchId; _batchId < _batchesLength; _batchId++) {
                 // if both bounds are lower or higher than iter batch
-                if (startTokenId < _batches[_batchId].startTokenId
-                    && endTokenId < _batches[_batchId].startTokenId
-                    || startTokenId > _batches[_batchId].endTokenId
-                    && endTokenId > _batches[_batchId].endTokenId) {
+                if (
+                    (startTokenId < _batches[_batchId].startTokenId && endTokenId < _batches[_batchId].startTokenId) ||
+                    (startTokenId > _batches[_batchId].endTokenId && endTokenId > _batches[_batchId].endTokenId)
+                ) {
                     continue;
                 } else {
                     revert("batches intersect");
@@ -233,10 +232,13 @@ contract Collection is ERC721Enumerable, AccessControl {
     /**
      * @notice Update batch by its index (index can change over time)
      */
-    function setBatch(uint256 batchIndex, uint256 batchStartId,uint256 batchEndId, string memory baseURI, uint256 rarity)
-    external
-    onlyRole(BATCH_MANAGER_ROLE)
-        {
+    function setBatch(
+        uint256 batchIndex,
+        uint256 batchStartId,
+        uint256 batchEndId,
+        string memory baseURI,
+        uint256 rarity
+    ) external onlyRole(BATCH_MANAGER_ROLE) {
         uint256 _batchesLength = _batches.length;
         require(_batchesLength > 0, "setBatch: batches is empty");
         require(batchStartId <= batchEndId, "setBatch: batchStartID must be equal or less than batchEndId");
@@ -245,11 +247,11 @@ contract Collection is ERC721Enumerable, AccessControl {
             if (_batchId == batchIndex) {
                 continue;
             } else {
-            // if both bounds are lower or higher than iter batch
-                if (batchStartId < _batches[_batchId].startTokenId
-                    && batchEndId < _batches[_batchId].startTokenId
-                    || batchStartId > _batches[_batchId].endTokenId
-                    && batchEndId > _batches[_batchId].endTokenId) {
+                // if both bounds are lower or higher than iter batch
+                if (
+                    (batchStartId < _batches[_batchId].startTokenId && batchEndId < _batches[_batchId].startTokenId) ||
+                    (batchStartId > _batches[_batchId].endTokenId && batchEndId > _batches[_batchId].endTokenId)
+                ) {
                     continue;
                 } else {
                     revert("batches intersect");
@@ -266,14 +268,8 @@ contract Collection is ERC721Enumerable, AccessControl {
     /**
      * @notice Removes batch at the given index
      */
-    function deleteBatch(uint256 batchIndex)
-    external
-    onlyRole(BATCH_MANAGER_ROLE)
-    {
-        require(
-            _batches.length > batchIndex,
-            "index out of batches length"
-        );
+    function deleteBatch(uint256 batchIndex) external onlyRole(BATCH_MANAGER_ROLE) {
+        require(_batches.length > batchIndex, "index out of batches length");
         _batches[batchIndex] = _batches[_batches.length - 1];
         _batches.pop();
     }
@@ -281,10 +277,11 @@ contract Collection is ERC721Enumerable, AccessControl {
     /**
      * @notice Adds new sale stage with given params at the end of `saleStages array`.
      */
-    function addSaleStage(uint256 startTokenId, uint256 endTokenId, uint256 weiPerToken)
-        external
-        onlyRole(SALE_STAGES_MANAGER_ROLE)
-    {
+    function addSaleStage(
+        uint256 startTokenId,
+        uint256 endTokenId,
+        uint256 weiPerToken
+    ) external onlyRole(SALE_STAGES_MANAGER_ROLE) {
         require(startTokenId <= endTokenId, "startTokenId must be equal or less than endTokenId");
         require(weiPerToken > 0, "weiPerToken must be non-zero");
         uint256 _saleStagesLength = _saleStages.length;
@@ -292,10 +289,12 @@ contract Collection is ERC721Enumerable, AccessControl {
         if (_saleStagesLength > 0) {
             for (uint256 _saleStageId; _saleStageId < _saleStagesLength; _saleStageId++) {
                 // if both bounds are lower or higher than iter sale stage
-                if (startTokenId < _saleStages[_saleStageId].startTokenId
-                    && endTokenId < _saleStages[_saleStageId].startTokenId
-                    || startTokenId > _saleStages[_saleStageId].endTokenId
-                    && endTokenId > _saleStages[_saleStageId].endTokenId) {
+                if (
+                    (startTokenId < _saleStages[_saleStageId].startTokenId &&
+                        endTokenId < _saleStages[_saleStageId].startTokenId) ||
+                    (startTokenId > _saleStages[_saleStageId].endTokenId &&
+                        endTokenId > _saleStages[_saleStageId].endTokenId)
+                ) {
                     continue;
                 } else {
                     revert("intersection _saleStages");
@@ -310,23 +309,26 @@ contract Collection is ERC721Enumerable, AccessControl {
     /**
      * @notice Rewrites sale stage properties with given index.
      */
-    function setSaleStage(uint256 saleStageId, uint256 startTokenId, uint256 saleStageEndId, uint256 weiPerToken)
-        external
-        onlyRole(SALE_STAGES_MANAGER_ROLE)
-    {
+    function setSaleStage(
+        uint256 saleStageId,
+        uint256 startTokenId,
+        uint256 saleStageEndId,
+        uint256 weiPerToken
+    ) external onlyRole(SALE_STAGES_MANAGER_ROLE) {
         uint256 _saleStagesLength = _saleStages.length;
         require(_saleStagesLength > 0, "batches is empty");
         require(startTokenId <= saleStageEndId, "startTokenId must be equal or less than saleStageEndId");
         for (uint256 _saleStageId; _saleStageId < _saleStagesLength; _saleStageId++) {
-
             if (_saleStageId == saleStageId) {
                 continue;
             } else {
                 // if both bounds are lower or higher than iter sale stage
-                if (startTokenId < _saleStages[_saleStageId].startTokenId
-                    && saleStageEndId < _saleStages[_saleStageId].startTokenId
-                    || startTokenId > _saleStages[_saleStageId].endTokenId
-                    && saleStageEndId > _saleStages[_saleStageId].endTokenId) {
+                if (
+                    (startTokenId < _saleStages[_saleStageId].startTokenId &&
+                        saleStageEndId < _saleStages[_saleStageId].startTokenId) ||
+                    (startTokenId > _saleStages[_saleStageId].endTokenId &&
+                        saleStageEndId > _saleStages[_saleStageId].endTokenId)
+                ) {
                     continue;
                 } else {
                     revert("intersection _saleStages");
@@ -334,7 +336,10 @@ contract Collection is ERC721Enumerable, AccessControl {
             }
         }
         SaleStage memory _saleStage = _saleStages[saleStageId];
-        _maxTotalSupply = _maxTotalSupply - (_saleStage.endTokenId - _saleStage.startTokenId + 1) + (saleStageEndId - startTokenId + 1);
+        _maxTotalSupply =
+            _maxTotalSupply -
+            (_saleStage.endTokenId - _saleStage.startTokenId + 1) +
+            (saleStageEndId - startTokenId + 1);
 
         _saleStages[saleStageId].startTokenId = startTokenId;
         _saleStages[saleStageId].endTokenId = saleStageEndId;
@@ -342,10 +347,7 @@ contract Collection is ERC721Enumerable, AccessControl {
     }
 
     function deleteSaleStage(uint256 saleStageIndex) external onlyRole(BATCH_MANAGER_ROLE) {
-        require(
-            _saleStages.length > saleStageIndex,
-            "index out of sale stage length"
-        );
+        require(_saleStages.length > saleStageIndex, "index out of sale stage length");
         SaleStage memory _saleStage = _saleStages[saleStageIndex];
         _maxTotalSupply -= _saleStage.endTokenId - _saleStage.startTokenId + 1;
 
@@ -369,8 +371,7 @@ contract Collection is ERC721Enumerable, AccessControl {
             iterPrice = 0;
             for (uint256 i = 0; i < _saleStagesLength; i++) {
                 saleStage = _saleStages[i];
-                if (totalSupply > saleStage.endTokenId || totalSupply < saleStage.startTokenId)
-                    continue;
+                if (totalSupply > saleStage.endTokenId || totalSupply < saleStage.startTokenId) continue;
                 iterPrice += saleStage.weiPerToken;
             }
             if (iterPrice == 0) {
@@ -390,7 +391,7 @@ contract Collection is ERC721Enumerable, AccessControl {
         require(nfts > 0, "nfts cannot be 0");
         require(totalSupply().add(nfts) <= _maxTotalSupply, "Exceeds _maxTotalSupply");
 
-        for (uint i = 0; i < nfts; i++) {
+        for (uint256 i = 0; i < nfts; i++) {
             uint256 mintIndex = _getRandomAvailableIndex();
             _safeMint(to, mintIndex);
         }
@@ -423,8 +424,7 @@ contract Collection is ERC721Enumerable, AccessControl {
      * @dev Pseudo-random index generator. Returns new free of owner token index.
      */
     function _getRandomAvailableIndex() internal view returns (uint256) {
-        uint256 index = (
-        uint256(
+        uint256 index = (uint256(
             keccak256(
                 abi.encodePacked(
                     block.timestamp, /* solhint-disable not-rely-on-time */
@@ -432,8 +432,7 @@ contract Collection is ERC721Enumerable, AccessControl {
                     blockhash(block.number - 1)
                 )
             )
-        ) % _maxTotalSupply
-        );
+        ) % _maxTotalSupply);
         while (_exists(index)) {
             index += 1;
             if (index >= _maxTotalSupply) {
@@ -478,7 +477,7 @@ contract Collection is ERC721Enumerable, AccessControl {
      * @dev Returns DNA of the NFT at index
      */
     function getDna(uint256 index) public view returns (uint256) {
-                return _tokenDna[index];
+        return _tokenDna[index];
     }
 
     /**
@@ -521,7 +520,7 @@ contract Collection is ERC721Enumerable, AccessControl {
         emit DnaChange(id, newDna);
     }
 
-     /**
+    /**
      * @dev Change max purchase size.
      */
     function setMaxPurchaseSize(uint256 newPurchaseSize) public onlyRole(MAX_PURCHASE_SIZE_SETTER_ROLE) {
@@ -529,16 +528,16 @@ contract Collection is ERC721Enumerable, AccessControl {
     }
 
     /**
-    * @dev Set defaultUri.
-    */
-    function setDefaultUri(string memory uri) public onlyRole (DEFAULT_URI_SETTER_ROLE) {
+     * @dev Set defaultUri.
+     */
+    function setDefaultUri(string memory uri) public onlyRole(DEFAULT_URI_SETTER_ROLE) {
         _defaultUri = uri;
     }
 
     /**
      * @dev Change vault.
      */
-    function setVault(address payable newVault) public onlyRole (VAULT_SETTER_ROLE) {
+    function setVault(address payable newVault) public onlyRole(VAULT_SETTER_ROLE) {
         vault = newVault;
     }
 
@@ -552,7 +551,7 @@ contract Collection is ERC721Enumerable, AccessControl {
     /**
      * @dev Set default name.
      */
-    function setDefaultName(string memory name) public onlyRole (DEFAULT_NAME_SETTER_ROLE) {
+    function setDefaultName(string memory name) public onlyRole(DEFAULT_NAME_SETTER_ROLE) {
         _defaultName = name;
     }
 

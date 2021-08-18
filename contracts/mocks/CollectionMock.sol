@@ -10,7 +10,7 @@ import "../Collection.sol";
  */
 contract CollectionMock is Collection {
     constructor() {
-        _maxTotalSupply = 2*256 - 1;
+        _maxTotalSupply = 2 * 256 - 1;
     }
 
     function baseURI() public view returns (string memory) {
@@ -25,7 +25,11 @@ contract CollectionMock is Collection {
         _safeMint(to, tokenId);
     }
 
-    function safeMint(address to, uint256 tokenId, bytes memory _data) public {
+    function safeMint(
+        address to,
+        uint256 tokenId,
+        bytes memory _data
+    ) public {
         _safeMint(to, tokenId, _data);
     }
 

@@ -39,9 +39,7 @@ contract('Collection Full test', function() {
       });
 
       it('reverts when adding stage with wrong price', async function() {
-        await expect(this.collection.addSaleStage(0, 1, 0)).to.be.revertedWith(
-          'weiPerToken must be non-zero',
-        );
+        await expect(this.collection.addSaleStage(0, 1, 0)).to.be.revertedWith('weiPerToken must be non-zero');
       });
 
       it('no batches before they added', async function() {
@@ -237,9 +235,7 @@ contract('Collection Full test', function() {
         });
 
         it('revert when getSaleStage gets too much tokens', async function() {
-          await expect(this.collection.getTotalPriceFor(100)).to.be.revertedWith(
-            'saleStage doesn\'t exist',
-          );
+          await expect(this.collection.getTotalPriceFor(100)).to.be.revertedWith('saleStage doesn\'t exist');
         });
 
         it('revert setSaleStage: startTokenId must be equal or less than saleStageEndId', async function() {
@@ -249,9 +245,7 @@ contract('Collection Full test', function() {
         });
 
         it('revert when delete not existed #1 sale stage', async function() {
-          await expect(this.collection.deleteSaleStage(1)).to.be.revertedWith(
-            'index out of sale stage length',
-          );
+          await expect(this.collection.deleteSaleStage(1)).to.be.revertedWith('index out of sale stage length');
         });
 
         context('set defaultRarity and defaultUri', function() {
@@ -334,30 +328,16 @@ contract('Collection Full test', function() {
           });
 
           it('revert when a batch intersection occurs when add sale stage', async function() {
-            await expect(this.collection.addSaleStage(0, 5, 200)).to.be.revertedWith(
-              'intersection _saleStages',
-            );
-            await expect(this.collection.addSaleStage(5, 15, 200)).to.be.revertedWith(
-              'intersection _saleStages',
-            );
-            await expect(this.collection.addSaleStage(10, 15, 200)).to.be.revertedWith(
-              'intersection _saleStages',
-            );
-            await expect(this.collection.addSaleStage(0, 25, 200)).to.be.revertedWith(
-              'intersection _saleStages',
-            );
+            await expect(this.collection.addSaleStage(0, 5, 200)).to.be.revertedWith('intersection _saleStages');
+            await expect(this.collection.addSaleStage(5, 15, 200)).to.be.revertedWith('intersection _saleStages');
+            await expect(this.collection.addSaleStage(10, 15, 200)).to.be.revertedWith('intersection _saleStages');
+            await expect(this.collection.addSaleStage(0, 25, 200)).to.be.revertedWith('intersection _saleStages');
           });
 
           it('revert when a batch intersection occurs when set sale stage', async function() {
-            await expect(this.collection.setSaleStage(1, 0, 5, 200)).to.be.revertedWith(
-              'intersection _saleStages',
-            );
-            await expect(this.collection.setSaleStage(1, 5, 15, 200)).to.be.revertedWith(
-              'intersection _saleStages',
-            );
-            await expect(this.collection.setSaleStage(1, 0, 25, 200)).to.be.revertedWith(
-              'intersection _saleStages',
-            );
+            await expect(this.collection.setSaleStage(1, 0, 5, 200)).to.be.revertedWith('intersection _saleStages');
+            await expect(this.collection.setSaleStage(1, 5, 15, 200)).to.be.revertedWith('intersection _saleStages');
+            await expect(this.collection.setSaleStage(1, 0, 25, 200)).to.be.revertedWith('intersection _saleStages');
           });
 
           context('then saleStage #1 updated', function() {
@@ -395,18 +375,10 @@ contract('Collection Full test', function() {
             });
 
             it('revert when getSaleStage get sale stage #0', async function() {
-              await expect(this.collection.getTotalPriceFor(1)).to.be.revertedWith(
-                'saleStage doesn\'t exist',
-              );
-              await expect(this.collection.getTotalPriceFor(10)).to.be.revertedWith(
-                'saleStage doesn\'t exist',
-              );
-              await expect(this.collection.getTotalPriceFor(11)).to.be.revertedWith(
-                'saleStage doesn\'t exist',
-              );
-              await expect(this.collection.getTotalPriceFor(19)).to.be.revertedWith(
-                'saleStage doesn\'t exist',
-              );
+              await expect(this.collection.getTotalPriceFor(1)).to.be.revertedWith('saleStage doesn\'t exist');
+              await expect(this.collection.getTotalPriceFor(10)).to.be.revertedWith('saleStage doesn\'t exist');
+              await expect(this.collection.getTotalPriceFor(11)).to.be.revertedWith('saleStage doesn\'t exist');
+              await expect(this.collection.getTotalPriceFor(19)).to.be.revertedWith('saleStage doesn\'t exist');
             });
 
             it('saleStages #0 got removed and #1 still there', async function() {
@@ -473,54 +445,24 @@ contract('Collection Full test', function() {
             });
 
             it('revert when a batch intersection occurs when add sale stage', async function() {
-              await expect(this.collection.addSaleStage(0, 5, 200)).to.be.revertedWith(
-                'intersection _saleStages',
-              );
-              await expect(this.collection.addSaleStage(24, 29, 200)).to.be.revertedWith(
-                'intersection _saleStages',
-              );
-              await expect(this.collection.addSaleStage(5, 15, 200)).to.be.revertedWith(
-                'intersection _saleStages',
-              );
-              await expect(this.collection.addSaleStage(13, 17, 200)).to.be.revertedWith(
-                'intersection _saleStages',
-              );
-              await expect(this.collection.addSaleStage(23, 27, 200)).to.be.revertedWith(
-                'intersection _saleStages',
-              );
-              await expect(this.collection.addSaleStage(15, 25, 200)).to.be.revertedWith(
-                'intersection _saleStages',
-              );
-              await expect(this.collection.addSaleStage(0, 29, 200)).to.be.revertedWith(
-                'intersection _saleStages',
-              );
-              await expect(this.collection.addSaleStage(0, 50, 200)).to.be.revertedWith(
-                'intersection _saleStages',
-              );
+              await expect(this.collection.addSaleStage(0, 5, 200)).to.be.revertedWith('intersection _saleStages');
+              await expect(this.collection.addSaleStage(24, 29, 200)).to.be.revertedWith('intersection _saleStages');
+              await expect(this.collection.addSaleStage(5, 15, 200)).to.be.revertedWith('intersection _saleStages');
+              await expect(this.collection.addSaleStage(13, 17, 200)).to.be.revertedWith('intersection _saleStages');
+              await expect(this.collection.addSaleStage(23, 27, 200)).to.be.revertedWith('intersection _saleStages');
+              await expect(this.collection.addSaleStage(15, 25, 200)).to.be.revertedWith('intersection _saleStages');
+              await expect(this.collection.addSaleStage(0, 29, 200)).to.be.revertedWith('intersection _saleStages');
+              await expect(this.collection.addSaleStage(0, 50, 200)).to.be.revertedWith('intersection _saleStages');
             });
 
             it('revert when a batch intersection occurs when set sale stage', async function() {
-              await expect(this.collection.setSaleStage(1, 0, 5, 200)).to.be.revertedWith(
-                'intersection _saleStages',
-              );
-              await expect(this.collection.setSaleStage(1, 24, 29, 200)).to.be.revertedWith(
-                'intersection _saleStages',
-              );
-              await expect(this.collection.setSaleStage(1, 5, 15, 200)).to.be.revertedWith(
-                'intersection _saleStages',
-              );
-              await expect(this.collection.setSaleStage(1, 23, 27, 200)).to.be.revertedWith(
-                'intersection _saleStages',
-              );
-              await expect(this.collection.setSaleStage(1, 15, 25, 200)).to.be.revertedWith(
-                'intersection _saleStages',
-              );
-              await expect(this.collection.setSaleStage(1, 0, 29, 200)).to.be.revertedWith(
-                'intersection _saleStages',
-              );
-              await expect(this.collection.setSaleStage(1, 0, 50, 200)).to.be.revertedWith(
-                'intersection _saleStages',
-              );
+              await expect(this.collection.setSaleStage(1, 0, 5, 200)).to.be.revertedWith('intersection _saleStages');
+              await expect(this.collection.setSaleStage(1, 24, 29, 200)).to.be.revertedWith('intersection _saleStages');
+              await expect(this.collection.setSaleStage(1, 5, 15, 200)).to.be.revertedWith('intersection _saleStages');
+              await expect(this.collection.setSaleStage(1, 23, 27, 200)).to.be.revertedWith('intersection _saleStages');
+              await expect(this.collection.setSaleStage(1, 15, 25, 200)).to.be.revertedWith('intersection _saleStages');
+              await expect(this.collection.setSaleStage(1, 0, 29, 200)).to.be.revertedWith('intersection _saleStages');
+              await expect(this.collection.setSaleStage(1, 0, 50, 200)).to.be.revertedWith('intersection _saleStages');
             });
 
             context('then saleStage #1 deleted', function() {
@@ -656,9 +598,7 @@ contract('Collection Full test', function() {
               });
 
               it('revert when index out of batches length', async function() {
-                await expect(this.collection.deleteBatch(1)).to.be.revertedWith(
-                  'index out of batches length',
-                );
+                await expect(this.collection.deleteBatch(1)).to.be.revertedWith('index out of batches length');
               });
 
               it('revert when batchStartID more than batchEndId', async function() {
@@ -668,9 +608,7 @@ contract('Collection Full test', function() {
               });
 
               it('revert getBatch with batchId more than batch length', async function() {
-                await expect(this.collection.getBatch(1)).to.be.revertedWith(
-                  'batchId must be less than batch length',
-                );
+                await expect(this.collection.getBatch(1)).to.be.revertedWith('batchId must be less than batch length');
               });
 
               context('set batch #0', function() {
@@ -856,9 +794,7 @@ contract('Collection Full test', function() {
                     expect(await batchByToken.startTokenId).to.equal(0);
                     expect(await batchByToken.endTokenId).to.equal(10);
 
-                    await expect(this.collection.getBatchByToken(11)).to.be.revertedWith(
-                      'batch doesn\'t exist',
-                    );
+                    await expect(this.collection.getBatchByToken(11)).to.be.revertedWith('batch doesn\'t exist');
 
                     batchByToken = await this.collection.getBatchByToken(35);
                     expect(await batchByToken.startTokenId).to.equal(31);

@@ -173,8 +173,8 @@ function shouldBehaveLikeERC721(errorPrefix, owner, newOwner, approved, anotherA
 
           it('keeps same tokens by index', async function() {
             if (!this.token.tokenOfOwnerByIndex) return;
-            const tokensListed = await Promise.all([0, 1].map(i => this.token.tokenOfOwnerByIndex(owner, i)));
-            expect(tokensListed.map(t => t.toNumber())).to.have.members([
+            const tokensListed = await Promise.all([0, 1].map((i) => this.token.tokenOfOwnerByIndex(owner, i)));
+            expect(tokensListed.map((t) => t.toNumber())).to.have.members([
               firstTokenId.toNumber(),
               secondTokenId.toNumber(),
             ]);
@@ -804,8 +804,8 @@ function shouldBehaveLikeERC721Enumerable(errorPrefix, owner, newOwner, approved
 
         it('returns correct token IDs for target', async function() {
           expect(await this.token.balanceOf(other)).to.be.bignumber.equal('2');
-          const tokensListed = await Promise.all([0, 1].map(i => this.token.tokenOfOwnerByIndex(other, i)));
-          expect(tokensListed.map(t => t.toNumber())).to.have.members([
+          const tokensListed = await Promise.all([0, 1].map((i) => this.token.tokenOfOwnerByIndex(other, i)));
+          expect(tokensListed.map((t) => t.toNumber())).to.have.members([
             firstTokenId.toNumber(),
             secondTokenId.toNumber(),
           ]);
@@ -820,8 +820,8 @@ function shouldBehaveLikeERC721Enumerable(errorPrefix, owner, newOwner, approved
 
     describe('tokenByIndex', function() {
       it('returns all tokens', async function() {
-        const tokensListed = await Promise.all([0, 1].map(i => this.token.tokenByIndex(i)));
-        expect(tokensListed.map(t => t.toNumber())).to.have.members([
+        const tokensListed = await Promise.all([0, 1].map((i) => this.token.tokenByIndex(i)));
+        expect(tokensListed.map((t) => t.toNumber())).to.have.members([
           firstTokenId.toNumber(),
           secondTokenId.toNumber(),
         ]);
@@ -842,11 +842,11 @@ function shouldBehaveLikeERC721Enumerable(errorPrefix, owner, newOwner, approved
 
           expect(await this.token.totalSupply()).to.be.bignumber.equal('3');
 
-          const tokensListed = await Promise.all([0, 1, 2].map(i => this.token.tokenByIndex(i)));
+          const tokensListed = await Promise.all([0, 1, 2].map((i) => this.token.tokenByIndex(i)));
           const expectedTokens = [firstTokenId, secondTokenId, newTokenId, anotherNewTokenId].filter(
-            x => x !== tokenId,
+            (x) => x !== tokenId,
           );
-          expect(tokensListed.map(t => t.toNumber())).to.have.members(expectedTokens.map(t => t.toNumber()));
+          expect(tokensListed.map((t) => t.toNumber())).to.have.members(expectedTokens.map((t) => t.toNumber()));
         });
       });
     });
