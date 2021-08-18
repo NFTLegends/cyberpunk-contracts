@@ -306,13 +306,13 @@ contract Collection is ERC721Enumerable, AccessControl {
     /**
      * @notice Rewrites sale stage properties with given index.
      */
-    function setSaleStage(uint256 saleStageId, uint256 startTokenId, uint256 saleStageEndtId, uint256 weiPerToken)
+    function setSaleStage(uint256 saleStageId, uint256 startTokenId, uint256 saleStageEndId, uint256 weiPerToken)
         external
         onlyRole(SALE_STAGES_MANAGER_ROLE)
     {
         uint256 _saleStagesLength = _saleStages.length;
         require(_saleStagesLength > 0, "setSaleStage: batches is empty");
-        require(startTokenId <= saleStageEndtId, "setSaleStage: startTokenId must be equal or less than saleStageEndtId");
+        require(startTokenId <= saleStageEndId, "setSaleStage: startTokenId must be equal or less than saleStageEndId");
 
         for (uint256 _saleStageId; _saleStageId < _saleStagesLength; _saleStageId++) {
 
@@ -321,9 +321,9 @@ contract Collection is ERC721Enumerable, AccessControl {
             } else {
                 // if both bounds are lower or higher than iter sale stage
                 if (startTokenId < _saleStages[_saleStageId].startTokenId
-                    && saleStageEndtId < _saleStages[_saleStageId].startTokenId
+                    && saleStageEndId < _saleStages[_saleStageId].startTokenId
                     || startTokenId > _saleStages[_saleStageId].endTokenId
-                    && saleStageEndtId > _saleStages[_saleStageId].endTokenId) {
+                    && saleStageEndId > _saleStages[_saleStageId].endTokenId) {
                     continue;
                 } else {
                     revert("addSaleStage: intersection _saleStages");
@@ -332,7 +332,7 @@ contract Collection is ERC721Enumerable, AccessControl {
         }
 
         _saleStages[saleStageId].startTokenId = startTokenId;
-        _saleStages[saleStageId].endTokenId = saleStageEndtId;
+        _saleStages[saleStageId].endTokenId = saleStageEndId;
         _saleStages[saleStageId].weiPerToken = weiPerToken;
     }
 

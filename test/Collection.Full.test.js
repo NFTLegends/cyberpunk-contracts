@@ -240,9 +240,9 @@ contract('Collection Full test', function() {
           );
         });
 
-        it('revert setSaleStage: startTokenId must be equal or less than saleStageEndtId', async function() {
+        it('revert setSaleStage: startTokenId must be equal or less than saleStageEndId', async function() {
           await expect(this.collection.setSaleStage(0, 10, 0, 100)).to.be.revertedWith(
-            'setSaleStage: startTokenId must be equal or less than saleStageEndtId',
+            'setSaleStage: startTokenId must be equal or less than saleStageEndId',
           );
         });
 
