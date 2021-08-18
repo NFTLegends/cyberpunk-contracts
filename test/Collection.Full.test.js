@@ -17,7 +17,7 @@ contract('Collection Full test', function() {
   });
 
   it('start should revert if _defaultUri not set', async function() {
-    await expect(this.collection.start()).to.be.revertedWith('revert start: _defaultUri is undefined');
+    await expect(this.collection.start()).to.be.revertedWith('_defaultUri is undefined');
   });
 
   context('set defaultRarity and defaultUri', function() {
@@ -30,7 +30,7 @@ contract('Collection Full test', function() {
     });
 
     it('start and buy should revert if vault not set', async function() {
-      await expect(this.collection.start()).to.be.revertedWith('start: Vault is undefined');
+      await expect(this.collection.start()).to.be.revertedWith('Vault is undefined');
     });
 
     context('set vault address', function() {
@@ -40,7 +40,7 @@ contract('Collection Full test', function() {
 
       it('reverts when adding stage with wrong price', async function() {
         await expect(this.collection.addSaleStage(0, 1, 0)).to.be.revertedWith(
-          'addSaleStage: weiPerToken must be non-zero',
+          'weiPerToken must be non-zero',
         );
       });
 
@@ -54,38 +54,38 @@ contract('Collection Full test', function() {
         await this.collection.addBatch(0, 9, 'ipfs://ipfs/first_batch', 12);
         await this.collection.addBatch(10, 19, 'ipfs://ipfs/second_batch', 23);
         await expect(this.collection.addBatch(5, 15, 'ipfs://ipfs/fourth_batch', 43)).to.be.revertedWith(
-          'addBatch: batches intersect',
+          'batches intersect',
         );
       });
 
       it('revert when batchStartID more than batchEndId', async function() {
         await expect(this.collection.addBatch(9, 0, 'ipfs://ipfs/first_batch', 12)).to.be.revertedWith(
-          'addBatch: batchStartID must be equal or less than batchEndId',
+          'batchStartID must be equal or less than batchEndId',
         );
       });
 
       it('revert when batch batchEndId = 0', async function() {
         await expect(this.collection.addBatch(9, 0, 'ipfs://ipfs/first_batch', 12)).to.be.revertedWith(
-          'addBatch: batchStartID must be equal or less than batchEndId',
+          'batchStartID must be equal or less than batchEndId',
         );
       });
 
       it('revert when batches is empty', async function() {
         await expect(this.collection.setBatch(0, 15, 5, 'ipfs://ipfs/first_batch', 13)).to.be.revertedWith(
-          'setBatch: batches is empty',
+          'batches is empty',
         );
       });
 
       it('revert getBatchByToken with no batches', async function() {
-        await expect(this.collection.getBatchByToken(0)).to.be.revertedWith('getBatchByToken: no batches');
+        await expect(this.collection.getBatchByToken(0)).to.be.revertedWith('no batches');
       });
 
       it('revert getBatch with no batches', async function() {
-        await expect(this.collection.getBatch(0)).to.be.revertedWith('getBatch: no batches');
+        await expect(this.collection.getBatch(0)).to.be.revertedWith('no batches');
       });
 
       it('revert tokenURI with no batches', async function() {
-        await expect(this.collection.tokenURI(0)).to.be.revertedWith('tokenURI: no batches');
+        await expect(this.collection.tokenURI(0)).to.be.revertedWith('no batches');
       });
 
       it('get default token name by id', async function() {
@@ -98,16 +98,16 @@ contract('Collection Full test', function() {
 
       it('revert when add sale stage w/ startTokenId more then endTokenId', async function() {
         await expect(this.collection.addSaleStage(1, 0, 100)).to.be.revertedWith(
-          'addSaleStage: startTokenId must be equal or less than endTokenId',
+          'startTokenId must be equal or less than endTokenId',
         );
       });
 
       it('revert when get not existed sale stage', async function() {
-        await expect(this.collection.getSaleStage(0)).to.be.revertedWith('getSaleStage: no stages');
+        await expect(this.collection.getSaleStage(0)).to.be.revertedWith('no stages');
       });
 
       it('revert when set not existed sale stage', async function() {
-        await expect(this.collection.setSaleStage(0, 0, 1, 100)).to.be.revertedWith('setSaleStage: batches is empty');
+        await expect(this.collection.setSaleStage(0, 0, 1, 100)).to.be.revertedWith('batches is empty');
       });
 
       context('add batch #0', function() {
@@ -188,13 +188,13 @@ contract('Collection Full test', function() {
           context('mint token', function() {
             it('reverts when trying to mint if sale stage no set', async function() {
               await expect(this.collection.mint(this.referral.address, 11)).to.be.revertedWith(
-                'revert Collection: maxSupply achieved',
+                'Collection: maxSupply achieved',
               );
             });
 
             it('reverts when trying to mintMultiple if sale stage no set', async function() {
               await expect(this.collection.mintMultiple(this.referral.address, 11)).to.be.revertedWith(
-                'buy: Sale has already ended',
+                'Sale has already ended',
               );
             });
           });
@@ -203,7 +203,7 @@ contract('Collection Full test', function() {
             it('reverts when trying to buy if sale stage no set', async function() {
               await expect(
                 this.collection.connect(this.buyer).buy(1, this.referral.address, { value: 100 }),
-              ).to.be.revertedWith('getTotalPriceFor: saleStage doesn\'t exist');
+              ).to.be.revertedWith('saleStage doesn\'t exist');
             });
           });
         });
@@ -236,19 +236,19 @@ contract('Collection Full test', function() {
 
         it('revert when getSaleStage gets too much tokens', async function() {
           await expect(this.collection.getTotalPriceFor(100)).to.be.revertedWith(
-            'getTotalPriceFor: saleStage doesn\'t exist',
+            'saleStage doesn\'t exist',
           );
         });
 
         it('revert setSaleStage: startTokenId must be equal or less than saleStageEndId', async function() {
           await expect(this.collection.setSaleStage(0, 10, 0, 100)).to.be.revertedWith(
-            'setSaleStage: startTokenId must be equal or less than saleStageEndId',
+            'startTokenId must be equal or less than saleStageEndId',
           );
         });
 
         it('revert when delete not existed #1 sale stage', async function() {
           await expect(this.collection.deleteSaleStage(1)).to.be.revertedWith(
-            'deleteSaleStage: index out of sale stage length',
+            'index out of sale stage length',
           );
         });
 
@@ -331,28 +331,28 @@ contract('Collection Full test', function() {
 
           it('revert when a batch intersection occurs when add sale stage', async function() {
             await expect(this.collection.addSaleStage(0, 5, 200)).to.be.revertedWith(
-              'addSaleStage: intersection _saleStages',
+              'intersection _saleStages',
             );
             await expect(this.collection.addSaleStage(5, 15, 200)).to.be.revertedWith(
-              'addSaleStage: intersection _saleStages',
+              'intersection _saleStages',
             );
             await expect(this.collection.addSaleStage(10, 15, 200)).to.be.revertedWith(
-              'addSaleStage: intersection _saleStages',
+              'intersection _saleStages',
             );
             await expect(this.collection.addSaleStage(0, 25, 200)).to.be.revertedWith(
-              'addSaleStage: intersection _saleStages',
+              'intersection _saleStages',
             );
           });
 
           it('revert when a batch intersection occurs when set sale stage', async function() {
             await expect(this.collection.setSaleStage(1, 0, 5, 200)).to.be.revertedWith(
-              'addSaleStage: intersection _saleStages',
+              'intersection _saleStages',
             );
             await expect(this.collection.setSaleStage(1, 5, 15, 200)).to.be.revertedWith(
-              'addSaleStage: intersection _saleStages',
+              'intersection _saleStages',
             );
             await expect(this.collection.setSaleStage(1, 0, 25, 200)).to.be.revertedWith(
-              'addSaleStage: intersection _saleStages',
+              'intersection _saleStages',
             );
           });
 
@@ -390,16 +390,16 @@ contract('Collection Full test', function() {
 
             it('revert when getSaleStage get sale stage #0', async function() {
               await expect(this.collection.getTotalPriceFor(1)).to.be.revertedWith(
-                'getTotalPriceFor: saleStage doesn\'t exist',
+                'saleStage doesn\'t exist',
               );
               await expect(this.collection.getTotalPriceFor(10)).to.be.revertedWith(
-                'getTotalPriceFor: saleStage doesn\'t exist',
+                'saleStage doesn\'t exist',
               );
               await expect(this.collection.getTotalPriceFor(11)).to.be.revertedWith(
-                'getTotalPriceFor: saleStage doesn\'t exist',
+                'saleStage doesn\'t exist',
               );
               await expect(this.collection.getTotalPriceFor(19)).to.be.revertedWith(
-                'getTotalPriceFor: saleStage doesn\'t exist',
+                'saleStage doesn\'t exist',
               );
             });
 
@@ -460,52 +460,52 @@ contract('Collection Full test', function() {
 
             it('revert when a batch intersection occurs when add sale stage', async function() {
               await expect(this.collection.addSaleStage(0, 5, 200)).to.be.revertedWith(
-                'addSaleStage: intersection _saleStages',
+                'intersection _saleStages',
               );
               await expect(this.collection.addSaleStage(24, 29, 200)).to.be.revertedWith(
-                'addSaleStage: intersection _saleStages',
+                'intersection _saleStages',
               );
               await expect(this.collection.addSaleStage(5, 15, 200)).to.be.revertedWith(
-                'addSaleStage: intersection _saleStages',
+                'intersection _saleStages',
               );
               await expect(this.collection.addSaleStage(13, 17, 200)).to.be.revertedWith(
-                'addSaleStage: intersection _saleStages',
+                'intersection _saleStages',
               );
               await expect(this.collection.addSaleStage(23, 27, 200)).to.be.revertedWith(
-                'addSaleStage: intersection _saleStages',
+                'intersection _saleStages',
               );
               await expect(this.collection.addSaleStage(15, 25, 200)).to.be.revertedWith(
-                'addSaleStage: intersection _saleStages',
+                'intersection _saleStages',
               );
               await expect(this.collection.addSaleStage(0, 29, 200)).to.be.revertedWith(
-                'addSaleStage: intersection _saleStages',
+                'intersection _saleStages',
               );
               await expect(this.collection.addSaleStage(0, 50, 200)).to.be.revertedWith(
-                'addSaleStage: intersection _saleStages',
+                'intersection _saleStages',
               );
             });
 
             it('revert when a batch intersection occurs when set sale stage', async function() {
               await expect(this.collection.setSaleStage(1, 0, 5, 200)).to.be.revertedWith(
-                'addSaleStage: intersection _saleStages',
+                'intersection _saleStages',
               );
               await expect(this.collection.setSaleStage(1, 24, 29, 200)).to.be.revertedWith(
-                'addSaleStage: intersection _saleStages',
+                'intersection _saleStages',
               );
               await expect(this.collection.setSaleStage(1, 5, 15, 200)).to.be.revertedWith(
-                'addSaleStage: intersection _saleStages',
+                'intersection _saleStages',
               );
               await expect(this.collection.setSaleStage(1, 23, 27, 200)).to.be.revertedWith(
-                'addSaleStage: intersection _saleStages',
+                'intersection _saleStages',
               );
               await expect(this.collection.setSaleStage(1, 15, 25, 200)).to.be.revertedWith(
-                'addSaleStage: intersection _saleStages',
+                'intersection _saleStages',
               );
               await expect(this.collection.setSaleStage(1, 0, 29, 200)).to.be.revertedWith(
-                'addSaleStage: intersection _saleStages',
+                'intersection _saleStages',
               );
               await expect(this.collection.setSaleStage(1, 0, 50, 200)).to.be.revertedWith(
-                'addSaleStage: intersection _saleStages',
+                'intersection _saleStages',
               );
             });
 
@@ -578,14 +578,14 @@ contract('Collection Full test', function() {
 
             it('mintMultiple reverts when trying to buy 0 nft', async function() {
               await expect(this.collection.mintMultiple(this.referral.address, 0)).to.be.revertedWith(
-                'buy: nfts cannot be 0',
+                'nfts cannot be 0',
               );
             });
 
             it('mintMultiple reverts when trying to buy nfts that exceeds totalSupply', async function() {
               price = await this.collection.getTotalPriceFor(20);
               await expect(this.collection.mintMultiple(this.referral.address, 20)).to.be.revertedWith(
-                'buy: Exceeds _maxTotalSupply',
+                'Exceeds _maxTotalSupply',
               );
             });
 
@@ -624,19 +624,19 @@ contract('Collection Full test', function() {
 
               it('revert when index out of batches length', async function() {
                 await expect(this.collection.deleteBatch(1)).to.be.revertedWith(
-                  'deleteBatch: index out of batches length',
+                  'index out of batches length',
                 );
               });
 
               it('revert when batchStartID more than batchEndId', async function() {
                 await expect(this.collection.setBatch(0, 15, 5, 'ipfs://ipfs/first_batch', 13)).to.be.revertedWith(
-                  'setBatch: batchStartID must be equal or less than batchEndId',
+                  'batchStartID must be equal or less than batchEndId',
                 );
               });
 
               it('revert getBatch with batchId more than batch length', async function() {
                 await expect(this.collection.getBatch(1)).to.be.revertedWith(
-                  'getBatch: batchId must be less than batch length',
+                  'batchId must be less than batch length',
                 );
               });
 
@@ -687,7 +687,7 @@ contract('Collection Full test', function() {
 
                 it('revert when a batch intersection occurs when set batch', async function() {
                   await expect(this.collection.setBatch(1, 5, 15, 'ipfs://ipfs/second_batch', 13)).to.be.revertedWith(
-                    'setBatch: batches intersect',
+                    'batches intersect',
                   );
                 });
 
@@ -824,7 +824,7 @@ contract('Collection Full test', function() {
                     expect(await batchByToken.endTokenId).to.equal(10);
 
                     await expect(this.collection.getBatchByToken(11)).to.be.revertedWith(
-                      'getBatchByToken: batch doesn\'t exist',
+                      'batch doesn\'t exist',
                     );
 
                     batchByToken = await this.collection.getBatchByToken(35);
@@ -950,7 +950,7 @@ contract('Collection Full test', function() {
                               this.collection.connect(this.buyer).buy(20, this.referral.address, {
                                 value: price,
                               }),
-                            ).to.be.revertedWith('buy: Exceeds _maxTotalSupply');
+                            ).to.be.revertedWith('Exceeds _maxTotalSupply');
                           });
 
                           it('reverts when trying to buy more than maxPurchaseSize nft', async function() {
@@ -958,7 +958,7 @@ contract('Collection Full test', function() {
                             await this.collection.setMaxPurchaseSize(newPurchaseSize);
                             await expect(
                               this.collection.buy(31, this.referral.address, { value: 1000 }),
-                            ).to.be.revertedWith('buy: You can not buy more than maxPurchaseSize NFTs at once');
+                            ).to.be.revertedWith('You can not buy more than maxPurchaseSize NFTs at once');
                           });
 
                           it('reverts when send incorrect ETH value', async function() {
@@ -967,7 +967,7 @@ contract('Collection Full test', function() {
                               this.collection.connect(this.other).buy(5, this.referral.address, {
                                 value: 0,
                               }),
-                            ).to.be.revertedWith('buy: Ether value sent is not correct');
+                            ).to.be.revertedWith('Ether value sent is not correct');
                           });
 
                           context('token attributes', function() {
@@ -1011,7 +1011,7 @@ contract('Collection Full test', function() {
                                   this.collection.buy(1, this.referral.address, {
                                     value: price,
                                   }),
-                                ).to.be.revertedWith('buy: Sale is not active');
+                                ).to.be.revertedWith('Sale is not active');
                               });
                             });
                           });

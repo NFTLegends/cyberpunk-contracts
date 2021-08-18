@@ -120,7 +120,7 @@ contract Collection is ERC721Enumerable, AccessControl {
         require(_saleStages.length > 0, "getSaleStage: no stages");
         require(
             saleStageIndex < _saleStages.length,
-            "getSaleStage: saleStageIndex must be less than sale stages length"
+            "saleStageIndex must be less than sale stages length"
         );
 
         return _saleStages[saleStageIndex];
@@ -175,7 +175,7 @@ contract Collection is ERC721Enumerable, AccessControl {
                 return _batches[i];
             }
         }
-        revert("getBatchByToken: batch doesn't exist");
+        revert("batch doesn't exist");
     }
 
     /**
@@ -206,11 +206,11 @@ contract Collection is ERC721Enumerable, AccessControl {
     external
     onlyRole(BATCH_MANAGER_ROLE)
         {
-        uint256 batchesLength = _batches.length;
+        uint256 _batchesLength = _batches.length;
 
         require(startTokenId <= endTokenId, "addBatch: batchStartID must be equal or less than batchEndId");
-        if (batchesLength > 0) {
-            for (uint256 _batchId; _batchId < batchesLength; _batchId++) {
+        if (_batchesLength > 0) {
+            for (uint256 _batchId; _batchId < _batchesLength; _batchId++) {
                 // if both bounds are lower or higher than iter batch
                 if (startTokenId < _batches[_batchId].startTokenId
                     && endTokenId < _batches[_batchId].startTokenId
@@ -218,7 +218,7 @@ contract Collection is ERC721Enumerable, AccessControl {
                     && endTokenId > _batches[_batchId].endTokenId) {
                     continue;
                 } else {
-                    revert("addBatch: batches intersect");
+                    revert("batches intersect");
                 }
             }
         }
@@ -233,11 +233,11 @@ contract Collection is ERC721Enumerable, AccessControl {
     external
     onlyRole(BATCH_MANAGER_ROLE)
         {
-        uint256 batchesLength = _batches.length;
-        require(batchesLength > 0, "setBatch: batches is empty");
+        uint256 _batchesLength = _batches.length;
+        require(_batchesLength > 0, "setBatch: batches is empty");
         require(batchStartId <= batchEndId, "setBatch: batchStartID must be equal or less than batchEndId");
 
-        for (uint256 _batchId; _batchId < batchesLength; _batchId++) {
+        for (uint256 _batchId; _batchId < _batchesLength; _batchId++) {
             if (_batchId == batchIndex) {
                 continue;
             } else {
@@ -248,7 +248,7 @@ contract Collection is ERC721Enumerable, AccessControl {
                     && batchEndId > _batches[_batchId].endTokenId) {
                     continue;
                 } else {
-                    revert("setBatch: batches intersect");
+                    revert("batches intersect");
                 }
             }
         }
@@ -268,7 +268,7 @@ contract Collection is ERC721Enumerable, AccessControl {
     {
         require(
             _batches.length > batchIndex,
-            "deleteBatch: index out of batches length"
+            "index out of batches length"
         );
         _batches[batchIndex] = _batches[_batches.length - 1];
         _batches.pop();
@@ -281,8 +281,8 @@ contract Collection is ERC721Enumerable, AccessControl {
         external
         onlyRole(SALE_STAGES_MANAGER_ROLE)
     {
-        require(startTokenId <= endTokenId, "addSaleStage: startTokenId must be equal or less than endTokenId");
-        require(weiPerToken > 0, "addSaleStage: weiPerToken must be non-zero");
+        require(startTokenId <= endTokenId, "startTokenId must be equal or less than endTokenId");
+        require(weiPerToken > 0, "weiPerToken must be non-zero");
         uint256 _saleStagesLength = _saleStages.length;
 
         if (_saleStagesLength > 0) {
@@ -294,7 +294,7 @@ contract Collection is ERC721Enumerable, AccessControl {
                     && endTokenId > _saleStages[_saleStageId].endTokenId) {
                     continue;
                 } else {
-                    revert("addSaleStage: intersection _saleStages");
+                    revert("intersection _saleStages");
                 }
             }
         }
@@ -311,9 +311,8 @@ contract Collection is ERC721Enumerable, AccessControl {
         onlyRole(SALE_STAGES_MANAGER_ROLE)
     {
         uint256 _saleStagesLength = _saleStages.length;
-        require(_saleStagesLength > 0, "setSaleStage: batches is empty");
-        require(startTokenId <= saleStageEndId, "setSaleStage: startTokenId must be equal or less than saleStageEndId");
-
+        require(_saleStagesLength > 0, "batches is empty");
+        require(startTokenId <= saleStageEndId, "startTokenId must be equal or less than saleStageEndId");
         for (uint256 _saleStageId; _saleStageId < _saleStagesLength; _saleStageId++) {
 
             if (_saleStageId == saleStageId) {
@@ -326,7 +325,7 @@ contract Collection is ERC721Enumerable, AccessControl {
                     && saleStageEndId > _saleStages[_saleStageId].endTokenId) {
                     continue;
                 } else {
-                    revert("addSaleStage: intersection _saleStages");
+                    revert("intersection _saleStages");
                 }
             }
         }
@@ -339,7 +338,7 @@ contract Collection is ERC721Enumerable, AccessControl {
     function deleteSaleStage(uint256 saleStageIndex) external onlyRole(BATCH_MANAGER_ROLE) {
         require(
             _saleStages.length > saleStageIndex,
-            "deleteSaleStage: index out of sale stage length"
+            "index out of sale stage length"
         );
         delete _saleStages[saleStageIndex];
         _saleStages[saleStageIndex] = _saleStages[_saleStages.length - 1];
@@ -367,7 +366,7 @@ contract Collection is ERC721Enumerable, AccessControl {
                 iterPrice += saleStage.weiPerToken;
             }
             if (iterPrice == 0) {
-                revert("getTotalPriceFor: saleStage doesn't exist");
+                revert("saleStage doesn't exist");
             }
             totalPrice += iterPrice;
             totalSupply += 1;
@@ -379,9 +378,9 @@ contract Collection is ERC721Enumerable, AccessControl {
      * @notice Method to purchase and get random available NFTs.
      */
     function _mintMultiple(address to, uint256 nfts) internal {
-        require(totalSupply() < _maxTotalSupply, "buy: Sale has already ended");
-        require(nfts > 0, "buy: nfts cannot be 0");
-        require(totalSupply().add(nfts) <= _maxTotalSupply, "buy: Exceeds _maxTotalSupply");
+        require(totalSupply() < _maxTotalSupply, "Sale has already ended");
+        require(nfts > 0, "nfts cannot be 0");
+        require(totalSupply().add(nfts) <= _maxTotalSupply, "Exceeds _maxTotalSupply");
 
         for (uint i = 0; i < nfts; i++) {
             uint256 mintIndex = _getRandomAvailableIndex();
@@ -404,9 +403,9 @@ contract Collection is ERC721Enumerable, AccessControl {
      * @notice Method to purchase and get random available NFTs.
      */
     function buy(uint256 nfts, address referral) public payable {
-        require(saleActive, "buy: Sale is not active");
-        require(nfts <= maxPurchaseSize, "buy: You can not buy more than maxPurchaseSize NFTs at once");
-        require(getTotalPriceFor(nfts) == msg.value, "buy: Ether value sent is not correct");
+        require(saleActive, "Sale is not active");
+        require(nfts <= maxPurchaseSize, "You can not buy more than maxPurchaseSize NFTs at once");
+        require(getTotalPriceFor(nfts) == msg.value, "Ether value sent is not correct");
         emit Buy(msg.sender, nfts, referral);
         vault.transfer(msg.value);
         _mintMultiple(msg.sender, nfts);
@@ -471,8 +470,8 @@ contract Collection is ERC721Enumerable, AccessControl {
      * @dev Starts sale
      */
     function start() public onlyRole(SALE_ADMIN_ROLE) {
-        require(bytes(_defaultUri).length > 0, "start: _defaultUri is undefined");
-        require(vault != address(0), "start: Vault is undefined");
+        require(bytes(_defaultUri).length > 0, "_defaultUri is undefined");
+        require(vault != address(0), "Vault is undefined");
         saleActive = true;
     }
 
