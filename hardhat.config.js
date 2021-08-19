@@ -5,6 +5,7 @@ require('@nomiclabs/hardhat-etherscan');
 require('solidity-coverage');
 require('hardhat-deploy');
 require('hardhat-deploy-ethers');
+require('@openzeppelin/hardhat-upgrades');
 
 require('./tasks/1-set-sale-stage.js');
 require('./tasks/2-mint-zero-batch-tokens.js');

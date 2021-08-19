@@ -12,6 +12,7 @@ contract('Collection : ERC721', function(accounts) {
 
   beforeEach(async function() {
     this.token = await CollectionMock.new();
+    await this.token.initialize();
     await this.token.addBatch(0, 10, 'https://ipfs.io/ipfs/QmSQENpQaQ9JLJRTXxDGR9zwKzyXxkYsk5KSB3YsGQu78a', 10);
   });
 

@@ -2,12 +2,12 @@
 
 pragma solidity 0.8.7;
 
-import "@openzeppelin/contracts/access/AccessControl.sol";
-import "@openzeppelin/contracts/token/ERC721/extensions/ERC721Enumerable.sol";
+import "@openzeppelin/contracts-upgradeable/access/AccessControlUpgradeable.sol";
+import "@openzeppelin/contracts-upgradeable/token/ERC721/extensions/ERC721EnumerableUpgradeable.sol";
 import "@openzeppelin/contracts/utils/Strings.sol";
 import "@openzeppelin/contracts/utils/math/SafeMath.sol";
 
-contract Collection is ERC721Enumerable, AccessControl {
+contract Collection is ERC721Upgradeable, ERC721EnumerableUpgradeable, AccessControlUpgradeable {
     event NameChange(uint256 indexed index, string newName);
     event SkillChange(uint256 indexed index, uint256 newSkill);
     event DnaChange(uint256 indexed index, uint256 newDna);
@@ -17,7 +17,7 @@ contract Collection is ERC721Enumerable, AccessControl {
     mapping(uint256 => uint256) private _tokenSkill;
     mapping(uint256 => uint256) private _tokenDna;
 
-    bool public saleActive = false;
+    bool public saleActive;
 
     using SafeMath for uint256;
     using Strings for uint256;
@@ -41,9 +41,9 @@ contract Collection is ERC721Enumerable, AccessControl {
     // Array of sale stages
     SaleStage[] internal _saleStages;
     // Maximum allowed tokenSupply boundary. Can be extended by adding new stages.
-    uint256 internal _maxTotalSupply = 0;
+    uint256 internal _maxTotalSupply;
     // Max NFTs that can be bought at once.
-    uint256 public maxPurchaseSize = 20;
+    uint256 public maxPurchaseSize;
 
     string internal _defaultUri;
     uint256 internal _defaultRarity;
@@ -66,7 +66,11 @@ contract Collection is ERC721Enumerable, AccessControl {
     bytes32 public constant DEFAULT_SKILL_SETTER_ROLE = keccak256("DEFAULT_SKILL_SETTER_ROLE");
     address payable public vault;
 
-    constructor() ERC721("CyberPunk", "A-12") {
+    function initialize() public initializer {
+        __ERC721_init("CyberPunk", "A-12");
+        __ERC721Enumerable_init();
+        __AccessControl_init();
+
         _setupRole(DEFAULT_ADMIN_ROLE, _msgSender());
         _setupRole(SALE_STAGES_MANAGER_ROLE, _msgSender());
         _setupRole(BATCH_MANAGER_ROLE, _msgSender());
@@ -81,6 +85,7 @@ contract Collection is ERC721Enumerable, AccessControl {
         _setupRole(DEFAULT_RARITY_SETTER_ROLE, _msgSender());
         _setupRole(DEFAULT_NAME_SETTER_ROLE, _msgSender());
         _setupRole(DEFAULT_SKILL_SETTER_ROLE, _msgSender());
+        maxPurchaseSize = 20;
     }
 
     /**
@@ -90,7 +95,7 @@ contract Collection is ERC721Enumerable, AccessControl {
         public
         view
         virtual
-        override(ERC721Enumerable, AccessControl)
+        override(ERC721Upgradeable, ERC721EnumerableUpgradeable, AccessControlUpgradeable)
         returns (bool)
     {
         return super.supportsInterface(interfaceId);
@@ -110,7 +115,7 @@ contract Collection is ERC721Enumerable, AccessControl {
         address from,
         address to,
         uint256 tokenId
-    ) internal virtual override {
+    ) internal virtual override(ERC721Upgradeable, ERC721EnumerableUpgradeable) {
         super._beforeTokenTransfer(from, to, tokenId);
 
         // check maxTotalSupply is not exceeded on mint

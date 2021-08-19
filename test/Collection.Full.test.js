@@ -1,4 +1,4 @@
-const { ethers } = require('hardhat');
+const { ethers, upgrades } = require('hardhat');
 const { expect } = require('chai');
 
 contract('Collection Full test', function() {
@@ -13,7 +13,7 @@ contract('Collection Full test', function() {
     this.CollectionArtifact = await ethers.getContractFactory('Collection');
   });
   beforeEach(async function() {
-    this.collection = await this.CollectionArtifact.deploy();
+    this.collection = await upgrades.deployProxy(this.CollectionArtifact);
   });
 
   it('start should revert if _defaultUri not set', async function() {
