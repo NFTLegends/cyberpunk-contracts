@@ -37,13 +37,6 @@ module.exports = {
   },
   networks: {
     hardhat: {
-      forking: {
-        enabled: process.env.FORKING === 'true',
-        url: 'https://eth-mainnet.alchemyapi.io/v2/' + `${process.env.ALCHEMY_API_KEY}`,
-      },
-      live: false,
-      saveDeployments: true,
-      tags: ['test'],
     },
     localhost: {
       live: false,
