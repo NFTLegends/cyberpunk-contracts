@@ -7,28 +7,42 @@ import "@openzeppelin/contracts-upgradeable/token/ERC721/extensions/ERC721Enumer
 import "@openzeppelin/contracts/utils/Strings.sol";
 import "@openzeppelin/contracts/utils/math/SafeMath.sol";
 
+/**
+ * @title Digital art collectible metaverse
+ * @author NFT Legends team
+ **/
 contract Collection is ERC721Upgradeable, ERC721EnumerableUpgradeable, AccessControlUpgradeable {
     event NameChange(uint256 indexed index, string newName);
     event SkillChange(uint256 indexed index, uint256 newSkill);
     event DnaChange(uint256 indexed index, uint256 newDna);
     event Buy(address indexed _from, uint256 nfts, address referral);
 
+    // each token has its own attributes: Name, Skill and DNA
+    // Name is the symbolic string, that can be changed over time
     mapping(uint256 => string) private _tokenName;
+    // Skill is a numeric value that represents character's experience
     mapping(uint256 => uint256) private _tokenSkill;
+    // DNA is 256-bit map where unique token attributes encoded
     mapping(uint256 => uint256) private _tokenDna;
 
+    // when sale is active, anyone is able to buy the token
     bool public saleActive;
 
     using SafeMath for uint256;
     using Strings for uint256;
 
-    // Sale Stage Info struct
+    // The token purchase price depends on how early you buy the character
+    // (i.e. sequential number of the purchase)
     struct SaleStage {
         uint256 startSaleTokenId;
         uint256 endSaleTokenId;
         uint256 weiPerToken;
     }
 
+    // All the tokens are grouped in batches. Batch is basically IPFS folder (DAG)
+    // that stores token descriptions and images. It tokenId falls into batch, the
+    // tokenURI = batch.baseURI + "/" + tokenId.
+    // All the batches have the same rarity parameter.
     struct Batch {
         uint256 startBatchTokenId;
         uint256 endBatchTokenId;
@@ -36,24 +50,25 @@ contract Collection is ERC721Upgradeable, ERC721EnumerableUpgradeable, AccessCon
         uint256 rarity;
     }
 
-    // Array of heroes batches
+    // Arrays that store configured batches and saleStages
     Batch[] internal _batches;
-    // Array of sale stages
     SaleStage[] internal _saleStages;
     // Maximum allowed tokenSupply boundary. Can be extended by adding new stages.
     uint256 internal _maxTotalSupply;
-    // Max NFTs that can be bought at once.
+    // Max NFTs that can be bought at once. To avoid gas overspending.
     uint256 public maxPurchaseSize;
 
+    // If tokenId doesn't match any configured batch, defaultURI parameters are used.
     string internal _defaultUri;
     uint256 internal _defaultRarity;
     string internal _defaultName;
     uint256 internal _defaultSkill;
-    // Role with add & set sale stages permissions
+    // Roles that can modify individual characteristics
     bytes32 public constant NAME_SETTER_ROLE = keccak256("NAME_SETTER_ROLE");
     bytes32 public constant SKILL_SETTER_ROLE = keccak256("SKILL_SETTER_ROLE");
     bytes32 public constant DNA_SETTER_ROLE = keccak256("DNA_SETTER_ROLE");
     bytes32 public constant MINTER_ROLE = keccak256("MINTER_ROLE");
+    // Received funds (native Ether or BNB) get transferred to Vault address
     address payable public vault;
 
     function initialize() public initializer {
@@ -83,7 +98,7 @@ contract Collection is ERC721Upgradeable, ERC721EnumerableUpgradeable, AccessCon
     }
 
     /**
-     * @notice Returns current `_maxTotalSupply` value.
+     * @dev Returns current `_maxTotalSupply` value.
      */
     function maxTotalSupply() public view virtual returns (uint256) {
         return _maxTotalSupply;
@@ -106,14 +121,17 @@ contract Collection is ERC721Upgradeable, ERC721EnumerableUpgradeable, AccessCon
     }
 
     /**
-     * @notice Returns current `_saleStages` array length.
+     * @dev Returns the number of configured saleStages (tokensale schedule)
+     * @return current `_saleStages` array length
      */
     function saleStagesLength() public view returns (uint256) {
         return _saleStages.length;
     }
 
     /**
-     * @notice Returns info about sale stage with given index.
+     * @dev Returns the saleStage by its index
+     * @param saleStageIndex salestage index in the array
+     * @return info about sale stage
      */
     function getSaleStage(uint256 saleStageIndex) public view returns (SaleStage memory) {
         require(_saleStages.length > 0, "getSaleStage: no stages");
@@ -123,29 +141,34 @@ contract Collection is ERC721Upgradeable, ERC721EnumerableUpgradeable, AccessCon
     }
 
     /**
-     * @notice Returns current `_batches` array length.
+     * @dev Returns the length of configured batches
+     * @return current `_batches` array length.
      */
     function batchesLength() public view returns (uint256) {
         return _batches.length;
     }
 
     /**
-     * @notice Returns `_batches`.
+     * @dev Returns all the batches
+     * @return `_batches`.
      */
     function getBatches() public view returns (Batch[] memory) {
         return _batches;
     }
 
     /**
-     * @notice Returns `_batches`.
+     * @dev Returns all sale stages
+     * @return `_saleStages`.
      */
     function getSaleStages() public view returns (SaleStage[] memory) {
         return _saleStages;
     }
 
     /**
-     * @notice Return batch by its sequential Id
-     Note: batch ids can change over time and reorder as the result of batch removal
+     * @dev Returns the batch by its index in the array
+     * @param batchIndex batch index
+     * @return Batch info
+     * Note: batch ids can change over time and reorder as the result of batch removal
      */
     function getBatch(uint256 batchIndex) public view returns (Batch memory) {
         require(_batches.length > 0, "getBatch: no batches");
@@ -155,7 +178,9 @@ contract Collection is ERC721Upgradeable, ERC721EnumerableUpgradeable, AccessCon
     }
 
     /**
-     * @notice Return token batch URI
+     * @dev Return batch by given tokenId
+     * @param tokenId token id
+     * @return batch structure
      */
     function getBatchByToken(uint256 tokenId) public view returns (Batch memory) {
         require(_batches.length > 0, "getBatchByToken: no batches");
@@ -171,7 +196,11 @@ contract Collection is ERC721Upgradeable, ERC721EnumerableUpgradeable, AccessCon
     }
 
     /**
-     * @notice Return tokenURI
+     * @dev IPFS address that stores JSON with token attributes
+     * Tries to find it by batch first. If token has no batch, returns defaultUri.
+     * @param tokenId id of the token
+     * @return string with ipfs address to json with token attribute
+     * or URI for default token if token doesn`t exist
      */
     function tokenURI(uint256 tokenId) public view override returns (string memory) {
         require(_batches.length > 0, "tokenURI: no batches");
@@ -187,7 +216,12 @@ contract Collection is ERC721Upgradeable, ERC721EnumerableUpgradeable, AccessCon
     }
 
     /**
-     * @notice Add tokens batch to batches array
+     * @notice Creates the new batch for given token range
+     * @param startTokenId index of the first batch token
+     * @param endTokenId index of the last batch token
+     * @param baseURI ipfs batch URI
+     * @param rarity batch rarity
+     * Note: batch ids can change over time and reorder as the result of batch removal
      */
     function addBatch(
         uint256 startTokenId,
@@ -218,7 +252,13 @@ contract Collection is ERC721Upgradeable, ERC721EnumerableUpgradeable, AccessCon
     }
 
     /**
-     * @notice Update batch by its index (index can change over time)
+     * @notice Update existing batch by its index
+     * @param batchIndex the index of the batch to be changed
+     * @param batchStartId index of the first batch token
+     * @param batchEndId index of the last batch token
+     * @param baseURI ipfs batch URI
+     * @param rarity batch rarity
+     * Note: batch ids can change over time and reorder as the result of batch removal
      */
     function setBatch(
         uint256 batchIndex,
@@ -256,7 +296,8 @@ contract Collection is ERC721Upgradeable, ERC721EnumerableUpgradeable, AccessCon
     }
 
     /**
-     * @notice Removes batch at the given index
+     * @notice Deletes batch by its id. This reorders the index of the token that was last.
+     * @param batchIndex the index of the batch to be deteted
      */
     function deleteBatch(uint256 batchIndex) external onlyRole(DEFAULT_ADMIN_ROLE) {
         require(_batches.length > batchIndex, "index out of batches length");
@@ -265,7 +306,11 @@ contract Collection is ERC721Upgradeable, ERC721EnumerableUpgradeable, AccessCon
     }
 
     /**
-     * @notice Adds new sale stage with given params at the end of `saleStages array`.
+     * @notice Add sale stage (i.e. tokensale schedule)
+     * It takes place at the end of `saleStages array`
+     * @param startTokenId index of the first batch token
+     * @param endTokenId index of the last batch token
+     * @param weiPerToken price for token
      */
     function addSaleStage(
         uint256 startTokenId,
@@ -297,7 +342,11 @@ contract Collection is ERC721Upgradeable, ERC721EnumerableUpgradeable, AccessCon
     }
 
     /**
-     * @notice Rewrites sale stage properties with given index.
+     * @notice Update (rewrite) saleStage properties by index
+     * @param saleStageId index of the first sale stage token
+     * @param startTokenId index sale stage need to be updated
+     * @param saleStageEndId ipfs batch URI
+     * @param weiPerToken price for token
      */
     function setSaleStage(
         uint256 saleStageId,
@@ -336,6 +385,10 @@ contract Collection is ERC721Upgradeable, ERC721EnumerableUpgradeable, AccessCon
         _saleStages[saleStageId].weiPerToken = weiPerToken;
     }
 
+    /**
+     * @dev Delete sale stage by the given given index
+     * @param saleStageIndex index of the batch to be deleted
+     */
     function deleteSaleStage(uint256 saleStageIndex) external onlyRole(DEFAULT_ADMIN_ROLE) {
         require(_saleStages.length > saleStageIndex, "index out of sale stage length");
         SaleStage memory _saleStage = _saleStages[saleStageIndex];
@@ -346,7 +399,9 @@ contract Collection is ERC721Upgradeable, ERC721EnumerableUpgradeable, AccessCon
     }
 
     /**
-     * @notice Returns summary price for given number of tokens.
+     * @dev Calculates the total price for the given number of tokens
+     * @param tokens number of tokens to be purchased
+     * @return summary price
      */
     function getTotalPriceFor(uint256 tokens) public view returns (uint256) {
         require(tokens > 0, "tokens must be more then 0");
@@ -374,7 +429,9 @@ contract Collection is ERC721Upgradeable, ERC721EnumerableUpgradeable, AccessCon
     }
 
     /**
-     * @notice Method to purchase and get random available NFTs.
+     * @dev Method to randomly mint desired number of NFTs
+     * @param to the address where you want to transfer tokens
+     * @param nfts the number of tokens to be minted
      */
     function _mintMultiple(address to, uint256 nfts) internal {
         require(totalSupply() < _maxTotalSupply, "Sale has already ended");
@@ -387,19 +444,28 @@ contract Collection is ERC721Upgradeable, ERC721EnumerableUpgradeable, AccessCon
         }
     }
 
+    /**
+     * @dev Mints a specific token (with known id) to the given address
+     * @param to the receiver
+     * @param mintIndex the tokenId to mint
+     */
     function mint(address to, uint256 mintIndex) public onlyRole(MINTER_ROLE) {
         _safeMint(to, mintIndex);
     }
 
     /**
-     * @notice Mint a set of random NFTs without purchase (for MINTER_ROLE only).
+     * @dev Public method to randomly mint desired number of NFTs
+     * @param to the receiver
+     * @param nfts the number of tokens to be minted
      */
     function mintMultiple(address to, uint256 nfts) public onlyRole(MINTER_ROLE) {
         _mintMultiple(to, nfts);
     }
 
     /**
-     * @notice Method to purchase and get random available NFTs.
+     * @dev Method to purchase and random available NFTs.
+     * @param nfts the number of tokens to buy
+     * @param referral the address of referral who invited the user to the platform
      */
     function buy(uint256 nfts, address referral) public payable {
         require(saleActive, "Sale is not active");
@@ -411,7 +477,8 @@ contract Collection is ERC721Upgradeable, ERC721EnumerableUpgradeable, AccessCon
     }
 
     /**
-     * @dev Pseudo-random index generator. Returns new free of owner token index.
+     * @dev Returns the (pseudo-)random token index free of owner.
+     * @return available token index
      */
     function _getRandomAvailableIndex() internal view returns (uint256) {
         uint256 index = (uint256(
@@ -433,7 +500,9 @@ contract Collection is ERC721Upgradeable, ERC721EnumerableUpgradeable, AccessCon
     }
 
     /**
-     * @dev Returns rarity of the NFT at token Id
+     * @dev Returns rarity of the NFT by token Id
+     * @param tokenId id of the token
+     * @return rarity
      */
     function getRarity(uint256 tokenId) public view returns (uint256) {
         require(_batches.length > 0, "getBatchByToken: no batches");
@@ -450,6 +519,8 @@ contract Collection is ERC721Upgradeable, ERC721EnumerableUpgradeable, AccessCon
 
     /**
      * @dev Returns name of the NFT at index
+     * @param index token id
+     * @return NFT name
      */
     function getName(uint256 index) public view returns (string memory) {
         require(index < _maxTotalSupply, "index < _maxTotalSupply");
@@ -462,6 +533,8 @@ contract Collection is ERC721Upgradeable, ERC721EnumerableUpgradeable, AccessCon
 
     /**
      * @dev Returns skill of the NFT at index
+     * @param index token id
+     * @return NFT skill
      */
     function getSkill(uint256 index) public view returns (uint256) {
         require(index < _maxTotalSupply, "index < _maxTotalSupply");
@@ -472,7 +545,9 @@ contract Collection is ERC721Upgradeable, ERC721EnumerableUpgradeable, AccessCon
     }
 
     /**
-     * @dev Returns DNA of the NFT at index
+     * @dev Returns individual DNA of the NFT at index
+     * @param index token id
+     * @return NFT DNA
      */
     function getDna(uint256 index) public view returns (uint256) {
         require(index < _maxTotalSupply, "index < _maxTotalSupply");
@@ -480,7 +555,7 @@ contract Collection is ERC721Upgradeable, ERC721EnumerableUpgradeable, AccessCon
     }
 
     /**
-     * @dev Starts sale
+     * @dev Start tokensale process
      */
     function start() public onlyRole(DEFAULT_ADMIN_ROLE) {
         require(bytes(_defaultUri).length > 0, "_defaultUri is undefined");
@@ -489,14 +564,14 @@ contract Collection is ERC721Upgradeable, ERC721EnumerableUpgradeable, AccessCon
     }
 
     /**
-     * @dev Stops sale
+     * @dev Stop tokensale
      */
     function stop() public onlyRole(DEFAULT_ADMIN_ROLE) {
         saleActive = false;
     }
 
     /**
-     * @dev Change token name
+     * @dev Set or change individual token name
      */
     function setName(uint256 index, string memory newName) public onlyRole(NAME_SETTER_ROLE) {
         require(index < _maxTotalSupply, "index < _maxTotalSupply");
@@ -505,7 +580,7 @@ contract Collection is ERC721Upgradeable, ERC721EnumerableUpgradeable, AccessCon
     }
 
     /**
-     * @dev Change token skill
+     * @dev Set or change individual token skill
      */
     function setSkill(uint256 index, uint256 newSkill) public onlyRole(SKILL_SETTER_ROLE) {
         require(index < _maxTotalSupply, "index < _maxTotalSupply");
@@ -514,7 +589,7 @@ contract Collection is ERC721Upgradeable, ERC721EnumerableUpgradeable, AccessCon
     }
 
     /**
-     * @dev Change token DNA attribute
+     * @dev Set or change individual token DNA
      */
     function setDna(uint256 index, uint256 newDna) public onlyRole(DNA_SETTER_ROLE) {
         require(index < _maxTotalSupply, "index < _maxTotalSupply");
@@ -523,28 +598,30 @@ contract Collection is ERC721Upgradeable, ERC721EnumerableUpgradeable, AccessCon
     }
 
     /**
-     * @dev Change max purchase size.
+     * @dev Set max purchase size (to avoid gas overspending)
      */
     function setMaxPurchaseSize(uint256 newPurchaseSize) public onlyRole(DEFAULT_ADMIN_ROLE) {
         maxPurchaseSize = newPurchaseSize;
     }
 
     /**
-     * @dev Set defaultUri.
+     * @dev Set defaultUri
      */
     function setDefaultUri(string memory uri) public onlyRole(DEFAULT_ADMIN_ROLE) {
         _defaultUri = uri;
     }
 
     /**
-     * @dev Change vault.
+     * @dev Set vault
+     * @param newVault address to receive ethers
      */
     function setVault(address payable newVault) public onlyRole(DEFAULT_ADMIN_ROLE) {
         vault = newVault;
     }
 
     /**
-     * @dev Set defaultRarity.
+     * @dev Set defaultRarity
+     * @param rarity new default rarity
      */
     function setDefaultRarity(uint256 rarity) public onlyRole(DEFAULT_ADMIN_ROLE) {
         _defaultRarity = rarity;
@@ -552,6 +629,7 @@ contract Collection is ERC721Upgradeable, ERC721EnumerableUpgradeable, AccessCon
 
     /**
      * @dev Set default name.
+     * @param name new default name
      */
     function setDefaultName(string memory name) public onlyRole(DEFAULT_ADMIN_ROLE) {
         _defaultName = name;
@@ -559,6 +637,7 @@ contract Collection is ERC721Upgradeable, ERC721EnumerableUpgradeable, AccessCon
 
     /**
      * @dev Set default skill.
+     * @param skill new default name
      */
     function setDefaultSkill(uint256 skill) public onlyRole(DEFAULT_ADMIN_ROLE) {
         _defaultSkill = skill;
