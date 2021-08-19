@@ -36,8 +36,7 @@ module.exports = {
     },
   },
   networks: {
-    hardhat: {
-    },
+    hardhat: {},
     localhost: {
       live: false,
       saveDeployments: true,
@@ -50,7 +49,6 @@ module.exports = {
       live: true,
       saveDeployments: true,
       tags: ['staging'],
-      gas: 4000000,
       gasPrice: 8000000000,
     },
     mainnet: {
@@ -72,7 +70,7 @@ module.exports = {
         settings: {
           optimizer: {
             enabled: true,
-            runs: 1,
+            runs: 200,
           },
         },
       },
