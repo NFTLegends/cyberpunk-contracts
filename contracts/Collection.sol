@@ -43,28 +43,18 @@ contract Collection is ERC721Upgradeable, ERC721EnumerableUpgradeable, AccessCon
     // Maximum allowed tokenSupply boundary. Can be extended by adding new stages.
     uint256 internal _maxTotalSupply;
     // Max NFTs that can be bought at once.
-    uint256 public _maxPurchaseSize;
+    uint256 public maxPurchaseSize;
 
     string internal _defaultUri;
     uint256 internal _defaultRarity;
     string internal _defaultName;
     uint256 internal _defaultSkill;
     // Role with add & set sale stages permissions
-    bytes32 public constant SALE_STAGES_MANAGER_ROLE = keccak256("SALE_STAGES_MANAGER_ROLE");
-    // Role with add & delete permissions
-    bytes32 public constant BATCH_MANAGER_ROLE = keccak256("BATCH_MANAGER_ROLE");
-    bytes32 public constant SALE_ADMIN_ROLE = keccak256("SALE_ADMIN_ROLE");
     bytes32 public constant NAME_SETTER_ROLE = keccak256("NAME_SETTER_ROLE");
     bytes32 public constant SKILL_SETTER_ROLE = keccak256("SKILL_SETTER_ROLE");
     bytes32 public constant DNA_SETTER_ROLE = keccak256("DNA_SETTER_ROLE");
-    bytes32 public constant MAX_PURCHASE_SIZE_SETTER_ROLE = keccak256("MAX_PURCHASE_SIZE_SETTER_ROLE");
     bytes32 public constant MINTER_ROLE = keccak256("MINTER_ROLE");
-    bytes32 public constant DEFAULT_URI_SETTER_ROLE = keccak256("DEFAULT_URI_SETTER_ROLE");
-    bytes32 public constant DEFAULT_RARITY_SETTER_ROLE = keccak256("DEFAULT_RARITY_SETTER_ROLE");
-    bytes32 public constant VAULT_SETTER_ROLE = keccak256("VAULT_SETTER_ROLE");
-    bytes32 public constant DEFAULT_NAME_SETTER_ROLE = keccak256("DEFAULT_NAME_SETTER_ROLE");
-    bytes32 public constant DEFAULT_SKILL_SETTER_ROLE = keccak256("DEFAULT_SKILL_SETTER_ROLE");
-    address payable public _vault;
+    address payable public vault;
 
     function initialize() public initializer {
         __ERC721_init("CyberPunk", "A-12");
@@ -72,20 +62,11 @@ contract Collection is ERC721Upgradeable, ERC721EnumerableUpgradeable, AccessCon
         __AccessControl_init();
 
         _setupRole(DEFAULT_ADMIN_ROLE, _msgSender());
-        _setupRole(SALE_STAGES_MANAGER_ROLE, _msgSender());
-        _setupRole(BATCH_MANAGER_ROLE, _msgSender());
-        _setupRole(SALE_ADMIN_ROLE, _msgSender());
         _setupRole(NAME_SETTER_ROLE, _msgSender());
         _setupRole(SKILL_SETTER_ROLE, _msgSender());
         _setupRole(DNA_SETTER_ROLE, _msgSender());
-        _setupRole(MAX_PURCHASE_SIZE_SETTER_ROLE, _msgSender());
         _setupRole(MINTER_ROLE, _msgSender());
-        _setupRole(DEFAULT_URI_SETTER_ROLE, _msgSender());
-        _setupRole(VAULT_SETTER_ROLE, _msgSender());
-        _setupRole(DEFAULT_RARITY_SETTER_ROLE, _msgSender());
-        _setupRole(DEFAULT_NAME_SETTER_ROLE, _msgSender());
-        _setupRole(DEFAULT_SKILL_SETTER_ROLE, _msgSender());
-        _maxPurchaseSize = 20;
+        maxPurchaseSize = 20;
     }
 
     /**
@@ -213,7 +194,7 @@ contract Collection is ERC721Upgradeable, ERC721EnumerableUpgradeable, AccessCon
         uint256 endTokenId,
         string memory baseURI,
         uint256 rarity
-    ) external onlyRole(BATCH_MANAGER_ROLE) {
+    ) external onlyRole(DEFAULT_ADMIN_ROLE) {
         uint256 _batchesLength = _batches.length;
 
         require(startTokenId <= endTokenId, "startId must be <= than EndId");
@@ -245,7 +226,7 @@ contract Collection is ERC721Upgradeable, ERC721EnumerableUpgradeable, AccessCon
         uint256 batchEndId,
         string memory baseURI,
         uint256 rarity
-    ) external onlyRole(BATCH_MANAGER_ROLE) {
+    ) external onlyRole(DEFAULT_ADMIN_ROLE) {
         uint256 _batchesLength = _batches.length;
         require(_batchesLength > 0, "setBatch: batches is empty");
         require(batchStartId <= batchEndId, "startId must be <= than EndId");
@@ -277,7 +258,7 @@ contract Collection is ERC721Upgradeable, ERC721EnumerableUpgradeable, AccessCon
     /**
      * @notice Removes batch at the given index
      */
-    function deleteBatch(uint256 batchIndex) external onlyRole(BATCH_MANAGER_ROLE) {
+    function deleteBatch(uint256 batchIndex) external onlyRole(DEFAULT_ADMIN_ROLE) {
         require(_batches.length > batchIndex, "index out of batches length");
         _batches[batchIndex] = _batches[_batches.length - 1];
         _batches.pop();
@@ -290,7 +271,7 @@ contract Collection is ERC721Upgradeable, ERC721EnumerableUpgradeable, AccessCon
         uint256 startTokenId,
         uint256 endTokenId,
         uint256 weiPerToken
-    ) external onlyRole(SALE_STAGES_MANAGER_ROLE) {
+    ) external onlyRole(DEFAULT_ADMIN_ROLE) {
         require(startTokenId <= endTokenId, "startId must be <= than EndId");
         require(weiPerToken > 0, "weiPerToken must be non-zero");
         uint256 _saleStagesLength = _saleStages.length;
@@ -323,7 +304,7 @@ contract Collection is ERC721Upgradeable, ERC721EnumerableUpgradeable, AccessCon
         uint256 startTokenId,
         uint256 saleStageEndId,
         uint256 weiPerToken
-    ) external onlyRole(SALE_STAGES_MANAGER_ROLE) {
+    ) external onlyRole(DEFAULT_ADMIN_ROLE) {
         uint256 _saleStagesLength = _saleStages.length;
         require(_saleStagesLength > 0, "batches is empty");
         require(startTokenId <= saleStageEndId, "startId must be <= than EndId");
@@ -355,7 +336,7 @@ contract Collection is ERC721Upgradeable, ERC721EnumerableUpgradeable, AccessCon
         _saleStages[saleStageId].weiPerToken = weiPerToken;
     }
 
-    function deleteSaleStage(uint256 saleStageIndex) external onlyRole(BATCH_MANAGER_ROLE) {
+    function deleteSaleStage(uint256 saleStageIndex) external onlyRole(DEFAULT_ADMIN_ROLE) {
         require(_saleStages.length > saleStageIndex, "index out of sale stage length");
         SaleStage memory _saleStage = _saleStages[saleStageIndex];
         _maxTotalSupply -= _saleStage.endSaleTokenId - _saleStage.startSaleTokenId + 1;
@@ -422,10 +403,10 @@ contract Collection is ERC721Upgradeable, ERC721EnumerableUpgradeable, AccessCon
      */
     function buy(uint256 nfts, address referral) public payable {
         require(saleActive, "Sale is not active");
-        require(nfts <= _maxPurchaseSize, "Can not buy > maxPurchaseSize");
+        require(nfts <= maxPurchaseSize, "Can not buy > maxPurchaseSize");
         require(getTotalPriceFor(nfts) == msg.value, "Ether value sent is not correct");
         emit Buy(msg.sender, nfts, referral);
-        _vault.transfer(msg.value);
+        vault.transfer(msg.value);
         _mintMultiple(msg.sender, nfts);
     }
 
@@ -501,16 +482,16 @@ contract Collection is ERC721Upgradeable, ERC721EnumerableUpgradeable, AccessCon
     /**
      * @dev Starts sale
      */
-    function start() public onlyRole(SALE_ADMIN_ROLE) {
+    function start() public onlyRole(DEFAULT_ADMIN_ROLE) {
         require(bytes(_defaultUri).length > 0, "_defaultUri is undefined");
-        require(_vault != address(0), "Vault is undefined");
+        require(vault != address(0), "Vault is undefined");
         saleActive = true;
     }
 
     /**
      * @dev Stops sale
      */
-    function stop() public onlyRole(SALE_ADMIN_ROLE) {
+    function stop() public onlyRole(DEFAULT_ADMIN_ROLE) {
         saleActive = false;
     }
 
@@ -544,42 +525,42 @@ contract Collection is ERC721Upgradeable, ERC721EnumerableUpgradeable, AccessCon
     /**
      * @dev Change max purchase size.
      */
-    function setMaxPurchaseSize(uint256 newPurchaseSize) public onlyRole(MAX_PURCHASE_SIZE_SETTER_ROLE) {
-        _maxPurchaseSize = newPurchaseSize;
+    function setMaxPurchaseSize(uint256 newPurchaseSize) public onlyRole(DEFAULT_ADMIN_ROLE) {
+        maxPurchaseSize = newPurchaseSize;
     }
 
     /**
      * @dev Set defaultUri.
      */
-    function setDefaultUri(string memory uri) public onlyRole(DEFAULT_URI_SETTER_ROLE) {
+    function setDefaultUri(string memory uri) public onlyRole(DEFAULT_ADMIN_ROLE) {
         _defaultUri = uri;
     }
 
     /**
      * @dev Change vault.
      */
-    function setVault(address payable newVault) public onlyRole(VAULT_SETTER_ROLE) {
-        _vault = newVault;
+    function setVault(address payable newVault) public onlyRole(DEFAULT_ADMIN_ROLE) {
+        vault = newVault;
     }
 
     /**
      * @dev Set defaultRarity.
      */
-    function setDefaultRarity(uint256 rarity) public onlyRole(DEFAULT_RARITY_SETTER_ROLE) {
+    function setDefaultRarity(uint256 rarity) public onlyRole(DEFAULT_ADMIN_ROLE) {
         _defaultRarity = rarity;
     }
 
     /**
      * @dev Set default name.
      */
-    function setDefaultName(string memory name) public onlyRole(DEFAULT_NAME_SETTER_ROLE) {
+    function setDefaultName(string memory name) public onlyRole(DEFAULT_ADMIN_ROLE) {
         _defaultName = name;
     }
 
     /**
      * @dev Set default skill.
      */
-    function setDefaultSkill(uint256 skill) public onlyRole(DEFAULT_SKILL_SETTER_ROLE) {
+    function setDefaultSkill(uint256 skill) public onlyRole(DEFAULT_ADMIN_ROLE) {
         _defaultSkill = skill;
     }
 }
