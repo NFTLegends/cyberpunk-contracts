@@ -58,13 +58,13 @@ contract('Collection Full test', function() {
 
       it('revert when batchStartID more than batchEndId', async function() {
         await expect(this.collection.addBatch(9, 0, 'ipfs://ipfs/first_batch', 12)).to.be.revertedWith(
-          'batchStartID must be equal or less than batchEndId',
+          'startId must be <= than EndId',
         );
       });
 
       it('revert when batch batchEndId = 0', async function() {
         await expect(this.collection.addBatch(9, 0, 'ipfs://ipfs/first_batch', 12)).to.be.revertedWith(
-          'batchStartID must be equal or less than batchEndId',
+          'startId must be <= than EndId',
         );
       });
 
@@ -87,9 +87,7 @@ contract('Collection Full test', function() {
       });
 
       it('revert when add sale stage w/ startTokenId more then endTokenId', async function() {
-        await expect(this.collection.addSaleStage(1, 0, 100)).to.be.revertedWith(
-          'startTokenId must be equal or less than endTokenId',
-        );
+        await expect(this.collection.addSaleStage(1, 0, 100)).to.be.revertedWith('startId must be <= than EndId');
       });
 
       it('revert when get not existed sale stage', async function() {
@@ -111,15 +109,15 @@ contract('Collection Full test', function() {
           const zeroBatch = await this.collection.getBatch(0);
           expect(batches.length).to.equal(1);
 
-          expect(zeroBatch._startBatchTokenId).to.equal(0);
-          expect(zeroBatch._endBatchTokenId).to.equal(10);
-          expect(zeroBatch._baseURI).to.equal('ipfs://ipfs/batchX');
-          expect(zeroBatch._rarity).to.equal(12);
+          expect(zeroBatch.startBatchTokenId).to.equal(0);
+          expect(zeroBatch.endBatchTokenId).to.equal(10);
+          expect(zeroBatch.baseURI).to.equal('ipfs://ipfs/batchX');
+          expect(zeroBatch.rarity).to.equal(12);
 
-          expect(batches[0]._startBatchTokenId).to.equal(0);
-          expect(batches[0]._endBatchTokenId).to.equal(10);
-          expect(batches[0]._baseURI).to.equal('ipfs://ipfs/batchX');
-          expect(batches[0]._rarity).to.equal(12);
+          expect(batches[0].startBatchTokenId).to.equal(0);
+          expect(batches[0].endBatchTokenId).to.equal(10);
+          expect(batches[0].baseURI).to.equal('ipfs://ipfs/batchX');
+          expect(batches[0].rarity).to.equal(12);
         });
 
         it('tokens from batch have batch-based rarity and URIs', async function() {
@@ -147,10 +145,10 @@ contract('Collection Full test', function() {
             expect(await this.collection.batchesLength()).to.equal(1);
             const batches = await this.collection.getBatches();
             expect(batches.length).to.equal(1);
-            expect(batches[0]._startBatchTokenId).to.equal(0);
-            expect(batches[0]._endBatchTokenId).to.equal(20);
-            expect(batches[0]._baseURI).to.equal('ipfs://ipfs/first_batch');
-            expect(batches[0]._rarity).to.equal(13);
+            expect(batches[0].startBatchTokenId).to.equal(0);
+            expect(batches[0].endBatchTokenId).to.equal(20);
+            expect(batches[0].baseURI).to.equal('ipfs://ipfs/first_batch');
+            expect(batches[0].rarity).to.equal(13);
           });
 
           it('there are empty indices between two batches');
@@ -200,14 +198,14 @@ contract('Collection Full test', function() {
           expect(await this.collection.saleStagesLength()).to.equal('1');
 
           const saleSrages = await this.collection.getSaleStages();
-          expect(saleSrages[0]._startSaleTokenId).to.equal('0');
-          expect(saleSrages[0]._endSaleTokenId).to.equal('9');
-          expect(saleSrages[0]._weiPerToken).to.equal('100');
+          expect(saleSrages[0].startSaleTokenId).to.equal('0');
+          expect(saleSrages[0].endSaleTokenId).to.equal('9');
+          expect(saleSrages[0].weiPerToken).to.equal('100');
 
           const saleStage = await this.collection.getSaleStage(0);
-          expect(saleStage._startSaleTokenId).to.equal('0');
-          expect(saleStage._endSaleTokenId).to.equal('9');
-          expect(saleStage._weiPerToken).to.equal('100');
+          expect(saleStage.startSaleTokenId).to.equal('0');
+          expect(saleStage.endSaleTokenId).to.equal('9');
+          expect(saleStage.weiPerToken).to.equal('100');
           await expect(this.collection.getSaleStage(1)).to.be.reverted;
 
           expect(await this.collection.maxTotalSupply()).to.equal('10');
@@ -223,9 +221,7 @@ contract('Collection Full test', function() {
         });
 
         it('revert setSaleStage: startTokenId must be equal or less than saleStageEndId', async function() {
-          await expect(this.collection.setSaleStage(0, 10, 0, 100)).to.be.revertedWith(
-            'startTokenId must be equal or less than saleStageEndId',
-          );
+          await expect(this.collection.setSaleStage(0, 10, 0, 100)).to.be.revertedWith('startId must be <= than EndId');
         });
 
         it('revert when delete not existed #1 sale stage', async function() {
@@ -292,9 +288,9 @@ contract('Collection Full test', function() {
           it('saleStages has new properties', async function() {
             expect(await this.collection.saleStagesLength()).to.equal('1');
             const saleStage = await this.collection.getSaleStage(0);
-            expect(saleStage._startSaleTokenId).to.equal('0');
-            expect(saleStage._endSaleTokenId).to.equal('19');
-            expect(saleStage._weiPerToken).to.equal('100');
+            expect(saleStage.startSaleTokenId).to.equal('0');
+            expect(saleStage.endSaleTokenId).to.equal('19');
+            expect(saleStage.weiPerToken).to.equal('100');
           });
         });
 
@@ -307,13 +303,13 @@ contract('Collection Full test', function() {
             expect(await this.collection.saleStagesLength()).to.equal('2');
             const saleStages = await this.collection.getSaleStages();
             // previously created stage is visible
-            expect(saleStages[0]._startSaleTokenId).to.equal('0');
-            expect(saleStages[0]._endSaleTokenId).to.equal('9');
-            expect(saleStages[0]._weiPerToken).to.equal('100');
+            expect(saleStages[0].startSaleTokenId).to.equal('0');
+            expect(saleStages[0].endSaleTokenId).to.equal('9');
+            expect(saleStages[0].weiPerToken).to.equal('100');
             // new stage is visible
-            expect(saleStages[1]._startSaleTokenId).to.equal('10');
-            expect(saleStages[1]._endSaleTokenId).to.equal('19');
-            expect(saleStages[1]._weiPerToken).to.equal('200');
+            expect(saleStages[1].startSaleTokenId).to.equal('10');
+            expect(saleStages[1].endSaleTokenId).to.equal('19');
+            expect(saleStages[1].weiPerToken).to.equal('200');
             await expect(this.collection.getSaleStage(2)).to.be.reverted;
 
             expect(await this.collection.maxTotalSupply()).to.equal('20');
@@ -340,14 +336,14 @@ contract('Collection Full test', function() {
             it('saleStages #1 has new properties', async function() {
               expect(await this.collection.saleStagesLength()).to.equal('2');
               let saleStage = await this.collection.getSaleStage(0);
-              expect(saleStage._startSaleTokenId).to.equal('0');
-              expect(saleStage._endSaleTokenId).to.equal('9');
-              expect(saleStage._weiPerToken).to.equal('100');
+              expect(saleStage.startSaleTokenId).to.equal('0');
+              expect(saleStage.endSaleTokenId).to.equal('9');
+              expect(saleStage.weiPerToken).to.equal('100');
               // sale stage has new properties
               saleStage = await this.collection.getSaleStage(1);
-              expect(saleStage._startSaleTokenId).to.equal('10');
-              expect(saleStage._endSaleTokenId).to.equal('29');
-              expect(saleStage._weiPerToken).to.equal('200');
+              expect(saleStage.startSaleTokenId).to.equal('10');
+              expect(saleStage.endSaleTokenId).to.equal('29');
+              expect(saleStage.weiPerToken).to.equal('200');
               await expect(this.collection.getSaleStage(2)).to.be.reverted;
 
               expect(await this.collection.maxTotalSupply()).to.equal('30');
@@ -376,9 +372,9 @@ contract('Collection Full test', function() {
             it('saleStages #0 got removed and #1 still there', async function() {
               expect(await this.collection.saleStagesLength()).to.equal('1');
               const saleStage = await this.collection.getSaleStage(0);
-              expect(saleStage._startSaleTokenId).to.equal('10');
-              expect(saleStage._endSaleTokenId).to.equal('19');
-              expect(saleStage._weiPerToken).to.equal('200');
+              expect(saleStage.startSaleTokenId).to.equal('10');
+              expect(saleStage.endSaleTokenId).to.equal('19');
+              expect(saleStage.weiPerToken).to.equal('200');
 
               expect(await this.collection.maxTotalSupply()).to.equal('10');
             });
@@ -417,20 +413,20 @@ contract('Collection Full test', function() {
               expect(await this.collection.saleStagesLength()).to.equal('3');
               // previously created stage is visible
               let saleStage = await this.collection.getSaleStage(0);
-              expect(saleStage._startSaleTokenId).to.equal('0');
-              expect(saleStage._endSaleTokenId).to.equal('9');
-              expect(saleStage._weiPerToken).to.equal('100');
+              expect(saleStage.startSaleTokenId).to.equal('0');
+              expect(saleStage.endSaleTokenId).to.equal('9');
+              expect(saleStage.weiPerToken).to.equal('100');
 
               saleStage = await this.collection.getSaleStage(1);
-              expect(saleStage._startSaleTokenId).to.equal('10');
-              expect(saleStage._endSaleTokenId).to.equal('19');
-              expect(saleStage._weiPerToken).to.equal('200');
+              expect(saleStage.startSaleTokenId).to.equal('10');
+              expect(saleStage.endSaleTokenId).to.equal('19');
+              expect(saleStage.weiPerToken).to.equal('200');
 
               // new stage is visible
               saleStage = await this.collection.getSaleStage(2);
-              expect(saleStage._startSaleTokenId).to.equal('20');
-              expect(saleStage._endSaleTokenId).to.equal('29');
-              expect(saleStage._weiPerToken).to.equal('300');
+              expect(saleStage.startSaleTokenId).to.equal('20');
+              expect(saleStage.endSaleTokenId).to.equal('29');
+              expect(saleStage.weiPerToken).to.equal('300');
               await expect(this.collection.getSaleStage(3)).to.be.reverted;
 
               expect(await this.collection.maxTotalSupply()).to.equal('30');
@@ -478,14 +474,14 @@ contract('Collection Full test', function() {
           expect(await this.collection.saleStagesLength()).to.equal('1');
 
           const saleSrages = await this.collection.getSaleStages();
-          expect(saleSrages[0]._startSaleTokenId).to.equal('0');
-          expect(saleSrages[0]._endSaleTokenId).to.equal('9');
-          expect(saleSrages[0]._weiPerToken).to.equal('100');
+          expect(saleSrages[0].startSaleTokenId).to.equal('0');
+          expect(saleSrages[0].endSaleTokenId).to.equal('9');
+          expect(saleSrages[0].weiPerToken).to.equal('100');
 
           const saleStage = await this.collection.getSaleStage(0);
-          expect(saleStage._startSaleTokenId).to.equal('0');
-          expect(saleStage._endSaleTokenId).to.equal('9');
-          expect(saleStage._weiPerToken).to.equal('100');
+          expect(saleStage.startSaleTokenId).to.equal('0');
+          expect(saleStage.endSaleTokenId).to.equal('9');
+          expect(saleStage.weiPerToken).to.equal('100');
           await expect(this.collection.getSaleStage(1)).to.be.reverted;
         });
 
@@ -506,13 +502,13 @@ contract('Collection Full test', function() {
             expect(await this.collection.saleStagesLength()).to.equal('2');
             const saleStages = await this.collection.getSaleStages();
             // previously created stage is visible
-            expect(saleStages[0]._startSaleTokenId).to.equal('0');
-            expect(saleStages[0]._endSaleTokenId).to.equal('9');
-            expect(saleStages[0]._weiPerToken).to.equal('100');
+            expect(saleStages[0].startSaleTokenId).to.equal('0');
+            expect(saleStages[0].endSaleTokenId).to.equal('9');
+            expect(saleStages[0].weiPerToken).to.equal('100');
             // new stage is visible
-            expect(saleStages[1]._startSaleTokenId).to.equal('10');
-            expect(saleStages[1]._endSaleTokenId).to.equal('19');
-            expect(saleStages[1]._weiPerToken).to.equal('200');
+            expect(saleStages[1].startSaleTokenId).to.equal('10');
+            expect(saleStages[1].endSaleTokenId).to.equal('19');
+            expect(saleStages[1].weiPerToken).to.equal('200');
             await expect(this.collection.getSaleStage(2)).to.be.reverted;
           });
 
@@ -575,15 +571,15 @@ contract('Collection Full test', function() {
                 const zeroBatch = await this.collection.getBatch(0);
                 expect(batches.length).to.equal(1);
 
-                expect(zeroBatch._startBatchTokenId).to.equal(0);
-                expect(zeroBatch._endBatchTokenId).to.equal(10);
-                expect(zeroBatch._baseURI).to.equal('ipfs://ipfs/batchX');
-                expect(zeroBatch._rarity).to.equal(12);
+                expect(zeroBatch.startBatchTokenId).to.equal(0);
+                expect(zeroBatch.endBatchTokenId).to.equal(10);
+                expect(zeroBatch.baseURI).to.equal('ipfs://ipfs/batchX');
+                expect(zeroBatch.rarity).to.equal(12);
 
-                expect(batches[0]._startBatchTokenId).to.equal(0);
-                expect(batches[0]._endBatchTokenId).to.equal(10);
-                expect(batches[0]._baseURI).to.equal('ipfs://ipfs/batchX');
-                expect(batches[0]._rarity).to.equal(12);
+                expect(batches[0].startBatchTokenId).to.equal(0);
+                expect(batches[0].endBatchTokenId).to.equal(10);
+                expect(batches[0].baseURI).to.equal('ipfs://ipfs/batchX');
+                expect(batches[0].rarity).to.equal(12);
               });
 
               it('get batch by token are correct', async function() {
@@ -603,12 +599,12 @@ contract('Collection Full test', function() {
 
               it('revert when batchStartID more than batchEndId', async function() {
                 await expect(this.collection.setBatch(0, 15, 5, 'ipfs://ipfs/first_batch', 13)).to.be.revertedWith(
-                  'batchStartID must be equal or less than batchEndId',
+                  'startId must be <= than EndId',
                 );
               });
 
               it('revert getBatch with batchId more than batch length', async function() {
-                await expect(this.collection.getBatch(1)).to.be.revertedWith('batchId must be less than batch length');
+                await expect(this.collection.getBatch(1)).to.be.revertedWith('Id must be < batch length');
               });
 
               context('set batch #0', function() {
@@ -620,10 +616,10 @@ contract('Collection Full test', function() {
                   expect(await this.collection.batchesLength()).to.equal(1);
                   const batches = await this.collection.getBatches();
                   expect(batches.length).to.equal(1);
-                  expect(batches[0]._startBatchTokenId).to.equal(0);
-                  expect(batches[0]._endBatchTokenId).to.equal(20);
-                  expect(batches[0]._baseURI).to.equal('ipfs://ipfs/first_batch');
-                  expect(batches[0]._rarity).to.equal(13);
+                  expect(batches[0].startBatchTokenId).to.equal(0);
+                  expect(batches[0].endBatchTokenId).to.equal(20);
+                  expect(batches[0].baseURI).to.equal('ipfs://ipfs/first_batch');
+                  expect(batches[0].rarity).to.equal(13);
                 });
 
                 it('there are empty indices between two batches');
@@ -640,14 +636,14 @@ contract('Collection Full test', function() {
                   expect(await this.collection.batchesLength()).to.equal(2);
                   const batches = await this.collection.getBatches();
                   expect(batches.length).to.equal(2);
-                  expect(batches[0]._startBatchTokenId).to.equal(0);
-                  expect(batches[0]._endBatchTokenId).to.equal(10);
-                  expect(batches[0]._baseURI).to.equal('ipfs://ipfs/batchX');
-                  expect(batches[0]._rarity).to.equal(12);
-                  expect(batches[1]._startBatchTokenId).to.equal(11);
-                  expect(batches[1]._endBatchTokenId).to.equal(20);
-                  expect(batches[1]._baseURI).to.equal('ipfs://ipfs/batchY');
-                  expect(batches[1]._rarity).to.equal(23);
+                  expect(batches[0].startBatchTokenId).to.equal(0);
+                  expect(batches[0].endBatchTokenId).to.equal(10);
+                  expect(batches[0].baseURI).to.equal('ipfs://ipfs/batchX');
+                  expect(batches[0].rarity).to.equal(12);
+                  expect(batches[1].startBatchTokenId).to.equal(11);
+                  expect(batches[1].endBatchTokenId).to.equal(20);
+                  expect(batches[1].baseURI).to.equal('ipfs://ipfs/batchY');
+                  expect(batches[1].rarity).to.equal(23);
                 });
 
                 it('tokenURIs are correct', async function() {
@@ -671,10 +667,10 @@ contract('Collection Full test', function() {
                     expect(await this.collection.batchesLength()).to.equal(2);
                     const batches = await this.collection.getBatches();
                     expect(batches.length).to.equal(2);
-                    expect(batches[1]._startBatchTokenId).to.equal(21);
-                    expect(batches[1]._endBatchTokenId).to.equal(30);
-                    expect(batches[1]._baseURI).to.equal('ipfs://ipfs/second_batch');
-                    expect(batches[1]._rarity).to.equal(13);
+                    expect(batches[1].startBatchTokenId).to.equal(21);
+                    expect(batches[1].endBatchTokenId).to.equal(30);
+                    expect(batches[1].baseURI).to.equal('ipfs://ipfs/second_batch');
+                    expect(batches[1].rarity).to.equal(13);
                   });
 
                   it('there are empty indices between two batches');
@@ -691,10 +687,10 @@ contract('Collection Full test', function() {
                     expect(await this.collection.batchesLength()).to.equal(1);
                     const batches = await this.collection.getBatches();
                     expect(batches.length).to.equal(1);
-                    expect(batches[0]._startBatchTokenId).to.equal(11);
-                    expect(batches[0]._endBatchTokenId).to.equal(20);
-                    expect(batches[0]._baseURI).to.equal('ipfs://ipfs/batchY');
-                    expect(batches[0]._rarity).to.equal(23);
+                    expect(batches[0].startBatchTokenId).to.equal(11);
+                    expect(batches[0].endBatchTokenId).to.equal(20);
+                    expect(batches[0].baseURI).to.equal('ipfs://ipfs/batchY');
+                    expect(batches[0].rarity).to.equal(23);
                   });
 
                   it('tokenURIs prevously served from removed batch now have batchY URI', async function() {
@@ -717,22 +713,22 @@ contract('Collection Full test', function() {
 
                   expect(await this.collection.batchesLength()).to.equal(4);
                   expect(batches.length).to.equal(4);
-                  expect(batches[0]._startBatchTokenId).to.equal(0);
-                  expect(batches[0]._endBatchTokenId).to.equal(10);
-                  expect(batches[0]._baseURI).to.equal('ipfs://ipfs/batchX');
-                  expect(batches[0]._rarity).to.equal(12);
-                  expect(batches[1]._startBatchTokenId).to.equal(11);
-                  expect(batches[1]._endBatchTokenId).to.equal(20);
-                  expect(batches[1]._baseURI).to.equal('ipfs://ipfs/second_batch');
-                  expect(batches[1]._rarity).to.equal(23);
-                  expect(batches[2]._startBatchTokenId).to.equal(21);
-                  expect(batches[2]._endBatchTokenId).to.equal(30);
-                  expect(batches[2]._baseURI).to.equal('ipfs://ipfs/third_batch');
-                  expect(batches[2]._rarity).to.equal(33);
-                  expect(batches[3]._startBatchTokenId).to.equal(31);
-                  expect(batches[3]._endBatchTokenId).to.equal(40);
-                  expect(batches[3]._baseURI).to.equal('ipfs://ipfs/fourth_batch');
-                  expect(batches[3]._rarity).to.equal(43);
+                  expect(batches[0].startBatchTokenId).to.equal(0);
+                  expect(batches[0].endBatchTokenId).to.equal(10);
+                  expect(batches[0].baseURI).to.equal('ipfs://ipfs/batchX');
+                  expect(batches[0].rarity).to.equal(12);
+                  expect(batches[1].startBatchTokenId).to.equal(11);
+                  expect(batches[1].endBatchTokenId).to.equal(20);
+                  expect(batches[1].baseURI).to.equal('ipfs://ipfs/second_batch');
+                  expect(batches[1].rarity).to.equal(23);
+                  expect(batches[2].startBatchTokenId).to.equal(21);
+                  expect(batches[2].endBatchTokenId).to.equal(30);
+                  expect(batches[2].baseURI).to.equal('ipfs://ipfs/third_batch');
+                  expect(batches[2].rarity).to.equal(33);
+                  expect(batches[3].startBatchTokenId).to.equal(31);
+                  expect(batches[3].endBatchTokenId).to.equal(40);
+                  expect(batches[3].baseURI).to.equal('ipfs://ipfs/fourth_batch');
+                  expect(batches[3].rarity).to.equal(43);
 
                   batchByToken = expect(await this.collection.getBatchByToken(0));
                   batch = await this.collection.getBatch(0);
@@ -766,18 +762,18 @@ contract('Collection Full test', function() {
 
                     expect(await this.collection.batchesLength()).to.equal(3);
                     expect(batches.length).to.equal(3);
-                    expect(batches[0]._startBatchTokenId).to.equal(0);
-                    expect(batches[0]._endBatchTokenId).to.equal(10);
-                    expect(batches[0]._baseURI).to.equal('ipfs://ipfs/batchX');
-                    expect(batches[0]._rarity).to.equal(12);
-                    expect(batches[1]._startBatchTokenId).to.equal(31);
-                    expect(batches[1]._endBatchTokenId).to.equal(40);
-                    expect(batches[1]._baseURI).to.equal('ipfs://ipfs/fourth_batch');
-                    expect(batches[1]._rarity).to.equal(43);
-                    expect(batches[2]._startBatchTokenId).to.equal(21);
-                    expect(batches[2]._endBatchTokenId).to.equal(30);
-                    expect(batches[2]._baseURI).to.equal('ipfs://ipfs/third_batch');
-                    expect(batches[2]._rarity).to.equal(33);
+                    expect(batches[0].startBatchTokenId).to.equal(0);
+                    expect(batches[0].endBatchTokenId).to.equal(10);
+                    expect(batches[0].baseURI).to.equal('ipfs://ipfs/batchX');
+                    expect(batches[0].rarity).to.equal(12);
+                    expect(batches[1].startBatchTokenId).to.equal(31);
+                    expect(batches[1].endBatchTokenId).to.equal(40);
+                    expect(batches[1].baseURI).to.equal('ipfs://ipfs/fourth_batch');
+                    expect(batches[1].rarity).to.equal(43);
+                    expect(batches[2].startBatchTokenId).to.equal(21);
+                    expect(batches[2].endBatchTokenId).to.equal(30);
+                    expect(batches[2].baseURI).to.equal('ipfs://ipfs/third_batch');
+                    expect(batches[2].rarity).to.equal(33);
                   });
 
                   it('batch #1 should disappear and batches array should shorten', async function() {
@@ -785,24 +781,24 @@ contract('Collection Full test', function() {
                     const batches = await this.collection.getBatches();
                     expect(await this.collection.batchesLength()).to.equal(3);
                     expect(batches.length).to.equal(3);
-                    expect(batches[1]._startBatchTokenId).to.equal(31);
-                    expect(batches[1]._endBatchTokenId).to.equal(40);
-                    expect(batches[1]._baseURI).to.equal('ipfs://ipfs/fourth_batch');
-                    expect(batches[1]._rarity).to.equal(43);
+                    expect(batches[1].startBatchTokenId).to.equal(31);
+                    expect(batches[1].endBatchTokenId).to.equal(40);
+                    expect(batches[1].baseURI).to.equal('ipfs://ipfs/fourth_batch');
+                    expect(batches[1].rarity).to.equal(43);
 
                     batchByToken = await this.collection.getBatchByToken(0);
-                    expect(await batchByToken._startBatchTokenId).to.equal(0);
-                    expect(await batchByToken._endBatchTokenId).to.equal(10);
+                    expect(await batchByToken.startBatchTokenId).to.equal(0);
+                    expect(await batchByToken.endBatchTokenId).to.equal(10);
 
                     await expect(this.collection.getBatchByToken(11)).to.be.revertedWith('batch doesn\'t exist');
 
                     batchByToken = await this.collection.getBatchByToken(35);
-                    expect(await batchByToken._startBatchTokenId).to.equal(31);
-                    expect(await batchByToken._endBatchTokenId).to.equal(40);
+                    expect(await batchByToken.startBatchTokenId).to.equal(31);
+                    expect(await batchByToken.endBatchTokenId).to.equal(40);
 
                     batchByToken = await this.collection.getBatchByToken(25);
-                    expect(await batchByToken._startBatchTokenId).to.equal(21);
-                    expect(await batchByToken._endBatchTokenId).to.equal(30);
+                    expect(await batchByToken.startBatchTokenId).to.equal(21);
+                    expect(await batchByToken.endBatchTokenId).to.equal(30);
                   });
 
                   it('tokenURI return default uri if not found batch', async function() {
@@ -833,22 +829,22 @@ contract('Collection Full test', function() {
                         expect(await this.collection.batchesLength()).to.equal(4);
                         const batches = await this.collection.getBatches();
                         expect(batches.length).to.equal(4);
-                        expect(batches[0]._startBatchTokenId).to.equal(0);
-                        expect(batches[0]._endBatchTokenId).to.equal(10);
-                        expect(batches[0]._baseURI).to.equal('ipfs://ipfs/first_batch');
-                        expect(batches[0]._rarity).to.equal(13);
-                        expect(batches[1]._startBatchTokenId).to.equal(11);
-                        expect(batches[1]._endBatchTokenId).to.equal(20);
-                        expect(batches[1]._baseURI).to.equal('ipfs://ipfs/second_batch');
-                        expect(batches[1]._rarity).to.equal(23);
-                        expect(batches[2]._startBatchTokenId).to.equal(21);
-                        expect(batches[2]._endBatchTokenId).to.equal(30);
-                        expect(batches[2]._baseURI).to.equal('ipfs://ipfs/third_batch');
-                        expect(batches[2]._rarity).to.equal(33);
-                        expect(batches[3]._startBatchTokenId).to.equal(31);
-                        expect(batches[3]._endBatchTokenId).to.equal(40);
-                        expect(batches[3]._baseURI).to.equal('ipfs://ipfs/fourth_batch');
-                        expect(batches[3]._rarity).to.equal(43);
+                        expect(batches[0].startBatchTokenId).to.equal(0);
+                        expect(batches[0].endBatchTokenId).to.equal(10);
+                        expect(batches[0].baseURI).to.equal('ipfs://ipfs/first_batch');
+                        expect(batches[0].rarity).to.equal(13);
+                        expect(batches[1].startBatchTokenId).to.equal(11);
+                        expect(batches[1].endBatchTokenId).to.equal(20);
+                        expect(batches[1].baseURI).to.equal('ipfs://ipfs/second_batch');
+                        expect(batches[1].rarity).to.equal(23);
+                        expect(batches[2].startBatchTokenId).to.equal(21);
+                        expect(batches[2].endBatchTokenId).to.equal(30);
+                        expect(batches[2].baseURI).to.equal('ipfs://ipfs/third_batch');
+                        expect(batches[2].rarity).to.equal(33);
+                        expect(batches[3].startBatchTokenId).to.equal(31);
+                        expect(batches[3].endBatchTokenId).to.equal(40);
+                        expect(batches[3].baseURI).to.equal('ipfs://ipfs/fourth_batch');
+                        expect(batches[3].rarity).to.equal(43);
                       });
 
                       it('tokenURIs are correct', async function() {
@@ -930,7 +926,7 @@ contract('Collection Full test', function() {
                             await this.collection.setMaxPurchaseSize(newPurchaseSize);
                             await expect(
                               this.collection.buy(31, this.referral.address, { value: 1000 }),
-                            ).to.be.revertedWith('You can not buy more than maxPurchaseSize NFTs at once');
+                            ).to.be.revertedWith('Can not buy > maxPurchaseSize');
                           });
 
                           it('reverts when send incorrect ETH value', async function() {
@@ -1049,13 +1045,13 @@ contract('Collection Full test', function() {
           expect(await this.collection.saleStagesLength()).to.equal('1');
 
           const saleSrages = await this.collection.getSaleStages();
-          expect(saleSrages[0].startTokenId).to.equal('0');
-          expect(saleSrages[0].endTokenId).to.equal('9');
+          expect(saleSrages[0].startSaleTokenId).to.equal('0');
+          expect(saleSrages[0].endSaleTokenId).to.equal('9');
           expect(saleSrages[0].weiPerToken).to.equal('100');
 
           const saleStage = await this.collection.getSaleStage(0);
-          expect(saleStage.startTokenId).to.equal('0');
-          expect(saleStage.endTokenId).to.equal('9');
+          expect(saleStage.startSaleTokenId).to.equal('0');
+          expect(saleStage.endSaleTokenId).to.equal('9');
           expect(saleStage.weiPerToken).to.equal('100');
           await expect(this.collection.getSaleStage(1)).to.be.reverted;
         });

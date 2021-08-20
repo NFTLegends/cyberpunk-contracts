@@ -8,10 +8,10 @@ import "@openzeppelin/contracts/utils/Strings.sol";
 import "@openzeppelin/contracts/utils/math/SafeMath.sol";
 
 contract Collection is ERC721Upgradeable, ERC721EnumerableUpgradeable, AccessControlUpgradeable {
-    event NameChange(uint256 indexed index, string _newName);
-    event SkillChange(uint256 indexed index, uint256 _newSkill);
-    event DnaChange(uint256 indexed index, uint256 _newDna);
-    event Buy(address indexed _from, uint256 _nfts, address _referral);
+    event NameChange(uint256 indexed index, string newName);
+    event SkillChange(uint256 indexed index, uint256 newSkill);
+    event DnaChange(uint256 indexed index, uint256 newDna);
+    event Buy(address indexed _from, uint256 nfts, address referral);
 
     mapping(uint256 => string) private _tokenName;
     mapping(uint256 => uint256) private _tokenSkill;
@@ -24,16 +24,16 @@ contract Collection is ERC721Upgradeable, ERC721EnumerableUpgradeable, AccessCon
 
     // Sale Stage Info struct
     struct SaleStage {
-        uint256 _startSaleTokenId;
-        uint256 _endSaleTokenId;
-        uint256 _weiPerToken;
+        uint256 startSaleTokenId;
+        uint256 endSaleTokenId;
+        uint256 weiPerToken;
     }
 
     struct Batch {
-        uint256 _startBatchTokenId;
-        uint256 _endBatchTokenId;
-        string _baseURI;
-        uint256 _rarity;
+        uint256 startBatchTokenId;
+        uint256 endBatchTokenId;
+        string baseURI;
+        uint256 rarity;
     }
 
     // Array of heroes batches
@@ -136,7 +136,7 @@ contract Collection is ERC721Upgradeable, ERC721EnumerableUpgradeable, AccessCon
      */
     function getSaleStage(uint256 saleStageIndex) public view returns (SaleStage memory) {
         require(_saleStages.length > 0, "getSaleStage: no stages");
-        require(saleStageIndex < _saleStages.length, "saleStageIndex must be less than sale stages length");
+        require(saleStageIndex < _saleStages.length, "Id must be < sale stages length");
 
         return _saleStages[saleStageIndex];
     }
@@ -168,7 +168,7 @@ contract Collection is ERC721Upgradeable, ERC721EnumerableUpgradeable, AccessCon
      */
     function getBatch(uint256 batchIndex) public view returns (Batch memory) {
         require(_batches.length > 0, "getBatch: no batches");
-        require(batchIndex < _batches.length, "getBatch: batchId must be less than batch length");
+        require(batchIndex < _batches.length, "Id must be < batch length");
 
         return _batches[batchIndex];
     }
@@ -180,7 +180,7 @@ contract Collection is ERC721Upgradeable, ERC721EnumerableUpgradeable, AccessCon
         require(_batches.length > 0, "getBatchByToken: no batches");
 
         for (uint256 i; i < _batches.length; i++) {
-            if (tokenId > _batches[i]._endBatchTokenId || tokenId < _batches[i]._startBatchTokenId) {
+            if (tokenId > _batches[i].endBatchTokenId || tokenId < _batches[i].startBatchTokenId) {
                 continue;
             } else {
                 return _batches[i];
@@ -196,10 +196,10 @@ contract Collection is ERC721Upgradeable, ERC721EnumerableUpgradeable, AccessCon
         require(_batches.length > 0, "tokenURI: no batches");
 
         for (uint256 i; i < _batches.length; i++) {
-            if (tokenId > _batches[i]._endBatchTokenId || tokenId < _batches[i]._startBatchTokenId) {
+            if (tokenId > _batches[i].endBatchTokenId || tokenId < _batches[i].startBatchTokenId) {
                 continue;
             } else {
-                return string(abi.encodePacked(_batches[i]._baseURI, "/", tokenId.toString(), ".json"));
+                return string(abi.encodePacked(_batches[i].baseURI, "/", tokenId.toString(), ".json"));
             }
         }
         return _defaultUri;
@@ -216,15 +216,15 @@ contract Collection is ERC721Upgradeable, ERC721EnumerableUpgradeable, AccessCon
     ) external onlyRole(BATCH_MANAGER_ROLE) {
         uint256 _batchesLength = _batches.length;
 
-        require(startTokenId <= endTokenId, "addBatch: batchStartID must be equal or less than batchEndId");
+        require(startTokenId <= endTokenId, "startId must be <= than EndId");
         if (_batchesLength > 0) {
             for (uint256 _batchId; _batchId < _batchesLength; _batchId++) {
                 // if both bounds are lower or higher than iter batch
                 if (
-                    (startTokenId < _batches[_batchId]._startBatchTokenId &&
-                        endTokenId < _batches[_batchId]._startBatchTokenId) ||
-                    (startTokenId > _batches[_batchId]._endBatchTokenId &&
-                        endTokenId > _batches[_batchId]._endBatchTokenId)
+                    (startTokenId < _batches[_batchId].startBatchTokenId &&
+                        endTokenId < _batches[_batchId].startBatchTokenId) ||
+                    (startTokenId > _batches[_batchId].endBatchTokenId &&
+                        endTokenId > _batches[_batchId].endBatchTokenId)
                 ) {
                     continue;
                 } else {
@@ -248,7 +248,7 @@ contract Collection is ERC721Upgradeable, ERC721EnumerableUpgradeable, AccessCon
     ) external onlyRole(BATCH_MANAGER_ROLE) {
         uint256 _batchesLength = _batches.length;
         require(_batchesLength > 0, "setBatch: batches is empty");
-        require(batchStartId <= batchEndId, "setBatch: batchStartID must be equal or less than batchEndId");
+        require(batchStartId <= batchEndId, "startId must be <= than EndId");
 
         for (uint256 _batchId; _batchId < _batchesLength; _batchId++) {
             if (_batchId == batchIndex) {
@@ -256,10 +256,10 @@ contract Collection is ERC721Upgradeable, ERC721EnumerableUpgradeable, AccessCon
             } else {
                 // if both bounds are lower or higher than iter batch
                 if (
-                    (batchStartId < _batches[_batchId]._startBatchTokenId &&
-                        batchEndId < _batches[_batchId]._startBatchTokenId) ||
-                    (batchStartId > _batches[_batchId]._endBatchTokenId &&
-                        batchEndId > _batches[_batchId]._endBatchTokenId)
+                    (batchStartId < _batches[_batchId].startBatchTokenId &&
+                        batchEndId < _batches[_batchId].startBatchTokenId) ||
+                    (batchStartId > _batches[_batchId].endBatchTokenId &&
+                        batchEndId > _batches[_batchId].endBatchTokenId)
                 ) {
                     continue;
                 } else {
@@ -268,10 +268,10 @@ contract Collection is ERC721Upgradeable, ERC721EnumerableUpgradeable, AccessCon
             }
         }
 
-        _batches[_batchIndex]._startBatchTokenId = _batchStartId;
-        _batches[_batchIndex]._endBatchTokenId = _batchEndId;
-        _batches[_batchIndex]._baseURI = _baseURI;
-        _batches[_batchIndex]._rarity = _rarity;
+        _batches[batchIndex].startBatchTokenId = batchStartId;
+        _batches[batchIndex].endBatchTokenId = batchEndId;
+        _batches[batchIndex].baseURI = baseURI;
+        _batches[batchIndex].rarity = rarity;
     }
 
     /**
@@ -291,7 +291,7 @@ contract Collection is ERC721Upgradeable, ERC721EnumerableUpgradeable, AccessCon
         uint256 endTokenId,
         uint256 weiPerToken
     ) external onlyRole(SALE_STAGES_MANAGER_ROLE) {
-        require(startTokenId <= endTokenId, "startTokenId must be equal or less than endTokenId");
+        require(startTokenId <= endTokenId, "startId must be <= than EndId");
         require(weiPerToken > 0, "weiPerToken must be non-zero");
         uint256 _saleStagesLength = _saleStages.length;
 
@@ -299,10 +299,10 @@ contract Collection is ERC721Upgradeable, ERC721EnumerableUpgradeable, AccessCon
             for (uint256 _saleStageId; _saleStageId < _saleStagesLength; _saleStageId++) {
                 // if both bounds are lower or higher than iter sale stage
                 if (
-                    (startTokenId < _saleStages[_saleStageId]._startSaleTokenId &&
-                        endTokenId < _saleStages[_saleStageId]._startSaleTokenId) ||
-                    (startTokenId > _saleStages[_saleStageId]._endSaleTokenId &&
-                        endTokenId > _saleStages[_saleStageId]._endSaleTokenId)
+                    (startTokenId < _saleStages[_saleStageId].startSaleTokenId &&
+                        endTokenId < _saleStages[_saleStageId].startSaleTokenId) ||
+                    (startTokenId > _saleStages[_saleStageId].endSaleTokenId &&
+                        endTokenId > _saleStages[_saleStageId].endSaleTokenId)
                 ) {
                     continue;
                 } else {
@@ -326,17 +326,17 @@ contract Collection is ERC721Upgradeable, ERC721EnumerableUpgradeable, AccessCon
     ) external onlyRole(SALE_STAGES_MANAGER_ROLE) {
         uint256 _saleStagesLength = _saleStages.length;
         require(_saleStagesLength > 0, "batches is empty");
-        require(startTokenId <= saleStageEndId, "startTokenId must be equal or less than saleStageEndId");
-        for (uint256 _saleStageId; _saleStageId < _saleStagesLength; _saleStageId++) {
-            if (_saleStageId == saleStageId) {
+        require(startTokenId <= saleStageEndId, "startId must be <= than EndId");
+        for (uint256 _staleSaleId; _staleSaleId < _saleStagesLength; _staleSaleId++) {
+            if (_staleSaleId == saleStageId) {
                 continue;
             } else {
                 // if both bounds are lower or higher than iter sale stage
                 if (
-                    (startTokenId < _saleStages[_staleSaleId]._startSaleTokenId &&
-                        saleStageEndId < _saleStages[_staleSaleId]._startSaleTokenId) ||
-                    (startTokenId > _saleStages[_staleSaleId]._endSaleTokenId &&
-                        saleStageEndId > _saleStages[_staleSaleId]._endSaleTokenId)
+                    (startTokenId < _saleStages[_staleSaleId].startSaleTokenId &&
+                        saleStageEndId < _saleStages[_staleSaleId].startSaleTokenId) ||
+                    (startTokenId > _saleStages[_staleSaleId].endSaleTokenId &&
+                        saleStageEndId > _saleStages[_staleSaleId].endSaleTokenId)
                 ) {
                     continue;
                 } else {
@@ -347,18 +347,18 @@ contract Collection is ERC721Upgradeable, ERC721EnumerableUpgradeable, AccessCon
         SaleStage memory _saleStage = _saleStages[saleStageId];
         _maxTotalSupply =
             _maxTotalSupply -
-            (_saleStage._endSaleTokenId - _saleStage._startSaleTokenId + 1) +
-            (_saleStageEndId - startTokenId + 1);
+            (_saleStage.endSaleTokenId - _saleStage.startSaleTokenId + 1) +
+            (saleStageEndId - startTokenId + 1);
 
-        _saleStages[_saleStageId]._startSaleTokenId = startTokenId;
-        _saleStages[_saleStageId]._endSaleTokenId = saleStageEndId;
-        _saleStages[_saleStageId]._weiPerToken = weiPerToken;
+        _saleStages[saleStageId].startSaleTokenId = startTokenId;
+        _saleStages[saleStageId].endSaleTokenId = saleStageEndId;
+        _saleStages[saleStageId].weiPerToken = weiPerToken;
     }
 
     function deleteSaleStage(uint256 saleStageIndex) external onlyRole(BATCH_MANAGER_ROLE) {
         require(_saleStages.length > saleStageIndex, "index out of sale stage length");
         SaleStage memory _saleStage = _saleStages[saleStageIndex];
-        _maxTotalSupply -= _saleStage._endSaleTokenId - _saleStage._startSaleTokenId + 1;
+        _maxTotalSupply -= _saleStage.endSaleTokenId - _saleStage.startSaleTokenId + 1;
 
         _saleStages[saleStageIndex] = _saleStages[_saleStages.length - 1];
         _saleStages.pop();
@@ -380,8 +380,8 @@ contract Collection is ERC721Upgradeable, ERC721EnumerableUpgradeable, AccessCon
             iterPrice = 0;
             for (uint256 i = 0; i < _saleStagesLength; i++) {
                 saleStage = _saleStages[i];
-                if (totalSupply > saleStage._endSaleTokenId || totalSupply < saleStage._startSaleTokenId) continue;
-                iterPrice += saleStage._weiPerToken;
+                if (totalSupply > saleStage.endSaleTokenId || totalSupply < saleStage.startSaleTokenId) continue;
+                iterPrice += saleStage.weiPerToken;
             }
             if (iterPrice == 0) {
                 revert("saleStage doesn't exist");
@@ -422,7 +422,7 @@ contract Collection is ERC721Upgradeable, ERC721EnumerableUpgradeable, AccessCon
      */
     function buy(uint256 nfts, address referral) public payable {
         require(saleActive, "Sale is not active");
-        require(nfts <= _maxPurchaseSize, "You can not buy more than maxPurchaseSize NFTs at once");
+        require(nfts <= _maxPurchaseSize, "Can not buy > maxPurchaseSize");
         require(getTotalPriceFor(nfts) == msg.value, "Ether value sent is not correct");
         emit Buy(msg.sender, nfts, referral);
         _vault.transfer(msg.value);
@@ -458,7 +458,7 @@ contract Collection is ERC721Upgradeable, ERC721EnumerableUpgradeable, AccessCon
         require(_batches.length > 0, "getBatchByToken: no batches");
 
         for (uint256 i; i < _batches.length; i++) {
-            if (tokenId > _batches[i].endTokenId || tokenId < _batches[i].startTokenId) {
+            if (tokenId > _batches[i].endBatchTokenId || tokenId < _batches[i].startBatchTokenId) {
                 continue;
             } else {
                 return _batches[i].rarity;
