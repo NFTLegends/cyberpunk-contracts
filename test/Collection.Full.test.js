@@ -91,8 +91,9 @@ contract('Collection Full test', function() {
       });
 
       it('revert when add sale stage w/ startTokenId more then endTokenId', async function() {
-        await expect(this.collection.addSaleStage(1, 0, 100))
-          .to.be.revertedWith('startTokensBought must be <= than endTokensBought');
+        await expect(this.collection.addSaleStage(1, 0, 100)).to.be.revertedWith(
+          'startTokensBought must be <= than endTokensBought',
+        );
       });
 
       it('revert when get not existed sale stage', async function() {
@@ -529,14 +530,16 @@ contract('Collection Full test', function() {
             });
 
             it('granted MINTER_ROLE can also mintMultiple', async function() {
-              await expect(this.collection.connect(this.grantedMinter).mintMultiple(this.referral.address, '2'))
-                .to.be.reverted;
+              await expect(
+                this.collection.connect(this.grantedMinter).mintMultiple(this.referral.address, '2'),
+              ).to.be.reverted;
               await this.collection.grantRole(await this.collection.MINTER_ROLE(), this.grantedMinter.address);
               await this.collection.connect(this.grantedMinter).mintMultiple(this.referral.address, '2');
               // todo: check efects of mint
               await this.collection.revokeRole(await this.collection.MINTER_ROLE(), this.grantedMinter.address);
-              await expect(this.collection.connect(this.grantedMinter).mintMultiple(this.referral.address, '2'))
-                .to.be.reverted;
+              await expect(
+                this.collection.connect(this.grantedMinter).mintMultiple(this.referral.address, '2'),
+              ).to.be.reverted;
             });
 
             it('mintMultiple token purchase', async function() {
@@ -1007,17 +1010,23 @@ contract('Collection Full test', function() {
                             });
 
                             it('granted NAME_SETTER_ROLE can also set name', async function() {
-                              await expect(this.collection.connect(this.grantedNameSetter).setName(1, newName))
-                                .to.be.reverted;
+                              await expect(
+                                this.collection.connect(this.grantedNameSetter).setName(1, newName),
+                              ).to.be.reverted;
                               expect(await this.collection.getName(1)).equal('CyberName');
-                              await this.collection.grantRole(await this.collection.NAME_SETTER_ROLE(),
-                                this.grantedNameSetter.address);
+                              await this.collection.grantRole(
+                                await this.collection.NAME_SETTER_ROLE(),
+                                this.grantedNameSetter.address,
+                              );
                               await this.collection.connect(this.grantedNameSetter).setName(1, newName);
                               expect(await this.collection.getName(1)).equal(newName);
-                              await this.collection.revokeRole(await this.collection.NAME_SETTER_ROLE(),
-                                this.grantedNameSetter.address);
-                              await expect(this.collection.connect(this.grantedNameSetter).setName(1, newName))
-                                .to.be.reverted;
+                              await this.collection.revokeRole(
+                                await this.collection.NAME_SETTER_ROLE(),
+                                this.grantedNameSetter.address,
+                              );
+                              await expect(
+                                this.collection.connect(this.grantedNameSetter).setName(1, newName),
+                              ).to.be.reverted;
                             });
 
                             it('get token skill by id', async function() {
@@ -1032,17 +1041,23 @@ contract('Collection Full test', function() {
                             });
 
                             it('granted SKILL_SETTER_ROLE can also set name', async function() {
-                              await expect(this.collection.connect(this.grantedNameSetter).setSkill(1, newSkill))
-                                .to.be.reverted;
+                              await expect(
+                                this.collection.connect(this.grantedNameSetter).setSkill(1, newSkill),
+                              ).to.be.reverted;
                               expect(await this.collection.getSkill(1)).equal(1490);
-                              await this.collection.grantRole(await this.collection.SKILL_SETTER_ROLE(),
-                                this.grantedNameSetter.address);
+                              await this.collection.grantRole(
+                                await this.collection.SKILL_SETTER_ROLE(),
+                                this.grantedNameSetter.address,
+                              );
                               await this.collection.connect(this.grantedNameSetter).setSkill(1, newSkill);
                               expect(await this.collection.getSkill(1)).equal(newSkill);
-                              await this.collection.revokeRole(await this.collection.SKILL_SETTER_ROLE(),
-                                this.grantedNameSetter.address);
-                              await expect(this.collection.connect(this.grantedNameSetter).setSkill(1, newSkill))
-                                .to.be.reverted;
+                              await this.collection.revokeRole(
+                                await this.collection.SKILL_SETTER_ROLE(),
+                                this.grantedNameSetter.address,
+                              );
+                              await expect(
+                                this.collection.connect(this.grantedNameSetter).setSkill(1, newSkill),
+                              ).to.be.reverted;
                             });
 
                             context('sale end', function() {

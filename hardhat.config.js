@@ -36,7 +36,9 @@ module.exports = {
     },
   },
   networks: {
-    hardhat: {},
+    hardhat: {
+      hardfork: 'berlin',
+    },
     localhost: {
       live: false,
       saveDeployments: true,
