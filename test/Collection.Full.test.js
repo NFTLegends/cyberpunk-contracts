@@ -104,6 +104,12 @@ contract('Collection Full test', function() {
         await expect(this.collection.setSaleStage(0, 0, 1, 100)).to.be.revertedWith('batches is empty');
       });
 
+      it('reverts when trying to get rarity if no batches set', async function() {
+        await expect(this.collection.getRarity(0)).to.be.revertedWith(
+          'getBatchByToken: no batches',
+        );
+      });
+
       context('add batch #0', function() {
         beforeEach(async function() {
           await this.collection.addBatch(0, 10, 'ipfs://ipfs/batchX', 12);
