@@ -34,8 +34,8 @@ contract Collection is ERC721Upgradeable, ERC721EnumerableUpgradeable, AccessCon
     // The token purchase price depends on how early you buy the character
     // (i.e. sequential number of the purchase)
     struct SaleStage {
-        uint256 startSaleTokenId;
-        uint256 endSaleTokenId;
+        uint256 startTokensBought;
+        uint256 endTokensBought;
         uint256 weiPerToken;
     }
 
@@ -308,16 +308,16 @@ contract Collection is ERC721Upgradeable, ERC721EnumerableUpgradeable, AccessCon
     /**
      * @notice Add sale stage (i.e. tokensale schedule)
      * It takes place at the end of `saleStages array`
-     * @param startTokenId index of the first batch token
-     * @param endTokenId index of the last batch token
+     * @param startTokensBought index of the first batch token
+     * @param endTokensBought index of the last batch token
      * @param weiPerToken price for token
      */
     function addSaleStage(
-        uint256 startTokenId,
-        uint256 endTokenId,
+        uint256 startTokensBought,
+        uint256 endTokensBought,
         uint256 weiPerToken
     ) external onlyRole(DEFAULT_ADMIN_ROLE) {
-        require(startTokenId <= endTokenId, "startId must be <= than EndId");
+        require(startTokensBought <= endTokensBought, "startTokensBought must be <= than endTokensBought");
         require(weiPerToken > 0, "weiPerToken must be non-zero");
         uint256 _saleStagesLength = _saleStages.length;
 
@@ -325,10 +325,10 @@ contract Collection is ERC721Upgradeable, ERC721EnumerableUpgradeable, AccessCon
             for (uint256 _saleStageId; _saleStageId < _saleStagesLength; _saleStageId++) {
                 // if both bounds are lower or higher than iter sale stage
                 if (
-                    (startTokenId < _saleStages[_saleStageId].startSaleTokenId &&
-                        endTokenId < _saleStages[_saleStageId].startSaleTokenId) ||
-                    (startTokenId > _saleStages[_saleStageId].endSaleTokenId &&
-                        endTokenId > _saleStages[_saleStageId].endSaleTokenId)
+                    (startTokensBought < _saleStages[_saleStageId].startTokensBought &&
+                        endTokensBought < _saleStages[_saleStageId].startTokensBought) ||
+                    (startTokensBought > _saleStages[_saleStageId].endTokensBought &&
+                        endTokensBought > _saleStages[_saleStageId].endTokensBought)
                 ) {
                     continue;
                 } else {
@@ -337,36 +337,36 @@ contract Collection is ERC721Upgradeable, ERC721EnumerableUpgradeable, AccessCon
             }
         }
 
-        _saleStages.push(SaleStage(startTokenId, endTokenId, weiPerToken));
-        _maxTotalSupply += endTokenId - startTokenId + 1;
+        _saleStages.push(SaleStage(startTokensBought, endTokensBought, weiPerToken));
+        _maxTotalSupply += endTokensBought - startTokensBought + 1;
     }
 
     /**
      * @notice Update (rewrite) saleStage properties by index
      * @param saleStageId index of the first sale stage token
-     * @param startTokenId index sale stage need to be updated
-     * @param saleStageEndId ipfs batch URI
+     * @param startTokensBought index of the first batch token
+     * @param endTokensBought index of the last batch token
      * @param weiPerToken price for token
      */
     function setSaleStage(
         uint256 saleStageId,
-        uint256 startTokenId,
-        uint256 saleStageEndId,
+        uint256 startTokensBought,
+        uint256 endTokensBought,
         uint256 weiPerToken
     ) external onlyRole(DEFAULT_ADMIN_ROLE) {
         uint256 _saleStagesLength = _saleStages.length;
         require(_saleStagesLength > 0, "batches is empty");
-        require(startTokenId <= saleStageEndId, "startId must be <= than EndId");
+        require(startTokensBought <= endTokensBought, "startId must be <= than EndId");
         for (uint256 _staleSaleId; _staleSaleId < _saleStagesLength; _staleSaleId++) {
             if (_staleSaleId == saleStageId) {
                 continue;
             } else {
                 // if both bounds are lower or higher than iter sale stage
                 if (
-                    (startTokenId < _saleStages[_staleSaleId].startSaleTokenId &&
-                        saleStageEndId < _saleStages[_staleSaleId].startSaleTokenId) ||
-                    (startTokenId > _saleStages[_staleSaleId].endSaleTokenId &&
-                        saleStageEndId > _saleStages[_staleSaleId].endSaleTokenId)
+                    (startTokensBought < _saleStages[_staleSaleId].startTokensBought &&
+                        endTokensBought < _saleStages[_staleSaleId].startTokensBought) ||
+                    (startTokensBought > _saleStages[_staleSaleId].endTokensBought &&
+                        endTokensBought > _saleStages[_staleSaleId].endTokensBought)
                 ) {
                     continue;
                 } else {
@@ -377,11 +377,11 @@ contract Collection is ERC721Upgradeable, ERC721EnumerableUpgradeable, AccessCon
         SaleStage memory _saleStage = _saleStages[saleStageId];
         _maxTotalSupply =
             _maxTotalSupply -
-            (_saleStage.endSaleTokenId - _saleStage.startSaleTokenId + 1) +
-            (saleStageEndId - startTokenId + 1);
+            (_saleStage.endTokensBought - _saleStage.startTokensBought + 1) +
+            (endTokensBought - startTokensBought + 1);
 
-        _saleStages[saleStageId].startSaleTokenId = startTokenId;
-        _saleStages[saleStageId].endSaleTokenId = saleStageEndId;
+        _saleStages[saleStageId].startTokensBought = startTokensBought;
+        _saleStages[saleStageId].endTokensBought = endTokensBought;
         _saleStages[saleStageId].weiPerToken = weiPerToken;
     }
 
@@ -392,7 +392,7 @@ contract Collection is ERC721Upgradeable, ERC721EnumerableUpgradeable, AccessCon
     function deleteSaleStage(uint256 saleStageIndex) external onlyRole(DEFAULT_ADMIN_ROLE) {
         require(_saleStages.length > saleStageIndex, "index out of sale stage length");
         SaleStage memory _saleStage = _saleStages[saleStageIndex];
-        _maxTotalSupply -= _saleStage.endSaleTokenId - _saleStage.startSaleTokenId + 1;
+        _maxTotalSupply -= _saleStage.endTokensBought - _saleStage.startTokensBought + 1;
 
         _saleStages[saleStageIndex] = _saleStages[_saleStages.length - 1];
         _saleStages.pop();
@@ -416,7 +416,7 @@ contract Collection is ERC721Upgradeable, ERC721EnumerableUpgradeable, AccessCon
             iterPrice = 0;
             for (uint256 i = 0; i < _saleStagesLength; i++) {
                 saleStage = _saleStages[i];
-                if (totalSupply > saleStage.endSaleTokenId || totalSupply < saleStage.startSaleTokenId) continue;
+                if (totalSupply > saleStage.endTokensBought || totalSupply < saleStage.startTokensBought) continue;
                 iterPrice += saleStage.weiPerToken;
             }
             if (iterPrice == 0) {

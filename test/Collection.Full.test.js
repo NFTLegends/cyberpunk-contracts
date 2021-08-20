@@ -91,7 +91,8 @@ contract('Collection Full test', function() {
       });
 
       it('revert when add sale stage w/ startTokenId more then endTokenId', async function() {
-        await expect(this.collection.addSaleStage(1, 0, 100)).to.be.revertedWith('startId must be <= than EndId');
+        await expect(this.collection.addSaleStage(1, 0, 100))
+          .to.be.revertedWith('startTokensBought must be <= than endTokensBought');
       });
 
       it('revert when get not existed sale stage', async function() {
@@ -206,13 +207,13 @@ contract('Collection Full test', function() {
           expect(await this.collection.saleStagesLength()).to.equal('1');
 
           const saleSrages = await this.collection.getSaleStages();
-          expect(saleSrages[0].startSaleTokenId).to.equal('0');
-          expect(saleSrages[0].endSaleTokenId).to.equal('9');
+          expect(saleSrages[0].startTokensBought).to.equal('0');
+          expect(saleSrages[0].endTokensBought).to.equal('9');
           expect(saleSrages[0].weiPerToken).to.equal('100');
 
           const saleStage = await this.collection.getSaleStage(0);
-          expect(saleStage.startSaleTokenId).to.equal('0');
-          expect(saleStage.endSaleTokenId).to.equal('9');
+          expect(saleStage.startTokensBought).to.equal('0');
+          expect(saleStage.endTokensBought).to.equal('9');
           expect(saleStage.weiPerToken).to.equal('100');
           await expect(this.collection.getSaleStage(1)).to.be.reverted;
 
@@ -296,8 +297,8 @@ contract('Collection Full test', function() {
           it('saleStages has new properties', async function() {
             expect(await this.collection.saleStagesLength()).to.equal('1');
             const saleStage = await this.collection.getSaleStage(0);
-            expect(saleStage.startSaleTokenId).to.equal('0');
-            expect(saleStage.endSaleTokenId).to.equal('19');
+            expect(saleStage.startTokensBought).to.equal('0');
+            expect(saleStage.endTokensBought).to.equal('19');
             expect(saleStage.weiPerToken).to.equal('100');
           });
         });
@@ -311,12 +312,12 @@ contract('Collection Full test', function() {
             expect(await this.collection.saleStagesLength()).to.equal('2');
             const saleStages = await this.collection.getSaleStages();
             // previously created stage is visible
-            expect(saleStages[0].startSaleTokenId).to.equal('0');
-            expect(saleStages[0].endSaleTokenId).to.equal('9');
+            expect(saleStages[0].startTokensBought).to.equal('0');
+            expect(saleStages[0].endTokensBought).to.equal('9');
             expect(saleStages[0].weiPerToken).to.equal('100');
             // new stage is visible
-            expect(saleStages[1].startSaleTokenId).to.equal('10');
-            expect(saleStages[1].endSaleTokenId).to.equal('19');
+            expect(saleStages[1].startTokensBought).to.equal('10');
+            expect(saleStages[1].endTokensBought).to.equal('19');
             expect(saleStages[1].weiPerToken).to.equal('200');
             await expect(this.collection.getSaleStage(2)).to.be.reverted;
 
@@ -344,13 +345,13 @@ contract('Collection Full test', function() {
             it('saleStages #1 has new properties', async function() {
               expect(await this.collection.saleStagesLength()).to.equal('2');
               let saleStage = await this.collection.getSaleStage(0);
-              expect(saleStage.startSaleTokenId).to.equal('0');
-              expect(saleStage.endSaleTokenId).to.equal('9');
+              expect(saleStage.startTokensBought).to.equal('0');
+              expect(saleStage.endTokensBought).to.equal('9');
               expect(saleStage.weiPerToken).to.equal('100');
               // sale stage has new properties
               saleStage = await this.collection.getSaleStage(1);
-              expect(saleStage.startSaleTokenId).to.equal('10');
-              expect(saleStage.endSaleTokenId).to.equal('29');
+              expect(saleStage.startTokensBought).to.equal('10');
+              expect(saleStage.endTokensBought).to.equal('29');
               expect(saleStage.weiPerToken).to.equal('200');
               await expect(this.collection.getSaleStage(2)).to.be.reverted;
 
@@ -380,8 +381,8 @@ contract('Collection Full test', function() {
             it('saleStages #0 got removed and #1 still there', async function() {
               expect(await this.collection.saleStagesLength()).to.equal('1');
               const saleStage = await this.collection.getSaleStage(0);
-              expect(saleStage.startSaleTokenId).to.equal('10');
-              expect(saleStage.endSaleTokenId).to.equal('19');
+              expect(saleStage.startTokensBought).to.equal('10');
+              expect(saleStage.endTokensBought).to.equal('19');
               expect(saleStage.weiPerToken).to.equal('200');
 
               expect(await this.collection.maxTotalSupply()).to.equal('10');
@@ -419,19 +420,19 @@ contract('Collection Full test', function() {
               expect(await this.collection.saleStagesLength()).to.equal('3');
               // previously created stage is visible
               let saleStage = await this.collection.getSaleStage(0);
-              expect(saleStage.startSaleTokenId).to.equal('0');
-              expect(saleStage.endSaleTokenId).to.equal('9');
+              expect(saleStage.startTokensBought).to.equal('0');
+              expect(saleStage.endTokensBought).to.equal('9');
               expect(saleStage.weiPerToken).to.equal('100');
 
               saleStage = await this.collection.getSaleStage(1);
-              expect(saleStage.startSaleTokenId).to.equal('10');
-              expect(saleStage.endSaleTokenId).to.equal('19');
+              expect(saleStage.startTokensBought).to.equal('10');
+              expect(saleStage.endTokensBought).to.equal('19');
               expect(saleStage.weiPerToken).to.equal('200');
 
               // new stage is visible
               saleStage = await this.collection.getSaleStage(2);
-              expect(saleStage.startSaleTokenId).to.equal('20');
-              expect(saleStage.endSaleTokenId).to.equal('29');
+              expect(saleStage.startTokensBought).to.equal('20');
+              expect(saleStage.endTokensBought).to.equal('29');
               expect(saleStage.weiPerToken).to.equal('300');
               await expect(this.collection.getSaleStage(3)).to.be.reverted;
 
@@ -471,13 +472,13 @@ contract('Collection Full test', function() {
           expect(await this.collection.saleStagesLength()).to.equal('1');
 
           const saleSrages = await this.collection.getSaleStages();
-          expect(saleSrages[0].startSaleTokenId).to.equal('0');
-          expect(saleSrages[0].endSaleTokenId).to.equal('9');
+          expect(saleSrages[0].startTokensBought).to.equal('0');
+          expect(saleSrages[0].endTokensBought).to.equal('9');
           expect(saleSrages[0].weiPerToken).to.equal('100');
 
           const saleStage = await this.collection.getSaleStage(0);
-          expect(saleStage.startSaleTokenId).to.equal('0');
-          expect(saleStage.endSaleTokenId).to.equal('9');
+          expect(saleStage.startTokensBought).to.equal('0');
+          expect(saleStage.endTokensBought).to.equal('9');
           expect(saleStage.weiPerToken).to.equal('100');
           await expect(this.collection.getSaleStage(1)).to.be.reverted;
         });
@@ -499,12 +500,12 @@ contract('Collection Full test', function() {
             expect(await this.collection.saleStagesLength()).to.equal('2');
             const saleStages = await this.collection.getSaleStages();
             // previously created stage is visible
-            expect(saleStages[0].startSaleTokenId).to.equal('0');
-            expect(saleStages[0].endSaleTokenId).to.equal('9');
+            expect(saleStages[0].startTokensBought).to.equal('0');
+            expect(saleStages[0].endTokensBought).to.equal('9');
             expect(saleStages[0].weiPerToken).to.equal('100');
             // new stage is visible
-            expect(saleStages[1].startSaleTokenId).to.equal('10');
-            expect(saleStages[1].endSaleTokenId).to.equal('19');
+            expect(saleStages[1].startTokensBought).to.equal('10');
+            expect(saleStages[1].endTokensBought).to.equal('19');
             expect(saleStages[1].weiPerToken).to.equal('200');
             await expect(this.collection.getSaleStage(2)).to.be.reverted;
           });
@@ -1126,13 +1127,13 @@ contract('Collection Full test', function() {
           expect(await this.collection.saleStagesLength()).to.equal('1');
 
           const saleSrages = await this.collection.getSaleStages();
-          expect(saleSrages[0].startSaleTokenId).to.equal('0');
-          expect(saleSrages[0].endSaleTokenId).to.equal('9');
+          expect(saleSrages[0].startTokensBought).to.equal('0');
+          expect(saleSrages[0].endTokensBought).to.equal('9');
           expect(saleSrages[0].weiPerToken).to.equal('100');
 
           const saleStage = await this.collection.getSaleStage(0);
-          expect(saleStage.startSaleTokenId).to.equal('0');
-          expect(saleStage.endSaleTokenId).to.equal('9');
+          expect(saleStage.startTokensBought).to.equal('0');
+          expect(saleStage.endTokensBought).to.equal('9');
           expect(saleStage.weiPerToken).to.equal('100');
           await expect(this.collection.getSaleStage(1)).to.be.reverted;
         });
