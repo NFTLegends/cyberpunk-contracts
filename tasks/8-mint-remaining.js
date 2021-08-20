@@ -9,8 +9,8 @@ task('8-mint-remaining', 'set token sale stages').setAction(async(taskArgs, hre)
   const deployerAddress = listAccounts[0];
   const tokenHolder = listAccounts[1];
 
-  collection = await ethers.getContract('Collection');
-  maxTotalSupply = await collection.maxTotalSupply();
+  const collection = await ethers.getContract('Collection');
+  const maxTotalSupply = await collection.maxTotalSupply();
 
   let tokenIndex;
   for (tokenIndex = 0; tokenIndex < maxTotalSupply; tokenIndex++) {
@@ -23,6 +23,3 @@ task('8-mint-remaining', 'set token sale stages').setAction(async(taskArgs, hre)
     }
   }
 });
-
-  
-  

@@ -13,7 +13,7 @@ task('6-buy-random-tokens', 'buy random tokens of a given amount')
     let price;
 
     try {
-      collection = await ethers.getContract('Collection');
+      const collection = await ethers.getContract('Collection');
       price = await collection.getTotalPriceFor(taskArgs.amount);
     } catch (e) {
       console.log(e);

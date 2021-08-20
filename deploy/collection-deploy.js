@@ -4,7 +4,7 @@ module.exports = async({ ethers, deployments }) => {
   const listAccounts = await ethers.provider.listAccounts();
   const vaultAddress = listAccounts[1];
 
-  const { deployer } = await getNamedAccounts();
+  const { deployer } = await ethers.getNamedAccounts();
 
   await deploy('Collection', {
     from: deployer,

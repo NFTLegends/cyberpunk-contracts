@@ -7,8 +7,8 @@ task('1-set-sale-stage', 'set token sale stages').setAction(async(taskArgs, hre)
 
   const listAccounts = await ethers.provider.listAccounts();
   const deployerAddress = listAccounts[0];
-  
-  console.log('Add saleStage 0'); 
+
+  console.log('Add saleStage 0');
   await execute('Collection', { from: deployerAddress, log: true }, 'addSaleStage', '0', '1', '100');
 
   console.log('Add saleStage 2');
