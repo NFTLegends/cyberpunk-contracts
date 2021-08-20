@@ -233,13 +233,11 @@ contract Collection is ERC721Upgradeable, ERC721EnumerableUpgradeable, AccessCon
 
         require(startTokenId <= endTokenId, "startId must be <= than EndId");
         if (_batchesLength > 0) {
-            for (uint256 _batchId; _batchId < _batchesLength; _batchId++) {
+            for (uint256 i; i < _batchesLength; i++) {
                 // if both bounds are lower or higher than iter batch
                 if (
-                    (startTokenId < _batches[_batchId].startBatchTokenId &&
-                        endTokenId < _batches[_batchId].startBatchTokenId) ||
-                    (startTokenId > _batches[_batchId].endBatchTokenId &&
-                        endTokenId > _batches[_batchId].endBatchTokenId)
+                    (startTokenId < _batches[i].startBatchTokenId && endTokenId < _batches[i].startBatchTokenId) ||
+                    (startTokenId > _batches[i].endBatchTokenId && endTokenId > _batches[i].endBatchTokenId)
                 ) {
                     continue;
                 } else {
@@ -271,16 +269,14 @@ contract Collection is ERC721Upgradeable, ERC721EnumerableUpgradeable, AccessCon
         require(_batchesLength > 0, "setBatch: batches is empty");
         require(batchStartId <= batchEndId, "startId must be <= than EndId");
 
-        for (uint256 _batchId; _batchId < _batchesLength; _batchId++) {
-            if (_batchId == batchIndex) {
+        for (uint256 i; i < _batchesLength; i++) {
+            if (i == batchIndex) {
                 continue;
             } else {
                 // if both bounds are lower or higher than iter batch
                 if (
-                    (batchStartId < _batches[_batchId].startBatchTokenId &&
-                        batchEndId < _batches[_batchId].startBatchTokenId) ||
-                    (batchStartId > _batches[_batchId].endBatchTokenId &&
-                        batchEndId > _batches[_batchId].endBatchTokenId)
+                    (batchStartId < _batches[i].startBatchTokenId && batchEndId < _batches[i].startBatchTokenId) ||
+                    (batchStartId > _batches[i].endBatchTokenId && batchEndId > _batches[i].endBatchTokenId)
                 ) {
                     continue;
                 } else {
@@ -322,13 +318,13 @@ contract Collection is ERC721Upgradeable, ERC721EnumerableUpgradeable, AccessCon
         uint256 _saleStagesLength = _saleStages.length;
 
         if (_saleStagesLength > 0) {
-            for (uint256 _saleStageId; _saleStageId < _saleStagesLength; _saleStageId++) {
+            for (uint256 i; i < _saleStagesLength; i++) {
                 // if both bounds are lower or higher than iter sale stage
                 if (
-                    (startTokensBought < _saleStages[_saleStageId].startTokensBought &&
-                        endTokensBought < _saleStages[_saleStageId].startTokensBought) ||
-                    (startTokensBought > _saleStages[_saleStageId].endTokensBought &&
-                        endTokensBought > _saleStages[_saleStageId].endTokensBought)
+                    (startTokensBought < _saleStages[i].startTokensBought &&
+                        endTokensBought < _saleStages[i].startTokensBought) ||
+                    (startTokensBought > _saleStages[i].endTokensBought &&
+                        endTokensBought > _saleStages[i].endTokensBought)
                 ) {
                     continue;
                 } else {
@@ -357,16 +353,16 @@ contract Collection is ERC721Upgradeable, ERC721EnumerableUpgradeable, AccessCon
         uint256 _saleStagesLength = _saleStages.length;
         require(_saleStagesLength > 0, "batches is empty");
         require(startTokensBought <= endTokensBought, "startId must be <= than EndId");
-        for (uint256 _staleSaleId; _staleSaleId < _saleStagesLength; _staleSaleId++) {
-            if (_staleSaleId == saleStageId) {
+        for (uint256 i; i < _saleStagesLength; i++) {
+            if (i == saleStageId) {
                 continue;
             } else {
                 // if both bounds are lower or higher than iter sale stage
                 if (
-                    (startTokensBought < _saleStages[_staleSaleId].startTokensBought &&
-                        endTokensBought < _saleStages[_staleSaleId].startTokensBought) ||
-                    (startTokensBought > _saleStages[_staleSaleId].endTokensBought &&
-                        endTokensBought > _saleStages[_staleSaleId].endTokensBought)
+                    (startTokensBought < _saleStages[i].startTokensBought &&
+                        endTokensBought < _saleStages[i].startTokensBought) ||
+                    (startTokensBought > _saleStages[i].endTokensBought &&
+                        endTokensBought > _saleStages[i].endTokensBought)
                 ) {
                     continue;
                 } else {
