@@ -1,5 +1,6 @@
 const { ethers, upgrades } = require('hardhat');
 const { expect } = require('chai');
+const { ZERO_ADDRESS } = require('@openzeppelin/test-helpers/src/constants');
 
 contract('Collection Full test', function() {
   before(async function() {
@@ -10,6 +11,8 @@ contract('Collection Full test', function() {
     this.other = accounts[2];
     this.buyer = accounts[3];
     this.referral = accounts[4];
+    this.grantedAdmin = accounts[5];
+    this.grantedMinter = accounts[5];
     this.CollectionArtifact = await ethers.getContractFactory('Collection');
   });
   beforeEach(async function() {
@@ -509,6 +512,29 @@ contract('Collection Full test', function() {
             it('mint with manager role', async function() {
               await this.collection.mint(this.other.address, 1);
               expect(await this.collection.totalSupply()).to.equal(1);
+            });
+
+            it('granted MINTER_ROLE can also mint', async function() {
+              expect(await this.collection.totalSupply()).to.equal(0);
+              await expect(this.collection.connect(this.grantedMinter).mint(this.other.address, '1')).to.be.reverted;
+              expect(await this.collection.totalSupply()).to.equal(0);
+              await this.collection.grantRole(await this.collection.MINTER_ROLE(), this.grantedMinter.address);
+              await this.collection.connect(this.grantedMinter).mint(this.other.address, '1');
+              expect(await this.collection.totalSupply()).to.equal(1);
+              await this.collection.revokeRole(await this.collection.MINTER_ROLE(), this.grantedMinter.address);
+              await expect(this.collection.connect(this.grantedMinter).mint(this.other.address, '1')).to.be.reverted;
+              expect(await this.collection.totalSupply()).to.equal(1);
+            });
+
+            it('granted MINTER_ROLE can also mintMultiple', async function() {
+              await expect(this.collection.connect(this.grantedMinter).mintMultiple(this.referral.address, '2'))
+                .to.be.reverted;
+              await this.collection.grantRole(await this.collection.MINTER_ROLE(), this.grantedMinter.address);
+              await this.collection.connect(this.grantedMinter).mintMultiple(this.referral.address, '2');
+              // todo: check efects of mint
+              await this.collection.revokeRole(await this.collection.MINTER_ROLE(), this.grantedMinter.address);
+              await expect(this.collection.connect(this.grantedMinter).mintMultiple(this.referral.address, '2'))
+                .to.be.reverted;
             });
 
             it('mintMultiple token purchase', async function() {
@@ -1170,6 +1196,64 @@ contract('Collection Full test', function() {
 
     it('mintMultiple reverts if called by wrong role', async function() {
       await expect(this.collection.connect(this.buyer).mintMultiple(this.referral.address, 20)).to.be.reverted;
+    });
+
+    context('with granted DEFAULT_ADMIN_ROLE', function() {
+      beforeEach(async function() {
+        await this.collection.grantRole(await this.collection.DEFAULT_ADMIN_ROLE(), this.grantedAdmin.address);
+      });
+
+      it('setMaxPurchaseSize succeeds and fails after revocation', async function() {
+        expect(await this.collection.maxPurchaseSize()).equal('20');
+        await this.collection.connect(this.grantedAdmin).setMaxPurchaseSize('21');
+        expect(await this.collection.maxPurchaseSize()).equal('21');
+        await this.collection.revokeRole(await this.collection.DEFAULT_ADMIN_ROLE(), this.grantedAdmin.address);
+        await expect(this.collection.connect(this.grantedAdmin).setMaxPurchaseSize('22')).to.be.reverted;
+      });
+
+      it('setDefaultUri succeeds and fails after revocation', async function() {
+        await this.collection.connect(this.grantedAdmin).setDefaultUri('ipfs://ipfs/newURI');
+        await this.collection.revokeRole(await this.collection.DEFAULT_ADMIN_ROLE(), this.grantedAdmin.address);
+        await expect(this.collection.connect(this.grantedAdmin).setDefaultUri('ipfs://ipfs/newestURI')).to.be.reverted;
+      });
+
+      it('setVault succeeds and fails after revocation', async function() {
+        expect(await this.collection.vault()).equal(ZERO_ADDRESS);
+        await this.collection.connect(this.grantedAdmin).setVault(this.other.address);
+        expect(await this.collection.vault()).equal(this.other.address);
+        await this.collection.revokeRole(await this.collection.DEFAULT_ADMIN_ROLE(), this.grantedAdmin.address);
+        await expect(this.collection.connect(this.grantedAdmin).setVault(this.other.address)).to.be.reverted;
+      });
+
+      it('setDefaultRarity succeeds and fails after revocation', async function() {
+        await this.collection.connect(this.grantedAdmin).setDefaultRarity('42');
+        await this.collection.revokeRole(await this.collection.DEFAULT_ADMIN_ROLE(), this.grantedAdmin.address);
+        await expect(this.collection.connect(this.grantedAdmin).setDefaultRarity('42')).to.be.reverted;
+      });
+
+      it('setDefaultName succeeds and fails after revocation', async function() {
+        await this.collection.connect(this.grantedAdmin).setDefaultName('NewDefaultName');
+        await this.collection.revokeRole(await this.collection.DEFAULT_ADMIN_ROLE(), this.grantedAdmin.address);
+        await expect(this.collection.connect(this.grantedAdmin).setDefaultName('NewerDefaultName')).to.be.reverted;
+      });
+
+      it('setDefaultSkill succeeds and fails after revocation', async function() {
+        await this.collection.connect(this.grantedAdmin).setDefaultSkill('5432');
+        await this.collection.revokeRole(await this.collection.DEFAULT_ADMIN_ROLE(), this.grantedAdmin.address);
+        await expect(this.collection.connect(this.grantedAdmin).setDefaultName('5432')).to.be.reverted;
+      });
+
+      it('start and stop succeed and fail after revocation', async function() {
+        // defaultUri and vault are required to start
+        await this.collection.connect(this.grantedAdmin).setDefaultUri('ipfs://ipfs/newURI');
+        await this.collection.connect(this.grantedAdmin).setVault(this.other.address);
+
+        await this.collection.connect(this.grantedAdmin).start();
+        await this.collection.connect(this.grantedAdmin).stop();
+        await this.collection.revokeRole(await this.collection.DEFAULT_ADMIN_ROLE(), this.grantedAdmin.address);
+        await expect(this.collection.connect(this.grantedAdmin).start()).to.be.reverted;
+        await expect(this.collection.connect(this.grantedAdmin).stop()).to.be.reverted;
+      });
     });
   });
 
