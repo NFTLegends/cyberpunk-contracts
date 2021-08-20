@@ -151,9 +151,13 @@ contract('Collection Full test', function() {
             expect(batches[0].rarity).to.equal(13);
           });
 
-          it('there are empty indices between two batches');
-
-          it('getTokenUri works on indices from 0 to 20');
+          it('getTokenUri works on indices from 0 to 10', async function() {
+            expect(await this.collection.tokenURI(0)).to.equal('ipfs://ipfs/first_batch/0.json');
+            expect(await this.collection.tokenURI(5)).to.equal('ipfs://ipfs/first_batch/5.json');
+            expect(await this.collection.tokenURI(10)).to.equal('ipfs://ipfs/first_batch/10.json');
+            expect(await this.collection.tokenURI(15)).to.equal('ipfs://ipfs/first_batch/15.json');
+            expect(await this.collection.tokenURI(20)).to.equal('ipfs://ipfs/first_batch/20.json');
+          });
         });
 
         context('turn on Sale', function() {
@@ -379,8 +383,6 @@ contract('Collection Full test', function() {
               expect(await this.collection.maxTotalSupply()).to.equal('10');
             });
 
-            it('addBatch reverts if called by wrong role');
-
             it('no batches before they added', async function() {
               expect(await this.collection.batchesLength()).to.equal(0);
               const batches = await this.collection.getBatches();
@@ -452,15 +454,6 @@ contract('Collection Full test', function() {
               await expect(this.collection.setSaleStage(1, 0, 29, 200)).to.be.revertedWith('intersection _saleStages');
               await expect(this.collection.setSaleStage(1, 0, 50, 200)).to.be.revertedWith('intersection _saleStages');
             });
-
-            context('then saleStage #1 deleted', function() {
-              beforeEach(async function() {
-                await this.collection.deleteSaleStage(1);
-              });
-              it('revert when a batch intersection occurs when set batch 2', async function() {});
-
-              it('revert when get ', async function() {});
-            });
           });
         });
       });
@@ -513,8 +506,6 @@ contract('Collection Full test', function() {
           });
 
           context('mint token', function() {
-            it('mint token when batch 0 is delete');
-
             it('mint with manager role', async function() {
               await this.collection.mint(this.other.address, 1);
               expect(await this.collection.totalSupply()).to.equal(1);
@@ -622,9 +613,12 @@ contract('Collection Full test', function() {
                   expect(batches[0].rarity).to.equal(13);
                 });
 
-                it('there are empty indices between two batches');
-
-                it('getTokenUri works on indices from 0 to 20');
+                it('getTokenUri works on indices from 0 to 20', async function() {
+                  expect(await this.collection.tokenURI(0)).to.equal('ipfs://ipfs/first_batch/0.json');
+                  expect(await this.collection.tokenURI(9)).to.equal('ipfs://ipfs/first_batch/9.json');
+                  expect(await this.collection.tokenURI(19)).to.equal('ipfs://ipfs/first_batch/19.json');
+                  expect(await this.collection.tokenURI(20)).to.equal('ipfs://ipfs/first_batch/20.json');
+                });
               });
 
               context('add batch #1', function() {
@@ -650,6 +644,7 @@ contract('Collection Full test', function() {
                   expect(await this.collection.tokenURI(0)).to.equal('ipfs://ipfs/batchX/0.json');
                   expect(await this.collection.tokenURI(10)).to.equal('ipfs://ipfs/batchX/10.json');
                   expect(await this.collection.tokenURI(11)).to.equal('ipfs://ipfs/batchY/11.json');
+                  expect(await this.collection.tokenURI(20)).to.equal('ipfs://ipfs/batchY/20.json');
                 });
 
                 it('revert when a batch intersection occurs when set batch', async function() {
@@ -673,9 +668,33 @@ contract('Collection Full test', function() {
                     expect(batches[1].rarity).to.equal(13);
                   });
 
-                  it('there are empty indices between two batches');
+                  it('cannot add new batch between two batches, if id incorrect', async function() {
+                    await expect(this.collection.addBatch(0, 21, 'ipfs://ipfs/first_batch', 23)).to.be.revertedWith(
+                      'batches intersect',
+                    );
+                    await expect(this.collection.addBatch(10, 29, 'ipfs://ipfs/first_batch', 33)).to.be.revertedWith(
+                      'batches intersect',
+                    );
+                    await expect(this.collection.addBatch(0, 9, 'ipfs://ipfs/first_batch', 53)).to.be.revertedWith(
+                      'batches intersect',
+                    );
+                    await expect(this.collection.addBatch(1, 5, 'ipfs://ipfs/first_batch', 63)).to.be.revertedWith(
+                      'batches intersect',
+                    );
+                    await expect(this.collection.addBatch(11, 31, 'ipfs://ipfs/first_batch', 73)).to.be.revertedWith(
+                      'batches intersect',
+                    );
+                    await expect(this.collection.addBatch(5, 25, 'ipfs://ipfs/first_batch', 83)).to.be.revertedWith(
+                      'batches intersect',
+                    );
+                  });
 
-                  it('getTokenUri works on indices from 21 to 30');
+                  it('getTokenUri works on indices from 21 to 30', async function() {
+                    expect(await this.collection.tokenURI(21)).to.equal('ipfs://ipfs/second_batch/21.json');
+                    expect(await this.collection.tokenURI(25)).to.equal('ipfs://ipfs/second_batch/25.json');
+                    expect(await this.collection.tokenURI(29)).to.equal('ipfs://ipfs/second_batch/29.json');
+                    expect(await this.collection.tokenURI(30)).to.equal('ipfs://ipfs/second_batch/30.json');
+                  });
                 });
 
                 context('delete batch #0', function() {
@@ -704,6 +723,13 @@ contract('Collection Full test', function() {
                   await this.collection.addBatch(11, 20, 'ipfs://ipfs/second_batch', 23);
                   await this.collection.addBatch(21, 30, 'ipfs://ipfs/third_batch', 33);
                   await this.collection.addBatch(31, 40, 'ipfs://ipfs/fourth_batch', 43);
+                });
+
+                it('there are empty indices between two batches', async function() {
+                  await this.collection.deleteBatch(1);
+                  expect(await this.collection.tokenURI(11)).to.equal('ipfs://ipfs/defaultUri');
+                  expect(await this.collection.getName(11)).equal('CyberName');
+                  expect(await this.collection.getSkill(11)).equal(1490);
                 });
 
                 it('all batches are visible', async function() {
