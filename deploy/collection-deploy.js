@@ -1,10 +1,10 @@
-module.exports = async({ ethers, deployments }) => {
+module.exports = async({ ethers, deployments, getNamedAccounts }) => {
   const { deploy, execute } = deployments;
 
   const listAccounts = await ethers.provider.listAccounts();
   const vaultAddress = listAccounts[1];
 
-  const { deployer } = await ethers.getNamedAccounts();
+  const { deployer } = await getNamedAccounts();
 
   await deploy('Collection', {
     from: deployer,
