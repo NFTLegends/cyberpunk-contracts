@@ -12,7 +12,8 @@ contract('Collection Full test', function() {
     this.buyer = accounts[3];
     this.referral = accounts[4];
     this.grantedAdmin = accounts[5];
-    this.grantedMinter = accounts[5];
+    this.grantedMinter = accounts[6];
+    this.grantedNameSetter = accounts[7];
     this.CollectionArtifact = await ethers.getContractFactory('Collection');
   });
   beforeEach(async function() {
@@ -1004,6 +1005,20 @@ contract('Collection Full test', function() {
                               expect(await this.collection.getName(1)).equal(newName);
                             });
 
+                            it('granted NAME_SETTER_ROLE can also set name', async function() {
+                              await expect(this.collection.connect(this.grantedNameSetter).setName(1, newName))
+                                .to.be.reverted;
+                              expect(await this.collection.getName(1)).equal('CyberName');
+                              await this.collection.grantRole(await this.collection.NAME_SETTER_ROLE(),
+                                this.grantedNameSetter.address);
+                              await this.collection.connect(this.grantedNameSetter).setName(1, newName);
+                              expect(await this.collection.getName(1)).equal(newName);
+                              await this.collection.revokeRole(await this.collection.NAME_SETTER_ROLE(),
+                                this.grantedNameSetter.address);
+                              await expect(this.collection.connect(this.grantedNameSetter).setName(1, newName))
+                                .to.be.reverted;
+                            });
+
                             it('get token skill by id', async function() {
                               expect(await this.collection.getSkill(1)).equal(1490);
                             });
@@ -1013,6 +1028,20 @@ contract('Collection Full test', function() {
                                 .to.emit(this.collection, 'SkillChange')
                                 .withArgs(1, newSkill);
                               expect(await this.collection.getSkill(1)).equal(newSkill);
+                            });
+
+                            it('granted SKILL_SETTER_ROLE can also set name', async function() {
+                              await expect(this.collection.connect(this.grantedNameSetter).setSkill(1, newSkill))
+                                .to.be.reverted;
+                              expect(await this.collection.getSkill(1)).equal(1490);
+                              await this.collection.grantRole(await this.collection.SKILL_SETTER_ROLE(),
+                                this.grantedNameSetter.address);
+                              await this.collection.connect(this.grantedNameSetter).setSkill(1, newSkill);
+                              expect(await this.collection.getSkill(1)).equal(newSkill);
+                              await this.collection.revokeRole(await this.collection.SKILL_SETTER_ROLE(),
+                                this.grantedNameSetter.address);
+                              await expect(this.collection.connect(this.grantedNameSetter).setSkill(1, newSkill))
+                                .to.be.reverted;
                             });
 
                             context('sale end', function() {
