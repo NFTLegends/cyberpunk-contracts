@@ -105,9 +105,7 @@ contract('Collection Full test', function() {
       });
 
       it('reverts when trying to get rarity if no batches set', async function() {
-        await expect(this.collection.getRarity(0)).to.be.revertedWith(
-          'getBatchByToken: no batches',
-        );
+        await expect(this.collection.getRarity(0)).to.be.revertedWith('getBatchByToken: no batches');
       });
 
       context('add batch #0', function() {

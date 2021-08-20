@@ -7,10 +7,11 @@ require('hardhat-deploy');
 require('hardhat-deploy-ethers');
 require('@openzeppelin/hardhat-upgrades');
 
-require('./tasks/1-set-sale-stage.js');
+require('./tasks/1-set-sale-stages.js');
 require('./tasks/2-mint-zero-batch-tokens.js');
-require('./tasks/3-mint-first-batch-tokens.js');
+require('./tasks/3-mint-99-random-tokens.js');
 require('./tasks/4-reveal-zero-batch.js');
+require('./tasks/4.1-check-batch-owner.js');
 require('./tasks/5-start-sale.js');
 require('./tasks/6-buy-random-tokens.js');
 require('./tasks/7-stop-sale.js');
