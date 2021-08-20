@@ -86,14 +86,6 @@ contract('Collection Full test', function() {
         await expect(this.collection.tokenURI(0)).to.be.revertedWith('no batches');
       });
 
-      it('get default token name by id', async function() {
-        expect(await this.collection.getName(999)).equal('CyberName');
-      });
-
-      it('get default token skill by id', async function() {
-        expect(await this.collection.getSkill(999)).equal(1490);
-      });
-
       it('revert when add sale stage w/ startTokenId more then endTokenId', async function() {
         await expect(this.collection.addSaleStage(1, 0, 100)).to.be.revertedWith(
           'startTokenId must be equal or less than endTokenId',
@@ -139,14 +131,6 @@ contract('Collection Full test', function() {
 
         it('tokens that don\'t match the batch have default rarity', async function() {
           expect(await this.collection.getRarity(999)).to.equal(1);
-        });
-
-        it('tokens that don\'t match the batch have default name', async function() {
-          expect(await this.collection.getName(999)).equal('CyberName');
-        });
-
-        it('tokens that don\'t match the batch have default skill', async function() {
-          expect(await this.collection.getSkill(999)).equal(1490);
         });
 
         it('tokens that don\'t match the batch have default uri', async function() {
@@ -246,6 +230,14 @@ contract('Collection Full test', function() {
 
         it('revert when delete not existed #1 sale stage', async function() {
           await expect(this.collection.deleteSaleStage(1)).to.be.revertedWith('index out of sale stage length');
+        });
+
+        it('get default token name by id', async function() {
+          expect(await this.collection.getName(5)).equal('CyberName');
+        });
+
+        it('get default token skill by id', async function() {
+          expect(await this.collection.getSkill(5)).equal(1490);
         });
 
         context('set defaultRarity and defaultUri', function() {
@@ -495,6 +487,14 @@ contract('Collection Full test', function() {
           expect(saleStage.endTokenId).to.equal('9');
           expect(saleStage.weiPerToken).to.equal('100');
           await expect(this.collection.getSaleStage(1)).to.be.reverted;
+        });
+
+        it('tokens that don\'t match the batch have default name', async function() {
+          expect(await this.collection.getName(5)).equal('CyberName');
+        });
+
+        it('tokens that don\'t match the batch have default skill', async function() {
+          expect(await this.collection.getSkill(5)).equal(1490);
         });
 
         context('then saleStage #1 added', function() {
@@ -946,7 +946,7 @@ contract('Collection Full test', function() {
                             const newName = 'Abraham Lincoln';
                             const newSkill = 20;
                             it('get token name by id', async function() {
-                              expect(await this.collection.getName(1448)).equal('CyberName');
+                              expect(await this.collection.getName(5)).equal('CyberName');
                             });
 
                             it('change token name', async function() {
@@ -995,6 +995,100 @@ contract('Collection Full test', function() {
               });
             });
           });
+        });
+      });
+    });
+  });
+
+  context('token attributes', function() {
+    beforeEach(async function() {
+      await this.collection.setDefaultRarity(1);
+      await this.collection.setDefaultUri('ipfs://ipfs/defaultUri');
+      await this.collection.connect(this.deployer).setDefaultName('CyberName');
+      await this.collection.connect(this.deployer).setDefaultSkill(1490);
+    });
+
+    context('token attributes before saleStage #0', function() {
+      const newDna = 2234;
+      const newName = 'Abraham Lincoln';
+      const newSkill = 20;
+      beforeEach(async function() {
+        this.dnaSetRole = await this.collection.DNA_SETTER_ROLE();
+      });
+
+      it('revert when get DNA when no saleStages', async function() {
+        await expect(this.collection.getDna(0)).to.be.revertedWith('index < _maxTotalSupply');
+      });
+
+      it('revert when get Skill when no saleStages', async function() {
+        await expect(this.collection.getName(0)).to.be.revertedWith('index < _maxTotalSupply');
+      });
+
+      it('revert when get Name when no saleStages', async function() {
+        await expect(this.collection.getSkill(0)).to.be.revertedWith('index < _maxTotalSupply');
+      });
+
+      it('revert when set DNA when no saleStages', async function() {
+        await expect(this.collection.setDna(0, 10)).to.be.revertedWith('index < _maxTotalSupply');
+      });
+
+      it('revert when set Skill when no saleStages', async function() {
+        await expect(this.collection.setName(0, 'NewName')).to.be.revertedWith('index < _maxTotalSupply');
+      });
+
+      it('revert when set Name when no saleStages', async function() {
+        await expect(this.collection.setSkill(0, 10)).to.be.revertedWith('index < _maxTotalSupply');
+      });
+
+      context('Add saleStage #0', function() {
+        beforeEach(async function() {
+          await this.collection.addSaleStage(0, 9, 100);
+        });
+
+        it('check saleStage #0 available', async function() {
+          expect(await this.collection.saleStagesLength()).to.equal('1');
+
+          const saleSrages = await this.collection.getSaleStages();
+          expect(saleSrages[0].startTokenId).to.equal('0');
+          expect(saleSrages[0].endTokenId).to.equal('9');
+          expect(saleSrages[0].weiPerToken).to.equal('100');
+
+          const saleStage = await this.collection.getSaleStage(0);
+          expect(saleStage.startTokenId).to.equal('0');
+          expect(saleStage.endTokenId).to.equal('9');
+          expect(saleStage.weiPerToken).to.equal('100');
+          await expect(this.collection.getSaleStage(1)).to.be.reverted;
+        });
+
+        it('deployer has DNA_SETTER_ROLE and able to set DNA', async function() {
+          expect(await this.collection.getDna(0)).to.equal(0);
+          await expect(this.collection.setDna(0, newDna)).to.emit(this.collection, 'DnaChange').withArgs(0, newDna);
+          expect(await this.collection.getDna(0)).to.equal(newDna);
+        });
+
+        it('deployer unable to set dna after role was revoked', async function() {
+          await this.collection.revokeRole(this.dnaSetRole, this.deployer.address);
+          await expect(this.collection.connect(this.deployer).setDna(0, newDna)).to.be.reverted;
+        });
+
+        it('get token name by id', async function() {
+          expect(await this.collection.getName(5)).equal('CyberName');
+        });
+
+        it('change token name', async function() {
+          await expect(this.collection.setName(1, newName)).to.emit(this.collection, 'NameChange').withArgs(1, newName);
+          expect(await this.collection.getName(1)).equal(newName);
+        });
+
+        it('get token skill by id', async function() {
+          expect(await this.collection.getSkill(1)).equal(1490);
+        });
+
+        it('change token skill', async function() {
+          await expect(this.collection.setSkill(1, newSkill))
+            .to.emit(this.collection, 'SkillChange')
+            .withArgs(1, newSkill);
+          expect(await this.collection.getSkill(1)).equal(newSkill);
         });
       });
     });

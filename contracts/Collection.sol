@@ -451,16 +451,23 @@ contract Collection is ERC721Upgradeable, ERC721EnumerableUpgradeable, AccessCon
      * @dev Returns rarity of the NFT at token Id
      */
     function getRarity(uint256 tokenId) public view returns (uint256) {
-        if (tokenId > _batches[_batches.length - 1].endTokenId) {
-            return _defaultRarity;
+        require(_batches.length > 0, "getBatchByToken: no batches");
+
+        for (uint256 i; i < _batches.length; i++) {
+            if (tokenId > _batches[i].endTokenId || tokenId < _batches[i].startTokenId) {
+                continue;
+            } else {
+                return _batches[i].rarity;
+            }
         }
-        return getBatchByToken(tokenId).rarity;
+        return _defaultRarity;
     }
 
     /**
      * @dev Returns name of the NFT at index
      */
     function getName(uint256 index) public view returns (string memory) {
+        require(index < _maxTotalSupply, "index < _maxTotalSupply");
         bytes memory _tokenWeight = bytes(_tokenName[index]);
         if (_tokenWeight.length == 0) {
             return _defaultName;
@@ -472,6 +479,7 @@ contract Collection is ERC721Upgradeable, ERC721EnumerableUpgradeable, AccessCon
      * @dev Returns skill of the NFT at index
      */
     function getSkill(uint256 index) public view returns (uint256) {
+        require(index < _maxTotalSupply, "index < _maxTotalSupply");
         if (_tokenSkill[index] == 0) {
             return _defaultSkill;
         }
@@ -482,6 +490,7 @@ contract Collection is ERC721Upgradeable, ERC721EnumerableUpgradeable, AccessCon
      * @dev Returns DNA of the NFT at index
      */
     function getDna(uint256 index) public view returns (uint256) {
+        require(index < _maxTotalSupply, "index < _maxTotalSupply");
         return _tokenDna[index];
     }
 
@@ -504,25 +513,28 @@ contract Collection is ERC721Upgradeable, ERC721EnumerableUpgradeable, AccessCon
     /**
      * @dev Change token name
      */
-    function setName(uint256 id, string memory newName) public onlyRole(NAME_SETTER_ROLE) {
-        _tokenName[id] = newName;
-        emit NameChange(id, newName);
+    function setName(uint256 index, string memory newName) public onlyRole(NAME_SETTER_ROLE) {
+        require(index < _maxTotalSupply, "index < _maxTotalSupply");
+        _tokenName[index] = newName;
+        emit NameChange(index, newName);
     }
 
     /**
      * @dev Change token skill
      */
-    function setSkill(uint256 id, uint256 newSkill) public onlyRole(SKILL_SETTER_ROLE) {
-        _tokenSkill[id] = newSkill;
-        emit SkillChange(id, newSkill);
+    function setSkill(uint256 index, uint256 newSkill) public onlyRole(SKILL_SETTER_ROLE) {
+        require(index < _maxTotalSupply, "index < _maxTotalSupply");
+        _tokenSkill[index] = newSkill;
+        emit SkillChange(index, newSkill);
     }
 
     /**
      * @dev Change token DNA attribute
      */
-    function setDna(uint256 id, uint256 newDna) public onlyRole(DNA_SETTER_ROLE) {
-        _tokenDna[id] = newDna;
-        emit DnaChange(id, newDna);
+    function setDna(uint256 index, uint256 newDna) public onlyRole(DNA_SETTER_ROLE) {
+        require(index < _maxTotalSupply, "index < _maxTotalSupply");
+        _tokenDna[index] = newDna;
+        emit DnaChange(index, newDna);
     }
 
     /**
