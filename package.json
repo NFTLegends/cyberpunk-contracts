@@ -13,6 +13,7 @@
     "deploy:rinkeby": "hardhat deploy --network rinkeby",
     "deploy:mainnet": "hardhat deploy --network mainnet",
     "verify:rinkeby": "hardhat etherscan-verify --network rinkeby --api-key $ETHERSCAN_API_KEY",
+    "verify:mainnet": "hardhat etherscan-verify --network mainnet --api-key $ETHERSCAN_API_KEY",
     "lint": "npm run lint:js && npm run lint:sol",
     "lint:js": "eslint --ignore-path .gitignore .",
     "lint:js:fix": "eslint --ignore-path .gitignore . --fix",

@@ -1,8 +1,7 @@
 module.exports = async({ ethers, deployments, getNamedAccounts }) => {
   const { deploy, execute } = deployments;
 
-  const listAccounts = await ethers.provider.listAccounts();
-  const vaultAddress = listAccounts[1];
+  const vaultAddress = '0xd2Eae8333626E5b25108962fD4d3bdD06785857E';
 
   const { deployer } = await getNamedAccounts();
 
@@ -20,7 +19,7 @@ module.exports = async({ ethers, deployments, getNamedAccounts }) => {
     'Collection',
     { from: deployer, log: true },
     'setDefaultUri',
-    'ipfs://Qmahe3tFGHsbVSHa7i7wBKo6uEJ7MeGqS8t9qCQw4qFjo2',
+    'ipfs://QmfBCYfa9THSvegJ66bFBFN57B7vz2AYgmzhyAV3NNW3vd/back.json',
   );
 
   console.log('Set vault');
