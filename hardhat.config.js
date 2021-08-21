@@ -61,6 +61,9 @@ module.exports = {
       live: true,
       saveDeployments: true,
       tags: ['production'],
+      gasMultiplier: 1.1,
+      gasPrice: 32000000000,
+      timeout: 60000,
     },
   },
   etherscan: {

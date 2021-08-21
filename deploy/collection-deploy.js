@@ -20,7 +20,7 @@ module.exports = async({ ethers, deployments, getNamedAccounts }) => {
     'Collection',
     { from: deployer, log: true },
     'setDefaultUri',
-    'https://ipfs.io/ipfs/Qmahe3tFGHsbVSHa7i7wBKo6uEJ7MeGqS8t9qCQw4qFjo2',
+    'ipfs://Qmahe3tFGHsbVSHa7i7wBKo6uEJ7MeGqS8t9qCQw4qFjo2',
   );
 
   console.log('Set vault');

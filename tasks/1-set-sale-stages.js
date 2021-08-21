@@ -9,7 +9,14 @@ task('1-set-sale-stages', 'set token sale stages').setAction(async(taskArgs, hre
   const deployerAddress = listAccounts[0];
 
   console.log('Add saleStage 0');
-  await execute('Collection', { from: deployerAddress, log: true }, 'addSaleStage', '0', '3999', '50000000000000000');
+  await execute(
+    'Collection',
+    { from: deployerAddress, log: true },
+    'addSaleStage',
+    '0',
+    '3999',
+    ethers.utils.parseEther('0.05'),
+  );
 
   console.log('Add saleStage 1');
   await execute(
@@ -18,7 +25,7 @@ task('1-set-sale-stages', 'set token sale stages').setAction(async(taskArgs, hre
     'addSaleStage',
     '4000',
     '9999',
-    '75000000000000000',
+    ethers.utils.parseEther('0.075'),
   );
 
   console.log('Add saleStage 2');
@@ -28,7 +35,7 @@ task('1-set-sale-stages', 'set token sale stages').setAction(async(taskArgs, hre
     'addSaleStage',
     '10000',
     '12999',
-    '100000000000000000',
+    ethers.utils.parseEther('0.1'),
   );
 
   console.log('Add saleStage 3');
@@ -38,7 +45,7 @@ task('1-set-sale-stages', 'set token sale stages').setAction(async(taskArgs, hre
     'addSaleStage',
     '13000',
     '14999',
-    '150000000000000000',
+    ethers.utils.parseEther('0.15'),
   );
 
   console.log('Add saleStage 4');
@@ -48,7 +55,7 @@ task('1-set-sale-stages', 'set token sale stages').setAction(async(taskArgs, hre
     'addSaleStage',
     '15000',
     '15999',
-    '200000000000000000',
+    ethers.utils.parseEther('0.2'),
   );
 
   console.log('Add saleStage 5');
@@ -58,7 +65,7 @@ task('1-set-sale-stages', 'set token sale stages').setAction(async(taskArgs, hre
     'addSaleStage',
     '16000',
     '16379',
-    '500000000000000000',
+    ethers.utils.parseEther('0.5'),
   );
 
   console.log('Add saleStage 6');
@@ -68,6 +75,6 @@ task('1-set-sale-stages', 'set token sale stages').setAction(async(taskArgs, hre
     'addSaleStage',
     '16380',
     '16383',
-    '1000000000000000000',
+    ethers.utils.parseEther('1'),
   );
 });

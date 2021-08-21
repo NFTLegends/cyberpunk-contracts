@@ -13,7 +13,7 @@ task('2-mint-zero-batch-tokens', 'Mint token IDs 0 to 3').setAction(async(taskAr
     'Collection',
     { from: deployerAddress, log: true },
     'mint',
-    '0xff440f57a2621952DdBC438D0100C50ACC507Cc4',
+    '0x80eA9CF6B42777b2153db7f6eb1828bFc819e03A',
     0,
   );
   console.log('Mint second token');
@@ -21,7 +21,7 @@ task('2-mint-zero-batch-tokens', 'Mint token IDs 0 to 3').setAction(async(taskAr
     'Collection',
     { from: deployerAddress, log: true },
     'mint',
-    '0x097C0c85e6d49a4e541deDd86B8153C7f4882688',
+    '0x80eA9CF6B42777b2153db7f6eb1828bFc819e03A',
     1,
   );
   console.log('Mint third token');
@@ -29,7 +29,7 @@ task('2-mint-zero-batch-tokens', 'Mint token IDs 0 to 3').setAction(async(taskAr
     'Collection',
     { from: deployerAddress, log: true },
     'mint',
-    '0x7107a4d60DEb424BDdC3449ec718ee34FE2f715A',
+    '0x80eA9CF6B42777b2153db7f6eb1828bFc819e03A',
     2,
   );
   console.log('Mint fourth token');
@@ -37,7 +37,7 @@ task('2-mint-zero-batch-tokens', 'Mint token IDs 0 to 3').setAction(async(taskAr
     'Collection',
     { from: deployerAddress, log: true },
     'mint',
-    '0x70bee23E578d678F8F5a109e4EBDDf55176c2452',
+    '0x80eA9CF6B42777b2153db7f6eb1828bFc819e03A',
     3,
   );
 });
